@@ -40,8 +40,8 @@ namespace ChanArchiver
                 case PostType.OP:
                     template = new StringBuilder(Properties.Resources.op_post);
 
-                    template.Replace("{op:sticky}", this.IsSticky ? "/img/sticky.png" : "");
-                    template.Replace("{op:locked}", this.IsLocked ? "/img/locked.png" : "");
+                    template.Replace("{op:sticky}", this.IsSticky ? "<img src='/res/sticky.png' />" : "");
+                    template.Replace("{op:locked}", this.IsLocked ? "<img src='/res/locked.png' />" : "");
 
                     break;
                 case PostType.Reply:

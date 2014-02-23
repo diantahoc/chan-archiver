@@ -25,7 +25,7 @@ namespace ChanArchiver
 
             image_template.Replace("{file:link}", string.Format("/file/{0}", this.Hash + "." + this.FileName.Split('.').Last()));
 
-            image_template.Replace("{file:thumblink}", string.Format("/file/{0}", this.Hash + ".jpg"));
+            image_template.Replace("{file:thumblink}", string.Format("/thumb/{0}", this.Hash + ".jpg"));
 
             image_template.Replace("{file:name}", this.FileName);
             image_template.Replace("{file:size}", format_size_string(this.Size));

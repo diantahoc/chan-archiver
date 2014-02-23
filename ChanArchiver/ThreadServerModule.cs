@@ -219,7 +219,7 @@ namespace ChanArchiver
                     case "locked.png":
                         data = Properties.Resources.locked;
                         break;
-                    case "sticky":
+                    case "sticky.png":
                         data = Properties.Resources.sticky;
                         break;
                     default:

@@ -19,13 +19,19 @@ namespace ChanArchiver
 
         static string board = "g";
 
-        public static Amib.Threading.SmartThreadPool stp;
+        public static Amib.Threading.SmartThreadPool thumb_stp;
+        public static Amib.Threading.SmartThreadPool file_stp;
 
         static List<int> monitored = new List<int>();
 
         static AniWrap.AniWrap aw;
 
         static int thread_worker_interval = 3;
+
+        static bool thumb_only = false;
+        static bool use_wget = false;
+
+        static string wget_path = "/usr/bin/wget";
 
         static void Main(string[] args)
         {
@@ -57,12 +63,34 @@ namespace ChanArchiver
                     board = arg.Split(':')[1];
                 }
 
+                if (arg == "--thumbonly")
+                {
+                    thumb_only = true;
+                }
+
+                if (arg == "--wget")
+                {
+                    if (Environment.OSVersion.Platform == PlatformID.Unix)
+                    {
+                        if (File.Exists(wget_path))
+                        {
+                            use_wget = true;
+                        }
+                    }
+                }
+
             }
 
-            stp = new Amib.Threading.SmartThreadPool();
-            stp.MinThreads = 0;
-            stp.MaxThreads = 25;
-            stp.Start();
+            thumb_stp = new Amib.Threading.SmartThreadPool();
+            thumb_stp.MinThreads = 0;
+            thumb_stp.MaxThreads = 20;
+            thumb_stp.Start();
+
+            file_stp = new Amib.Threading.SmartThreadPool();
+            file_stp.MaxThreads = 10;
+            file_stp.MinThreads = 0;
+            file_stp.Start();
+
 
             program_dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "chanarchiver");
             Directory.CreateDirectory(program_dir);
@@ -298,64 +326,94 @@ namespace ChanArchiver
 
             if (!File.Exists(thumb_path))
             {
-                stp.QueueWorkItem(new Amib.Threading.Action((Action)delegate
+                thumb_stp.QueueWorkItem(new Amib.Threading.Action((Action)delegate
                 {
                     download_file(new string[] { thumb_path, pf.ThumbLink, reff });
-                }), Amib.Threading.WorkItemPriority.AboveNormal);
+                }), Amib.Threading.WorkItemPriority.Highest);
 
             }
 
-            if (!File.Exists(file_path))
+            if (!thumb_only)
             {
-                stp.QueueWorkItem(new Amib.Threading.Action((Action)delegate
+                if (!File.Exists(file_path))
                 {
-                    download_file(new string[] { file_path, pf.FullImageLink, reff });
-                }), Amib.Threading.WorkItemPriority.Normal);
+                    file_stp.QueueWorkItem(new Amib.Threading.Action((Action)delegate
+                    {
+                        download_file(new string[] { file_path, pf.FullImageLink, reff });
+                    }), Amib.Threading.WorkItemPriority.Normal);
+                }
             }
+
 
         }
 
+
+
         private static void download_file(string[] param)
         {
+            string user_agent = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:26.0) Gecko/20100101 Firefox/26.0";
+
             string save_path = param[0];
             string url = param[1];
+            string referer = param[2];
 
-            using (WebClient nc = new WebClient())
+            if (use_wget)
             {
-                nc.Headers.Add(HttpRequestHeader.UserAgent, "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:26.0) Gecko/20100101 Firefox/26.0");
-                nc.Headers.Add(HttpRequestHeader.Referer, param[2]);
+                System.Diagnostics.ProcessStartInfo psr = new System.Diagnostics.ProcessStartInfo(wget_path);
 
-                int count = 0;
-                while (count < 20)
+                psr.UseShellExecute = false;
+                psr.CreateNoWindow = true;
+                psr.RedirectStandardError = true;
+                psr.RedirectStandardOutput = true;
+                psr.Arguments = string.Format("-U \"{0}\" -–referer=\"{1}\" -O \"{2}\" {3}", user_agent, referer, save_path, url);
+
+                using (System.Diagnostics.Process p = System.Diagnostics.Process.Start(psr))
                 {
-                    
-                    byte[] file_data = null;
+                    p.WaitForExit();
+                    return;
+                }
+            }
+            else
+            {
 
-                    try
+                using (WebClient nc = new WebClient())
+                {
+                    nc.Headers.Add(HttpRequestHeader.UserAgent, user_agent);
+                    nc.Headers.Add(HttpRequestHeader.Referer, referer);
+
+                    int count = 0;
+                    while (count < 20)
                     {
-                        file_data = nc.DownloadData(url);
 
-                        int length = -1;
+                        byte[] file_data = null;
 
-                        Int32.TryParse(Convert.ToString(nc.ResponseHeaders[HttpRequestHeader.ContentLength]), out length);
-
-                        if (length > 0)
+                        try
                         {
-                            if (file_data.Length != length)
-                            {
-                                //corrupte file, redownload.
-                                count++;
-                                continue;
-                            }
-                        }
+                            file_data = nc.DownloadData(url);
 
-                        File.WriteAllBytes(save_path, file_data);
-                        break;
+                            int length = -1;
+
+                            Int32.TryParse(Convert.ToString(nc.ResponseHeaders[HttpRequestHeader.ContentLength]), out length);
+
+                            if (length > 0)
+                            {
+                                if (file_data.Length != length)
+                                {
+                                    //corrupte file, redownload.
+                                    count++;
+                                    continue;
+                                }
+                            }
+
+                            File.WriteAllBytes(save_path, file_data);
+                            break;
+                        }
+                        catch (Exception)
+                        {
+                            count++;
+                        }
                     }
-                    catch (Exception)
-                    {
-                        count++;
-                    }
+                    return;
                 }
             }
         }
