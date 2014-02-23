@@ -1,7 +1,9 @@
 ChanARCHIVER is an archive for 4chan. It has 3 operation modes:
 
 1 - Full board archival. Archive all threads, and monitor board for new threads to archive.
+
 2 - Single thread archival. Archive only a single thread until it 404. Useful for image dumping/info thread.
+
 3 - Server mode. ChanARCHIVER runs as an HTTP server, serving only the archived threads. No archiving is made in this mode.
 
 By default, ChanARCHIVER start the http server and archive /g/. You can modify it's behaviour with the following command line switches:
@@ -10,6 +12,8 @@ By default, ChanARCHIVER start the http server and archive /g/. You can modify i
 * `--server` : Run ChanARCHIVER in the server mode.
 * `--noserver` : To prevent ChanARCHIVER starting the HTTP server. Useful if you don't want to serve page right now, or another instance of ChanARCHIVER is running as server.
 * `--board:r` : Archive the /r/ board.
+* `--thumbonly` : Only save thumbnails.
+* `--wget` : Use wget as the download backend. In my testings, this has not worked. `wget` is only supported under a *nix os.
 
 ChanARCHIVER use the following libraries:
 	
