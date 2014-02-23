@@ -1,0 +1,1104 @@
+﻿html
+{
+    -webkit-text-size-adjust: 100%;
+}
+
+body
+{
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 5px;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+.mobile, .mobileinline, .mobileib
+{
+    display: none !important;
+}
+
+div#footer
+{
+    clear: both;
+    text-align: center;
+}
+
+hr
+{
+    background: url("../res/hr.png") repeat-x scroll 0px 0px transparent;
+    border: 0px none;
+    color: rgb(204, 204, 204);
+    height: 4px;
+    padding: 0px;
+    clear: both;
+}
+
+div.boardBanner {
+    text-align: center;
+    clear: both;
+}
+
+div.boardBanner>img {
+    margin: 5px 0px 5px 0px;
+    width: 300px;
+    height: 100px;
+    max-width: 100%;
+}
+
+div.boardBanner>div.boardTitle {
+    font-size: 28px;
+    font-weight: bold;
+    letter-spacing: -2px;
+    margin-top: 0px;
+}
+
+div.boardBanner>div.boardSubtitle {
+    font-size: x-small;
+}
+
+img.icon 
+{
+    max-height: 46px;
+    max-width: 46px;
+}
+/*div.board > hr
+{
+    clear: both;
+}
+
+ul.rules
+{
+    margin: 0px;
+    padding: 0px;
+    margin-top: 1px;
+}
+
+ul.rules > li
+{
+    list-style: none;
+    font-size: 10px;
+}
+
+.rules > li:before
+{
+    content: "\2022 \20";
+}*/
+
+div.opContainer
+{
+    display: inline;
+}
+
+div.thread
+{
+    margin: 0px;
+    clear: both;
+}
+
+div.post
+{
+    margin: 4px 0;
+    overflow: hidden;
+}
+
+div.thread > div:nth-of-type(2) > div.reply
+{
+    margin-top: 2px !important;
+}
+
+div.op
+{
+    display: inline;
+}
+
+div.reply
+{
+    display: table;
+    min-width: 500px;
+}
+
+div.reply div.postInfo
+{
+    display: block;
+    width: 100%;
+}
+
+div.post div.postInfo span.postNum a
+{
+    text-decoration: none;
+}
+
+/*.dateTime
+{
+    color: #000 !important;
+}
+
+.posteruid
+{
+    color: rgb(00, 88, 193);
+}
+
+div.post div.postInfo span.postNum a:hover, .posteruid .hand:hover
+{
+    color: #DD0000 !important;
+}*/
+
+div.post div.postInfo span.nameBlock
+{
+    display: inline-block;
+}
+
+div.post div.postInfo span.nameBlock
+{
+    color: #117743;
+    font-weight: normal !important;
+}
+
+div.post blockquote
+{
+    display: block;
+}
+
+div.post div.file
+{
+    display: block;
+}
+
+div.post div.file div.fileInfo
+{
+    margin-right: 10px;
+}
+
+div.replyContainer div.post div.file div.fileInfo
+{
+    margin-left: 20px;
+}
+
+div.post div.file .fileThumb
+{
+    float: left;
+    margin-left: 20px;
+    margin-right: 20px;
+    margin-top: 3px;
+    margin-bottom: 5px;
+}
+
+span.fileThumb
+{
+    margin-left: 0px !important;
+    margin-right: 5px !important;
+}
+
+div.reply span.fileThumb, div.reply span.fileThumb img
+{
+    float: none !important;
+    margin-top: 0px !important;
+    margin-bottom: 0px !important;
+}
+
+div.post div.file .fileThumb img
+{
+    border: none;
+    float: left;
+}
+
+span.summary
+{
+    margin-top: 10px;
+}
+
+div.thread:last-child
+{
+    padding-bottom: 21px;
+    margin-bottom: 6px;
+}
+
+div.pagelist
+{
+    font-size: small;
+    margin: 0;
+    padding: 3px 7px;
+    list-style: none;
+    overflow: hidden;
+}
+
+div.pagelist > div
+{
+    display: inline-block;
+}
+
+div.pagelist > div span
+{
+    padding: 4px;
+    display: inline-block;
+}
+
+div.pagelist div.pages
+{
+    padding: 4px;
+}
+
+div.pagelist strong
+{
+    color: #000000;
+}
+
+div.pagelist
+{
+    padding-left: 12px;
+    margin-left: 7px;
+}
+
+input[type=password]
+{
+    width: 50px;
+    text-align: center;
+}
+
+table
+{
+    border-spacing: 1px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+tr.rules td
+{
+    border: 0px !important;
+    background-color: transparent !important;
+    font-weight: normal !important;
+}
+
+td
+{
+    margin: 0px;
+    padding: 0px;
+    font-size: 10pt;
+}
+
+.postblock
+{
+    background-color: #98E;
+    color: #000;
+    font-weight: bold;
+    border: 1px solid #000;
+    padding: 0 5px;
+    font-size: 10pt;
+}
+
+@media screen and (-webkit-min-device-pixel-ratio:0)
+{
+    tbody textarea
+    {
+        margin-bottom: -3px !important;
+        width: 292px;
+    }
+}
+
+.center
+{
+    text-align: center;
+}
+
+.bold
+{
+    font-weight: bold;
+}
+
+.smaller
+{
+    font-size: smaller;
+}
+
+.hand
+{
+    cursor: pointer;
+}
+
+s, s a:not(:hover)
+{
+    color: #000 !important;
+    background: #000 !important;
+    text-decoration: none;
+}
+
+s:hover, s:focus, s:hover a
+{
+    color: #fff !important;
+}
+
+s:hover a
+{
+    text-decoration: underline;
+}
+
+.deadlink
+{
+    text-decoration: line-through;
+}
+
+.mFileInfo
+{
+    padding-top: 5px;
+    text-align: center;
+    color: #707070 !important;
+    font-size: 9pt !important;
+    text-decoration: none !important;
+}
+
+/*Rotator Classes*/
+
+.hide
+{
+    display: none !important;
+}
+
+div.qp
+{
+    border-radius: 2px 2px 2px 2px;
+    background: #e6e6e6 !important;
+    padding: 5px 5px 5px 5px;
+    border: dotted 3px #FF0000;
+    display: table !important;
+    position: fixed;
+    z-index: 1000;
+}
+
+.qphl
+{
+    border: dotted 3px #FF0000;
+}
+
+div.qpInserted
+{
+    background: #f6f6f6 !important;
+    padding: 5px 5px 5px 5px;
+    border: dotted 3px #000000;
+}
+
+div.post img
+{
+    max-height: 250px;
+    max-width: 250px;
+}
+
+/*-------------------- CSS MENU SECTION --------------------*/
+
+.cssmenu
+{
+    height: 25px;
+    display: inline;
+    margin: 0;
+    border-radius: 5px 5px 5px 5px;
+}
+
+.cssmenu > ul
+{
+    list-style: inside none;
+    padding: 0;
+    margin: 0;
+}
+
+.cssmenu > ul > li
+{
+    list-style: inside none;
+    padding: 0;
+    margin: 0;
+    float: left;
+    display: block;
+    position: relative;
+}
+
+.cssmenu > ul > li > a
+{
+    outline: none;
+    display: block;
+    position: relative;
+    padding: 5px 5px 5px 5px;
+    font: bold 13px/100% Arial,Helvetica,sans-serif;
+    text-align: center;
+    text-decoration: none;
+    text-shadow: 1px 1px 0 rgba(0,0,0,.4);
+}
+
+.cssmenu > ul > li:first-child > a
+{
+    border-radius: 5px 5px 5px 5px;
+}
+
+.cssmenu ul li.has-sub:hover > a:after
+{
+    top: 0;
+    bottom: 0;
+}
+
+.cssmenu > ul > li.has-sub > a:before
+{
+    position: absolute;
+    top: 18px;
+    right: 6px;
+    border: 5px solid transparent;
+    border-top: 5px solid #fff;
+}
+
+.cssmenu > ul > li.has-sub:hover > a:before
+{
+    top: 19px;
+}
+
+.cssmenu ul li.has-sub:hover > a
+{
+    top: -1px;
+    z-index: 99999;
+}
+
+.cssmenu ul li.has-sub:hover > ul, #cssmenu ul li.has-sub:hover > div
+{
+    display: block;
+}
+
+.cssmenu ul li > ul, .cssmenu ul li > div
+{
+    display: none;
+    width: auto;
+    position: absolute;
+    top: 20px;
+    padding: 10px 0;
+    border-radius: 0 0 5px 5px;
+    z-index: 999999;
+}
+
+.cssmenu ul li > ul
+{
+    width: 120px;
+}
+
+.cssmenu ul li > ul li
+{
+    display: block;
+    list-style: inside none;
+    padding: 0;
+    margin: 0;
+    position: relative;
+}
+
+.cssmenu ul li > ul li a
+{
+    outline: none;
+    display: block;
+    position: relative;
+    margin: 0;
+    padding: 8px 20px;
+    font: 10pt Arial,Helvetica,sans-serif;
+    color: #fff;
+    text-decoration: none;
+}
+
+/*-------------------- END OF CSS MENU SECTION --------------------*/
+
+.qr
+{
+    z-index: 5000;
+    position: fixed;
+    top: 0px;
+    left: 0px;
+}
+
+.qrtitle
+{
+    border-radius: 5px 5px 0px 0px;
+    height: 30px;
+    cursor: move;
+    text-align: center;
+}
+
+#gheader
+{
+    position: fixed;
+    top: 0px;
+    right: 0px;
+    width: 100%;
+    height: 35px;
+    box-shadow: 0px 3px 4px 1px rgba(0, 0, 0, 0.35);
+    background: #000;
+    z-index: 4999;
+    overflow: hidden;
+    color: #FFFFFF;
+}
+
+#gcontent
+{
+    text-align: center;
+    float: none;
+}
+
+.gtitle
+{
+    text-transform: capitalize;
+    float: left;
+    padding: 5px 10px;
+}
+
+#gtoolbox
+{
+    text-align: center;
+    float: right;
+    padding: 5px 10px;
+}
+
+.gsep
+{
+    width: 1px;
+    max-width: 1px;
+    height: inherit;
+    background: #FFFFFF;
+}
+
+.gstatus
+{
+    color: #FFFFFF;
+    text-transform: capitalize;
+    float: right;
+    padding: 5px 10px;
+}
+
+#dimbox
+{
+    z-index: 6000;
+    background: #000000;
+    opacity: 0.6;
+    position: fixed;
+    top: 0px;
+    right: 0px;
+    width: 100%;
+    height: 100%;
+}
+
+#modal_dialog
+{
+    position: fixed;
+    z-index: 6001;
+    box-shadow: 0px 0px 10px #FFFFFF;
+    border-radius: 5px 5px 5px 5px;
+}
+
+
+body
+{
+    background: #FFFFFF url(../res/bgwhite.png);
+    color: #000000;
+    font-family: 'Lucida Grande';
+    font-size: medium;
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 5px;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+a, a:visited
+{
+    color: #0058c1;
+}
+
+a.replylink, div#footer a
+{
+    text-decoration: underline !important;
+}
+
+a:hover
+{
+    color: #DD0000 !important;
+}
+
+div.boardBanner {
+    color: #AF0A0F;
+}
+
+div.boardBanner>img {
+    border: 1px solid #34345C;
+}
+
+hr
+{
+    background: url("../res/hr.png") repeat-x scroll 0px 0px transparent;
+    border: 0px none;
+    color: rgb(204, 204, 204);
+    height: 4px;
+    padding: 0px;
+}
+
+div.reply
+{
+    border-radius: 2px 2px 2px 2px;
+    background: #e6e6e6;
+    padding: 5px 5px 5px 5px;
+}
+
+div.reply:hover
+{
+    box-shadow: 0px 0px 2px rgba(169, 169, 169, 0.6);
+}
+
+div.post div.postInfo span.postNum a
+{
+    text-decoration: none;
+    color: #000000;
+}
+
+.dateTime
+{
+    color: #000;
+}
+
+.posterid
+{
+    color: rgb(00, 88, 193);
+}
+
+.trip
+{
+    color: #FF00FF;
+}
+
+div.post div.postInfo span.postNum a:hover, .posteruid .hand:hover
+{
+    color: #DD0000 !important;
+}
+
+div.post div.postInfo span.nameBlock
+{
+    color: #117743;
+    font-weight: normal !important;
+}
+
+span.subject
+{
+    color: rgb(100, 100, 100);
+}
+
+div.post blockquote
+{
+    color: #000000;
+}
+
+blockquote > span.quote
+{
+    color: #789922;
+}
+
+.quotelink, .deadlink
+{
+    color: #D00 !important;
+}
+
+span.name
+{
+    color: rgb(63,145,0);
+}
+
+span.summary
+{
+    color: #707070;
+}
+
+div.thread:last-child
+{
+    padding-bottom: 21px;
+    margin-bottom: 6px;
+}
+
+div.pagelist
+{
+    font-size: small;
+    margin: 0;
+    padding: 3px 7px;
+    list-style: none;
+    overflow: hidden;
+}
+
+div.pagelist > div
+{
+    display: inline-block;
+}
+
+div.pagelist > div span
+{
+    padding: 4px;
+    display: inline-block;
+}
+
+div.pagelist div.pages
+{
+    padding: 4px;
+}
+
+div.pagelist div.pages a
+{
+    text-decoration: none !important;
+}
+
+div.pagelist strong
+{
+    color: #000000;
+}
+
+.postblock
+{
+    background-color: #98E;
+    color: #000;
+    font-weight: bold;
+    border: 1px solid #000;
+    padding: 0 5px;
+    font-size: 10pt;
+}
+
+@media screen and (-webkit-min-device-pixel-ratio:0)
+{
+    tbody textarea
+    {
+        margin-bottom: -3px !important;
+        width: 292px;
+    }
+}
+
+.navSmall
+{
+    font-size: 90%;
+}
+
+.highlightPost
+{
+    background: #c1c6e2 !important;
+    border-color: #7b82ac !important;
+}
+
+.reply:target, .reply.highlight
+{
+    box-shadow: 0px 0px 15px rgba(120, 0, 0, 0.5) !important;
+    padding: 10px !important;
+}
+
+.mFileInfo
+{
+    padding-top: 5px;
+    text-align: center;
+    color: #707070 !important;
+    font-size: 9pt !important;
+    text-decoration: none !important;
+}
+
+div.qp
+{
+    border-radius: 2px 2px 2px 2px;
+    background: #e6e6e6 !important;
+    padding: 5px 5px 5px 5px;
+    border: dotted 3px #FF0000;
+    display: table !important;
+    position: fixed;
+    z-index: 1000;
+}
+
+.qphl
+{
+    border: dotted 3px #FF0000;
+}
+
+div.qpInserted
+{
+    background: #f6f6f6 !important;
+    padding: 5px 5px 5px 5px;
+    border: dotted 3px #000000;
+}
+
+.navigb
+{
+    padding: 2px 2px 2px 2px;
+}
+
+
+/*-------------------- CSS MENU SECTION --------------------*/
+
+.cssmenu > ul > li > a
+{
+    color: #FFFFFF !important;
+}
+
+.cssmenu > ul > li > a:hover
+{
+    color: #FFFFFF !important;
+}
+
+.cssmenu ul li.has-sub:hover > a
+{
+    background: #3f3f3f;
+    border-color: #3f3f3f;
+}
+
+.cssmenu ul li.has-sub > a:hover
+{
+    background: #3f3f3f;
+    border-color: #3f3f3f;
+}
+
+.cssmenu ul li > ul, .cssmenu ul li > div
+{
+    background: #3f3f3f;
+    border-radius: 0 0 5px 5px;
+}
+
+.cssmenu ul li > ul li a:hover
+{
+    color: #000000 !important;
+}
+
+.cssmenu, .cssmenu > ul > li > ul > li a:hover
+{
+    background-image: linear-gradient(#e7e7e7, #e7e7e7 38%, #d7d7d7);
+}
+
+.cssmenu > ul > li > a:after
+{
+    border-color: #6ed1ff;
+}
+
+.cssmenu > ul > li > a:hover
+{
+    background: #36acd2;
+}
+
+/*-------------------- END OF CSS MENU SECTION --------------------*/
+
+.tt
+{
+    border-left: 4px solid rgb(0, 0, 0);
+    background-color: rgb(248, 248, 248);
+    padding: 0px 15px;
+    color: rgb(50, 50, 50);
+    font-family: Consolas;
+}
+
+/*----------- FORM ELEMENTS REGION ------------*/
+
+input[type=text], input[type=password]
+{
+    background-color: #FFFFFF;
+    border: 2px solid rgb(230, 228, 222) !important;
+    padding: 4px;
+    border-radius: 3px 3px 3px 3px;
+}
+
+/*input[type=text], input[type=password]:focus
+{
+    outline: 0px none;
+    box-shadow: 0px 0px 10px rgba(169, 169, 169, 0.5);
+    background: none repeat scroll 0% 0% rgb(255, 255, 223);
+    border: 2px solid rgb(230, 228, 222) !important;
+    padding: 4px;
+    border-radius: 3px 3px 3px 3px;
+}*/
+
+textarea
+{
+    background-color: rgb(255, 255, 255);
+    border: 2px solid rgb(230, 228, 222) !important;
+    padding: 4px;
+    border-radius: 3px 3px 3px 3px;
+    font: 1em normal Arial,Helvetica,sans-serif;
+}
+
+/*textarea:focus
+{
+    outline: 0px none;
+    box-shadow: 0px 0px 10px rgba(169, 169, 169, 0.5);
+    border: 2px solid rgb(230, 228, 222) !important;
+    padding: 4px;
+    border-radius: 3px 3px 3px 3px;
+}*/
+
+select
+{
+    font-family: inherit;
+    font-size: 1em;
+    white-space: normal;
+    border: 1px solid rgb(204, 204, 204);
+    margin: 0px;
+}
+
+select:focus
+{
+    border: 1px solid rgb(255, 204, 0);
+    background: #ffffdf;
+}
+
+input[type=button], input[type=reset], input[type=submit]
+{
+    -moz-appearance: none;
+    background-image: linear-gradient(#ededed, #ededed 38%, #dedede);
+    border: 1px solid rgba(0, 0, 0, 0.25);
+    color: #444;
+    text-shadow: 0 1px 0 rgb(240, 240, 240);
+    border-radius: 2px;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.75);
+    margin: 0px 5px;
+    min-width: 4em;
+    min-height: 34px;
+    -moz-padding-start: 9px;
+    -moz-padding-end: 8px;
+    font-family: 'Segoe UI' , Arial, 'Microsoft Yahei' , Simsun, sans-serif;
+}
+
+input[type=button], input[type=reset], input[type=submit]:hover
+{
+    background-image: linear-gradient(#f0f0f0, #f0f0f0 38%, #e0e0e0);
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    color: #000;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.12), inset 0 1px 2px rgba(255, 255, 255, 0.95);
+}
+
+input[type=button], input[type=reset], input[type=submit]:active
+{
+    background-image: linear-gradient(#e7e7e7, #e7e7e7 38%, #d7d7d7);
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    color: #444;
+    box-shadow: none;
+}
+
+.button
+{
+    cursor: default;
+    -moz-appearance: none;
+    background-image: linear-gradient(#ededed, #ededed 38%, #dedede);
+    border: 1px solid rgba(0, 0, 0, 0.25);
+    color: #444 !important;
+    text-decoration: none;
+    text-shadow: 0 1px 0 rgb(240, 240, 240);
+    border-radius: 2px;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.75);
+    min-width: 4em;
+    min-height: 20px;
+    -moz-padding-start: 9px;
+    -moz-padding-end: 8px;
+    font-family: 'Segoe UI' , Arial, 'Microsoft Yahei' , Simsun, sans-serif;
+    padding: 3px 8px;
+    margin: 0px 1px;
+}
+
+.button:hover
+{
+    background-image: linear-gradient(#f0f0f0, #f0f0f0 38%, #e0e0e0);
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    text-decoration: none;
+    color: #000 !important;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.12), inset 0 1px 2px rgba(255, 255, 255, 0.95);
+}
+
+.button:active
+{
+    background-image: linear-gradient(#e7e7e7, #e7e7e7 38%, #d7d7d7) !important;
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    color: #444 !important;
+    box-shadow: none;
+}
+
+/*----------- END OF FORM ELEMENTS REGION ------------*/
+
+.qr
+{
+    z-index: 5000; /*min-width:500px!important;*/
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    box-shadow: 0px 0px 10px rgb(0, 0, 0);
+}
+
+.qrtitle
+{
+    border-radius: 5px 5px 0px 0px;
+    background: #000000 url(../res/bgdark.png);
+    color: #FFFFFF;
+    height: 30px;
+    cursor: move;
+    text-align: center;
+}
+
+.qrbody
+{
+    background: #e6e6e6;
+    border-radius: 0px 0px 5px 5px;
+    text-align: left;
+}
+
+.download-mid-block .progress-block
+{
+    margin: 24px 0px 25px !important;
+}
+
+#gheader
+{
+    position: fixed;
+    top: 0px;
+    right: 0px;
+    width: 100%;
+    height: 35px;
+    box-shadow: 0px 3px 4px 1px rgba(0, 0, 0, 0.35);
+    background: #000;
+    z-index: 4999;
+    overflow: hidden;
+    color: #FFFFFF;
+}
+
+#gcontent
+{
+    text-align: center;
+    float: none;
+}
+.gtitle
+{
+    text-transform: capitalize;
+    float: left;
+    padding: 5px 10px;
+}
+
+#gtoolbox
+{
+    text-align: center;
+    float: right;
+    padding: 5px 10px;
+}
+
+.gsep
+{
+    width: 1px;
+    max-width: 1px;
+    height: inherit;
+    background: #FFFFFF;
+}
+
+.gstatus
+{
+    color: #FFFFFF;
+    text-transform: capitalize;
+    float: right;
+    padding: 5px 10px;
+}
+
+#dimbox
+{
+    z-index: 6000;
+    background: #000000;
+    opacity: 0.6;
+    position: fixed;
+    top: 0px;
+    right: 0px;
+    width: 100%;
+    height: 100%;
+}
+
+#modal_dialog
+{
+    position: fixed;
+    z-index: 6001;
+    box-shadow: 0px 0px 10px #FFFFFF;
+    border-radius: 5px 5px 5px 5px;
+}

@@ -1,0 +1,23 @@
+<div class="replyContainer" id="pc{wpost:id}">
+    
+    <div id="p{wpost:id}" class="post reply">
+       
+        <div class="postInfo desktop">
+
+            {wpost:subject}
+            <span class="name">{wpost:name}</span>
+            {wpost:posterId}
+            <span class="dateTime">{wpost:time}</span>
+
+            <span class="postNum">
+                <a href="#{wpost:id}">No.</a>
+                <a href="#p{wpost:id}" title="{wpost:id}">{wpost:id}</a>
+            </span>
+
+        </div>
+
+        {wpost:file}
+
+        {wpost:comment}
+    </div>
+</div>

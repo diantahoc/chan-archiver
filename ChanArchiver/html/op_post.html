@@ -1,0 +1,21 @@
+﻿<div class="opContainer" id="pc{wpost:id}">
+  
+    <div id="p{wpost:id}" class="post op">
+        {wpost:file}
+
+        <div class="postInfo desktop">
+            {wpost:subject}
+            <span class="name">{wpost:name}</span>
+            {wpost:posterId}
+            <span class="dateTime">{wpost:time}</span>
+
+            <span class="postNum">
+               <a href="{postLink}">No.</a>
+
+               <a href="#p{wpost:id}" title="{wpost:id}">{wpost:id}</a>
+            </span>
+            {op:replycount} {op:sticky} {op:locked}
+        </div>
+        {wpost:comment}
+    </div>
+</div>
