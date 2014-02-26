@@ -1,0 +1,88 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.IO;
+
+namespace ChanArchiver.HttpServerHandlers 
+{
+    public class FileHandler : HttpServer.HttpModules.HttpModule
+    {
+        public override bool Process(HttpServer.IHttpRequest request, HttpServer.IHttpResponse response, HttpServer.Sessions.IHttpSession session) 
+        {
+            string command = request.UriPath.ToString();
+
+            if (command.StartsWith("/file/"))
+            {
+                string path = Path.Combine(Program.file_save_dir, command.Split('/').Last());
+                if (File.Exists(path))
+                {
+                    response.ContentType = get_mime(command.Split('.').Last().ToLower());
+                    response.Status = System.Net.HttpStatusCode.OK;
+
+                    byte[] data = File.ReadAllBytes(path);
+                    response.ContentLength = data.Length;
+
+                    response.SendHeaders();
+
+                    response.SendBody(data);
+                }
+                else
+                {
+                    response.ContentType = "image/gif";
+                    response.Status = System.Net.HttpStatusCode.NotFound;
+                    response.ContentLength = Properties.Resources._4.Length;
+                    response.SendHeaders();
+                    response.SendBody(Properties.Resources._4);
+                }
+                return true;
+            }
+
+            if (command.StartsWith("/thumb/"))
+            {
+                string path = Path.Combine(Program.thumb_save_dir, command.Split('/').Last());
+
+                if (File.Exists(path))
+                {
+                    response.ContentType = "image/jpeg";
+                    response.Status = System.Net.HttpStatusCode.OK;
+
+                    byte[] data = File.ReadAllBytes(path);
+                    response.ContentLength = data.Length;
+
+                    response.SendHeaders();
+
+                    response.SendBody(data);
+                }
+                else
+                {
+                    response.ContentType = "image/gif";
+                    response.Status = System.Net.HttpStatusCode.NotFound;
+                    response.ContentLength = Properties.Resources._4.Length;
+                    response.SendHeaders();
+                    response.SendBody(Properties.Resources._4);
+                }
+                return true;
+            }
+
+            return false;
+        }
+
+        private string get_mime(string ext)
+        {
+            switch (ext)
+            {
+                case "jpg":
+                case "jpeg":
+                    return "image/jpeg";
+                case "png":
+                    return "image/png";
+                case "gif":
+                    return "image/gif";
+                default:
+                    return "application/octect-stream";
+            }
+        }
+
+    }
+}

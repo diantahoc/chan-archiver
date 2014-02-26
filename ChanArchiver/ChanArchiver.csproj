@@ -38,9 +38,6 @@
     <StartupObject>ChanArchiver.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AniWrap">
-      <HintPath>..\..\AniWrap\AniWrap\bin\Release\AniWrap.dll</HintPath>
-    </Reference>
     <Reference Include="HttpServer">
       <HintPath>..\..\..\..\..\Desktop\New folder\HttpServer.v1.1\HttpServer.dll</HintPath>
     </Reference>
@@ -59,7 +56,57 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="aniwrap\AniWrap.cs" />
+    <Compile Include="aniwrap\DataTypes\APIResponse.cs" />
+    <Compile Include="aniwrap\DataTypes\CatalogItem.cs" />
+    <Compile Include="aniwrap\DataTypes\CommentToken.cs" />
+    <Compile Include="aniwrap\DataTypes\GenericPost.cs" />
+    <Compile Include="aniwrap\DataTypes\PostFile.cs" />
+    <Compile Include="aniwrap\DataTypes\Reply.cs" />
+    <Compile Include="aniwrap\DataTypes\Thread.cs" />
+    <Compile Include="aniwrap\DataTypes\ThreadContainer.cs" />
+    <Compile Include="aniwrap\Helpers\Common.cs" />
+    <Compile Include="aniwrap\Helpers\ThreadHelper.cs" />
+    <Compile Include="aniwrap\libs\hap\1_4_0\HtmlAgilityPack\crc32.cs" />
+    <Compile Include="aniwrap\libs\hap\1_4_0\HtmlAgilityPack\EncodingFoundException.cs" />
+    <Compile Include="aniwrap\libs\hap\1_4_0\HtmlAgilityPack\HtmlAttribute.cs" />
+    <Compile Include="aniwrap\libs\hap\1_4_0\HtmlAgilityPack\HtmlAttributeCollection.cs" />
+    <Compile Include="aniwrap\libs\hap\1_4_0\HtmlAgilityPack\HtmlCmdLine.cs" />
+    <Compile Include="aniwrap\libs\hap\1_4_0\HtmlAgilityPack\HtmlCommentNode.cs" />
+    <Compile Include="aniwrap\libs\hap\1_4_0\HtmlAgilityPack\HtmlConsoleListener.cs" />
+    <Compile Include="aniwrap\libs\hap\1_4_0\HtmlAgilityPack\HtmlDocument.cs" />
+    <Compile Include="aniwrap\libs\hap\1_4_0\HtmlAgilityPack\HtmlElementFlag.cs" />
+    <Compile Include="aniwrap\libs\hap\1_4_0\HtmlAgilityPack\HtmlEntity.cs" />
+    <Compile Include="aniwrap\libs\hap\1_4_0\HtmlAgilityPack\HtmlNameTable.cs" />
+    <Compile Include="aniwrap\libs\hap\1_4_0\HtmlAgilityPack\HtmlNode.cs" />
+    <Compile Include="aniwrap\libs\hap\1_4_0\HtmlAgilityPack\HtmlNodeCollection.cs" />
+    <Compile Include="aniwrap\libs\hap\1_4_0\HtmlAgilityPack\HtmlNodeNavigator.cs" />
+    <Compile Include="aniwrap\libs\hap\1_4_0\HtmlAgilityPack\HtmlNodeType.cs" />
+    <Compile Include="aniwrap\libs\hap\1_4_0\HtmlAgilityPack\HtmlParseError.cs" />
+    <Compile Include="aniwrap\libs\hap\1_4_0\HtmlAgilityPack\HtmlParseErrorCode.cs" />
+    <Compile Include="aniwrap\libs\hap\1_4_0\HtmlAgilityPack\HtmlTextNode.cs" />
+    <Compile Include="aniwrap\libs\hap\1_4_0\HtmlAgilityPack\HtmlWeb.cs" />
+    <Compile Include="aniwrap\libs\hap\1_4_0\HtmlAgilityPack\HtmlWebException.cs" />
+    <Compile Include="aniwrap\libs\hap\1_4_0\HtmlAgilityPack\IOLibrary.cs" />
+    <Compile Include="aniwrap\libs\hap\1_4_0\HtmlAgilityPack\MixedCodeDocument.cs" />
+    <Compile Include="aniwrap\libs\hap\1_4_0\HtmlAgilityPack\MixedCodeDocumentCodeFragment.cs" />
+    <Compile Include="aniwrap\libs\hap\1_4_0\HtmlAgilityPack\MixedCodeDocumentFragment.cs" />
+    <Compile Include="aniwrap\libs\hap\1_4_0\HtmlAgilityPack\MixedCodeDocumentFragmentList.cs" />
+    <Compile Include="aniwrap\libs\hap\1_4_0\HtmlAgilityPack\MixedCodeDocumentFragmentType.cs" />
+    <Compile Include="aniwrap\libs\hap\1_4_0\HtmlAgilityPack\MixedCodeDocumentTextFragment.cs" />
+    <Compile Include="aniwrap\libs\hap\1_4_0\HtmlAgilityPack\NameValuePair.cs" />
+    <Compile Include="aniwrap\libs\hap\1_4_0\HtmlAgilityPack\NameValuePairList.cs" />
+    <Compile Include="BoardWatcher.cs" />
     <Compile Include="FileFormatter.cs" />
+    <Compile Include="FileQueueStateInfo.cs" />
+    <Compile Include="HttpServerHandlers\FileHandler.cs" />
+    <Compile Include="HttpServerHandlers\FileQueuePageHandler.cs" />
+    <Compile Include="HttpServerHandlers\LogPageHandler.cs" />
+    <Compile Include="HttpServerHandlers\OverviewPageHandler.cs" />
+    <Compile Include="HttpServerHandlers\ResourcesHandler.cs" />
+    <Compile Include="HttpServerHandlers\WatchJobsPageHandler.cs" />
+    <Compile Include="LogEntry.cs" />
+    <Compile Include="NetworkUsageCounter.cs" />
     <Compile Include="PostFormatter.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -68,6 +115,37 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="RSSWatcher.cs" />
+    <Compile Include="rss\Collections\ExceptionCollection.cs" />
+    <Compile Include="rss\Collections\RssCategoryCollection.cs" />
+    <Compile Include="rss\Collections\RssChannelCollection.cs" />
+    <Compile Include="rss\Collections\RssFeedCollection.cs" />
+    <Compile Include="rss\Collections\RssItemCollection.cs" />
+    <Compile Include="rss\Collections\RssModuleCollection.cs" />
+    <Compile Include="rss\Collections\RssModuleItemCollection.cs" />
+    <Compile Include="rss\Collections\RssModuleItemCollectionCollection.cs" />
+    <Compile Include="rss\RssChannel\RssChannel.cs" />
+    <Compile Include="rss\RssChannel\RssCloud.cs" />
+    <Compile Include="rss\RssChannel\RssImage.cs" />
+    <Compile Include="rss\RssChannel\RssTextInput.cs" />
+    <Compile Include="rss\RssFeed.cs" />
+    <Compile Include="rss\RssItem\RssEnclosure.cs" />
+    <Compile Include="rss\RssItem\RssGuid.cs" />
+    <Compile Include="rss\RssItem\RssItem.cs" />
+    <Compile Include="rss\RssItem\RssSource.cs" />
+    <Compile Include="rss\RssModule.cs" />
+    <Compile Include="rss\RssModuleItem.cs" />
+    <Compile Include="rss\RssModules\RssBlogChannel.cs" />
+    <Compile Include="rss\RssModules\RssCreativeCommon.cs" />
+    <Compile Include="rss\RssModules\RssPhotoAlbum.cs" />
+    <Compile Include="rss\RssReader.cs" />
+    <Compile Include="rss\RssWriter.cs" />
+    <Compile Include="rss\Shared\DBBool.cs" />
+    <Compile Include="rss\Shared\RssCategory.cs" />
+    <Compile Include="rss\Shared\RssCompact.cs" />
+    <Compile Include="rss\Shared\RssDefault.cs" />
+    <Compile Include="rss\Shared\RssElement.cs" />
+    <Compile Include="rss\Shared\RssEnumerators.cs" />
     <Compile Include="stp\CallerThreadContext.cs" />
     <Compile Include="stp\CanceledWorkItemsGroup.cs" />
     <Compile Include="stp\EventWaitHandle.cs" />
@@ -94,6 +172,7 @@
     <Compile Include="stp\WorkItemsGroupBase.cs" />
     <Compile Include="stp\WorkItemsQueue.cs" />
     <Compile Include="ThreadServerModule.cs" />
+    <Compile Include="ThreadWorker.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
@@ -105,6 +184,15 @@
   <ItemGroup>
     <Content Include="html\4" />
     <EmbeddedResource Include="html\full_page.html" />
+    <Content Include="html\bs\dashboard.htm" />
+    <Content Include="html\bs\filequeue.htm" />
+    <Content Include="html\bs\logs.htm" />
+    <Content Include="html\bs\res\bootstrap.css" />
+    <Content Include="html\bs\res\bootstrap.js" />
+    <Content Include="html\bs\res\dashboard.css" />
+    <Content Include="html\bs\res\docs.js" />
+    <Content Include="html\bs\res\jquery.js" />
+    <Content Include="html\bs\wjobs.htm" />
     <Content Include="html\image_file.html" />
     <Content Include="html\layout.css" />
     <Content Include="html\op_post.html" />
@@ -115,6 +203,7 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -10,82 +10,16 @@ namespace ChanArchiver
     {
         public override bool Process(HttpServer.IHttpRequest request, HttpServer.IHttpResponse response, HttpServer.Sessions.IHttpSession session)
         {
-            response.Encoding = System.Text.Encoding.UTF8;
-
             string command = request.UriPath.ToString();
-
-            if (command.StartsWith("/file/"))
-            {
-                string path = Path.Combine(Program.file_save_dir, command.Split('/').Last());
-                if (File.Exists(path))
-                {
-                    response.ContentType = get_mime(command.Split('.').Last().ToLower());
-                    response.Status = System.Net.HttpStatusCode.OK;
-
-                    byte[] data = File.ReadAllBytes(path);
-                    response.ContentLength = data.Length;
-
-                    response.SendHeaders();
-
-                    response.SendBody(data);
-                }
-                else
-                {
-                    response.ContentType = "image/gif";
-                    response.Status = System.Net.HttpStatusCode.NotFound;
-                    response.ContentLength = Properties.Resources._4.Length;
-                    response.SendHeaders();
-                    response.SendBody(Properties.Resources._4);
-                }
-                return true;
-            }
-
-            if (command.StartsWith("/thumb/"))
-            {
-                string path = Path.Combine(Program.thumb_save_dir, command.Split('/').Last());
-
-                if (File.Exists(path))
-                {
-                    response.ContentType = "image/jpeg";
-                    response.Status = System.Net.HttpStatusCode.OK;
-
-                    byte[] data = File.ReadAllBytes(path);
-                    response.ContentLength = data.Length;
-
-                    response.SendHeaders();
-
-                    response.SendBody(data);
-                }
-                else
-                {
-                    response.ContentType = "image/gif";
-                    response.Status = System.Net.HttpStatusCode.NotFound;
-                    response.ContentLength = Properties.Resources._4.Length;
-                    response.SendHeaders();
-                    response.SendBody(Properties.Resources._4);
-                }
-                return true;
-            }
-
-            if (command == "/css/css.css")
-            {
-                response.ContentType = "text/css";
-                response.Status = System.Net.HttpStatusCode.OK;
-                byte[] css = System.Text.Encoding.UTF8.GetBytes(ChanArchiver.Properties.Resources.layout);
-                response.ContentLength = css.Length;
-                response.SendHeaders();
-                response.SendBody(css);
-
-                return true;
-            }
 
             if (command.StartsWith("/view/"))
             {
+                response.Encoding = System.Text.Encoding.UTF8;
                 response.ContentType = "text/html";
                 response.Status = System.Net.HttpStatusCode.OK;
 
                 string[] data = command.Split('/');
-                if (data.Length != 4) 
+                if (data.Length != 4)
                 {
                     _404(response);
                     return true;
@@ -93,7 +27,7 @@ namespace ChanArchiver
                 string board = data[2];
                 string tid = data[3];
 
-                string thread_folder_path = Path.Combine(Program.program_dir, board, tid);
+                string thread_folder_path = Path.Combine(Program.post_files_dir, board, tid);
 
                 if (Directory.Exists(thread_folder_path))
                 {
@@ -114,7 +48,7 @@ namespace ChanArchiver
 
                     int cou = sorted.Count();
 
-                    for (int i = 0; i < cou-1; i++)
+                    for (int i = 0; i < cou - 1; i++)
                     {
                         body.Append(load_post_data(sorted.ElementAt(i), false));
                     }
@@ -137,41 +71,18 @@ namespace ChanArchiver
                 return true;
             }
 
-            if (command == "/")
-            {
-                DirectoryInfo i = new DirectoryInfo(Program.program_dir);
-
-                DirectoryInfo[] boards = i.GetDirectories();
-
-                response.ContentType = "text/html";
-                response.Status = System.Net.HttpStatusCode.OK;
-               
-
-                StringBuilder s = new StringBuilder();
-
-                for (int index = 0; index < boards.Length; index++)
-                {
-                    DirectoryInfo fo = boards[index];
-                    if (fo.Name == "files" || fo.Name == "thumbs" || fo.Name == "aniwrap_cache") { continue; }
-                    s.AppendFormat("<a href='/all/{0}/'>/{0}/</a><br/>", fo.Name);
-                }
-
-                byte[] data = System.Text.Encoding.UTF8.GetBytes(Properties.Resources.full_page.Replace("{DocumentBody}", s.ToString()));
-
-                response.ContentLength = data.Length;
-                
-                response.SendHeaders();
-
-                response.SendBody(data);
-
-                return true;
-            }
-
             if (command.StartsWith("/all/"))
             {
+                response.Encoding = System.Text.Encoding.UTF8;
                 string board = command.Split('/')[2];
 
-                string board_folder = Path.Combine(Program.program_dir, board);
+                if (string.IsNullOrEmpty(board))
+                {
+                    _404(response);
+                    return true;
+                }
+
+                string board_folder = Path.Combine(Program.post_files_dir, board);
 
                 if (Directory.Exists(board_folder))
                 {
@@ -205,49 +116,168 @@ namespace ChanArchiver
                 return true;
             }
 
-            if (command.StartsWith("/res/"))
+            if (command == "/boards")
             {
-                byte[] data = null;
-                switch (command.Split('/')[2].ToLower())
-                {
-                    case "bgwhite.png":
-                        data = Properties.Resources.bgwhite;
-                        break;
-                    case "hr.png":
-                        data = Properties.Resources.hr;
-                        break;
-                    case "locked.png":
-                        data = Properties.Resources.locked;
-                        break;
-                    case "sticky.png":
-                        data = Properties.Resources.sticky;
-                        break;
-                    default:
-                        break;
-                }
+                response.Encoding = System.Text.Encoding.UTF8;
 
-                if (data == null)
+                if (Directory.Exists(Program.post_files_dir))
                 {
-                    _404(response);
-                }
-                else
-                {
+                    response.ContentType = "text/html";
                     response.Status = System.Net.HttpStatusCode.OK;
 
-                    response.ContentType = "image/png";
+                    DirectoryInfo info = new DirectoryInfo(Program.post_files_dir);
+
+                    DirectoryInfo[] folders = info.GetDirectories();
+
+                    StringBuilder s = new StringBuilder();
+
+                    for (int i = 0; i < folders.Length; i++)
+                    {
+                        s.AppendFormat("<a href='/all/{0}'>/{0}/</a><br/>", folders[i].Name);
+                    }
+
+                    byte[] data = System.Text.Encoding.UTF8.GetBytes(Properties.Resources.full_page.Replace("{DocumentBody}", s.ToString()));
+
                     response.ContentLength = data.Length;
                     response.SendHeaders();
                     response.SendBody(data);
+
+                }
+                else
+                {
+                    _404(response);
                 }
 
+                return true;
             }
 
+            if (command.StartsWith("/add/"))
+            {
+                string[] rdata = command.Split('/');
+                string mode = rdata[2].ToLower();
 
+                if (mode == "board")
+                {
+                    if (string.IsNullOrEmpty(request.QueryString["boardletter"].Value))
+                    {
+                        _404(response);
+                    }
+
+                    string board = request.QueryString["boardletter"].Value;
+                    Program.archive_board(board);
+                    response.Status = System.Net.HttpStatusCode.OK;
+
+                    response.Redirect("/wjobs");
+
+                }
+                else if (mode == "thread")
+                {
+                    if (string.IsNullOrEmpty(request.QueryString["boardletter"].Value))
+                    {
+                        _404(response);
+                    }
+
+                    if (string.IsNullOrEmpty(request.QueryString["threadid"].Value))
+                    {
+                        _404(response);
+                    }
+
+                    string board = request.QueryString["boardletter"].Value;
+                    int id = -1;
+                    string tid = request.QueryString["threadid"].Value;
+                    Int32.TryParse(tid, out id);
+                    if (id > 0)
+                    {
+                        Program.archive_single(board, Convert.ToInt32(tid));
+                        response.Status = System.Net.HttpStatusCode.OK;
+
+                        response.Redirect("/wjobs");
+
+                    }
+                    else
+                    {
+                        _404(response);
+                    }
+                }
+                else
+                {
+                    _404(response);
+                }
+
+                return true;
+            }
+
+            if (command.StartsWith("/cancel/"))
+            {
+                string[] data = command.Split('/');
+                string mode = data[2];
+
+                if (mode == "bw")
+                {
+                    string board = data[3];
+                    if (Program.active_dumpers.ContainsKey(board))
+                    {
+                        BoardWatcher bw = Program.active_dumpers[board];
+                        bw.Stop();
+                        response.Redirect("/wjobs");
+                    }
+
+                }
+
+                if (mode == "bwr")
+                {
+                    string board = data[3];
+                    if (Program.active_dumpers.ContainsKey(board))
+                    {
+                        BoardWatcher bw = Program.active_dumpers[board];
+                        bw.StartFullMode();
+                        response.Redirect("/wjobs");
+                    }
+                }
+
+                if (mode == "tw")
+                {
+                    string board = data[3];
+                    string tid = data[4];
+
+                    if (Program.active_dumpers.ContainsKey(board))
+                    {
+                        BoardWatcher bw = Program.active_dumpers[board];
+                        int id = Convert.ToInt32(tid);
+                        if (bw.watched_threads.ContainsKey(id))
+                        {
+                            ThreadWorker tw = bw.watched_threads[id];
+                            tw.Stop();
+                            response.Redirect("/wjobs");
+                        }
+                    }
+                }
+
+                if (mode == "twr")
+                {
+                    string board = data[3];
+                    string tid = data[4];
+
+                    if (Program.active_dumpers.ContainsKey(board))
+                    {
+                        BoardWatcher bw = Program.active_dumpers[board];
+                        int id = Convert.ToInt32(tid);
+                        if (bw.watched_threads.ContainsKey(id))
+                        {
+                            ThreadWorker tw = bw.watched_threads[id];
+                            tw.Start();
+                            response.Redirect("/wjobs");
+                        }
+                    }
+                }
+
+                return true;
+            }
 
             return false;
         }
 
-        private void _404(HttpServer.IHttpResponse response)
+        public static void _404(HttpServer.IHttpResponse response)
         {
             response.Status = System.Net.HttpStatusCode.NotFound;
             byte[] d = System.Text.Encoding.UTF8.GetBytes("404");
@@ -255,7 +285,6 @@ namespace ChanArchiver
             response.SendHeaders();
             response.SendBody(d);
         }
-
 
         private string load_post_data(FileInfo fi, bool isop)
         {
@@ -281,6 +310,7 @@ namespace ChanArchiver
             {
                 pf.PosterID = Convert.ToString(post_data["PosterID"]);
             }
+
             if (post_data.ContainsKey("Subject"))
             {
                 pf.Subject = Convert.ToString(post_data["Subject"]);
@@ -338,7 +368,6 @@ namespace ChanArchiver
                 pf.MyFile = f;
             }
 
-
             if (isop)
             {
                 if (post_data.ContainsKey("Closed"))
@@ -361,20 +390,6 @@ namespace ChanArchiver
             return pf.ToString();
         }
 
-        private string get_mime(string ext)
-        {
-            switch (ext)
-            {
-                case "jpg":
-                case "jpeg":
-                    return "image/jpeg";
-                case "png":
-                    return "image/png";
-                case "gif":
-                    return "image/gif";
-                default:
-                    return "application/octect-stream";
-            }
-        }
+
     }
 }

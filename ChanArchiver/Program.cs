@@ -14,6 +14,8 @@ namespace ChanArchiver
     {
         public static string file_save_dir = "";
         public static string thumb_save_dir = "";
+        public static string api_cache_dir = "";
+        public static string post_files_dir = "";
 
         public static string program_dir;
 
@@ -24,14 +26,21 @@ namespace ChanArchiver
 
         static List<int> monitored = new List<int>();
 
-        static AniWrap.AniWrap aw;
-
-        static int thread_worker_interval = 3;
+        public static AniWrap.AniWrap aw;
 
         static bool thumb_only = false;
+
         static bool use_wget = false;
 
+        public static bool verbose = false;
+
         static string wget_path = "/usr/bin/wget";
+
+        public static Dictionary<string, BoardWatcher> active_dumpers = new Dictionary<string, BoardWatcher>();
+
+        public static Dictionary<string, FileQueueStateInfo> queued_files = new Dictionary<string, FileQueueStateInfo>();
+
+        public static DateTime StartUpTime = DateTime.Now;
 
         static void Main(string[] args)
         {
@@ -39,6 +48,7 @@ namespace ChanArchiver
 
             bool server = false;
             bool force_no_server = false;
+
             foreach (string arg in args)
             {
                 if (arg.StartsWith("--thread"))
@@ -68,253 +78,143 @@ namespace ChanArchiver
                     thumb_only = true;
                 }
 
+                if (arg == "--verbose")
+                {
+                    verbose = true;
+                }
+
                 if (arg == "--wget")
                 {
-                    if (Environment.OSVersion.Platform == PlatformID.Unix)
-                    {
-                        if (File.Exists(wget_path))
-                        {
-                            use_wget = true;
-                        }
-                    }
+                    //if (Environment.OSVersion.Platform == PlatformID.Unix)
+                    //{
+                    //    if (File.Exists(wget_path))
+                    //    {
+                    //        use_wget = true;
+                    //    }
+                    //}
+                    Console.WriteLine("Sorry, wget backend is dropped");
                 }
 
             }
 
-            thumb_stp = new Amib.Threading.SmartThreadPool();
-            thumb_stp.MinThreads = 0;
-            thumb_stp.MaxThreads = 20;
+            thumb_stp = new Amib.Threading.SmartThreadPool() { MaxThreads = 20, MinThreads = 0 };
             thumb_stp.Start();
 
-            file_stp = new Amib.Threading.SmartThreadPool();
-            file_stp.MaxThreads = 10;
-            file_stp.MinThreads = 0;
+            file_stp = new Amib.Threading.SmartThreadPool() { MaxThreads = 10, MinThreads = 0 };
             file_stp.Start();
-
 
             program_dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "chanarchiver");
             Directory.CreateDirectory(program_dir);
 
             file_save_dir = Path.Combine(program_dir, "files");
             thumb_save_dir = Path.Combine(program_dir, "thumbs");
+            post_files_dir = Path.Combine(program_dir, "posts");
+            api_cache_dir = Path.Combine(program_dir, "aniwrap_cache");
 
             Directory.CreateDirectory(file_save_dir);
             Directory.CreateDirectory(thumb_save_dir);
+            Directory.CreateDirectory(post_files_dir);
+            Directory.CreateDirectory(api_cache_dir);
 
-            Console.WriteLine("ChanARCHIVER unstable 0.4");
-            Console.WriteLine("Powered by AniWrap Library");
+            aw = new AniWrap.AniWrap(api_cache_dir);
+
+            Console.WriteLine("ChanARCHIVER stable 0.61");
 
             Console.WriteLine(string.Format("Saving files in '{0}'", program_dir));
+
+            if (thumb_only) 
+            {
+                Console.WriteLine("ChanARCHIVER is running in thumbnail only mode");
+            }
 
             if (server)
             {
                 Console.WriteLine("ChanARCHIVER is running in server mode");
-
                 start_server();
-                Console.WriteLine("Enter Q to exit");
-                while (Console.ReadLine().ToUpper() != "Q") { }
-                return;
             }
             else
             {
                 if (!force_no_server)
                 {
-                    Console.WriteLine("Starting HTTP server...");
                     start_server();
-                    Console.WriteLine("Listening on port 8787");
                 }
-
-                string animwrap_c = Path.Combine(program_dir, "aniwrap_cache");
-                Directory.CreateDirectory(animwrap_c);
-                aw = new AniWrap.AniWrap(animwrap_c);
 
                 if (single_id > 0)
                 {
-                    Console.WriteLine("Archiving thread '{0}' in board /{1}/", single_id, board);
-                    thread_worker_interval = 1;
-                    update_thread_worker(single_id);
+                    archive_single(board, single_id);
                 }
                 else
                 {
-                    Console.WriteLine("Archiving board : /" + board + "/");
-
-                    while (true)
-                    {
-                        CatalogItem[][] catalog = aw.GetCatalog(board);
-
-                        foreach (CatalogItem[] page in catalog)
-                        {
-                            foreach (CatalogItem thread in page)
-                            {
-
-                                if (!monitored.Contains(thread.ID))
-                                {
-                                    monitored.Add(thread.ID);
-                                    Console.WriteLine("Found new thread " + thread.ID);
-
-                                    Task.Factory.StartNew((Action)delegate
-                                    {
-                                        update_thread_worker(thread.ID);
-                                    });
-                                    System.Threading.Thread.Sleep(5000); //allow 5 secs between each worker launch
-                                }
-                            }
-
-                            System.Threading.Thread.Sleep(10 * 1000); //allow 10 seconds between each page.
-                        }
-
-                        System.Threading.Thread.Sleep(10 * 60 * 1000); //refresh catalog each 10 mins
-                    }
+                    archive_board(board);
                 }
+            }
+            Console.WriteLine("Enter Q to exit");
+            while (Console.ReadLine().ToUpper() != "Q") { }
+        }
+
+        public static void archive_single(string board, int id)
+        {
+            if (active_dumpers.ContainsKey(board))
+            {
+                BoardWatcher bw = active_dumpers[board];
+                bw.AddThreadId(id);
+            }
+            else
+            {
+                BoardWatcher bw = get_board_watcher(board);
+                active_dumpers.Add(board, bw);
+                bw.AddThreadId(id);
+            }
+        }
+
+        private static BoardWatcher get_board_watcher(string board)
+        {
+            BoardWatcher b = new BoardWatcher(board);
+            return b;
+        }
+
+        public static void archive_board(string board)
+        {
+            if (active_dumpers.ContainsKey(board))
+            {
+                BoardWatcher bw = active_dumpers[board];
+                bw.StartFullMode();
+            }
+            else
+            {
+                BoardWatcher bw = get_board_watcher(board);
+                active_dumpers.Add(board, bw);
+                bw.StartFullMode();
             }
         }
 
         private static void start_server()
         {
-            HttpServer.HttpServer server = new HttpServer.HttpServer();
-
-            server.ServerName = "ChanARCHIVER";
-
-            server.Add(new ThreadServerModule());
-
-            server.Start(IPAddress.Any, 8787);
-        }
-
-        private static void update_thread_worker(int tid)
-        {
-            string thread_folder = Path.Combine(program_dir, board, tid.ToString());
-
-            Directory.CreateDirectory(thread_folder);
-
-            while (true)
+            try
             {
-                ThreadContainer tc = null;
-                try
-                {
-                    Console.WriteLine("Updating thread " + tid.ToString());
+                HttpServer.HttpServer server = new HttpServer.HttpServer();
 
-                    tc = aw.GetThreadData(board, tid);
+                server.ServerName = "ChanARCHIVER";
 
-                    string op = Path.Combine(thread_folder, "op.json");
+                server.Add(new ChanArchiver.HttpServerHandlers.OverviewPageHandler());
+                server.Add(new ChanArchiver.HttpServerHandlers.LogPageHandler());
+                server.Add(new ChanArchiver.HttpServerHandlers.FileQueuePageHandler());
+                server.Add(new ChanArchiver.HttpServerHandlers.WatchJobsPageHandler());
+                server.Add(new ChanArchiver.HttpServerHandlers.ResourcesHandler());
+                server.Add(new ChanArchiver.HttpServerHandlers.FileHandler());
 
-                    if (!File.Exists(op))
-                    {
-                        string post_data = get_post_string(tc.Instance);
-
-                        if (tc.Instance.File != null) { dump_files(tc.Instance.File); }
-
-                        File.WriteAllText(op, post_data);
-                    }
-
-                    int count = tc.Replies.Count();
-
-                    for (int i = 0; i < count; i++)
-                    {
-                        string item_path = Path.Combine(thread_folder, tc.Replies[i].ID.ToString() + ".json");
-                        if (!File.Exists(item_path))
-                        {
-                            string post_data = get_post_string(tc.Replies[i]);
-
-                            if (tc.Replies[i].File != null) { dump_files(tc.Replies[i].File); }
-                            File.WriteAllText(item_path, post_data);
-                        }
-                    }
-
-                    Console.WriteLine("Updated thread number " + tid.ToString());
-                }
-                catch (Exception ex)
-                {
-                    if (ex.Message.Contains("404"))
-                    {
-                        //thread died
-                        //monitored.Remove(id);
-                        Console.WriteLine("Thread " + tid.ToString() + " 404'ed");
-                        break;
-                    }
-                }
-                System.Threading.Thread.Sleep(thread_worker_interval * 60 * 1000); // refresh thread worker each X min
+                server.Add(new ThreadServerModule());
+                Console.WriteLine("Starting HTTP server...");
+                server.Start(IPAddress.Any, 8787);
+                Console.WriteLine("Listening on port 8787");
+            }
+            catch (Exception ex)
+            {
+                Console.Beep();
+                Console.WriteLine("Could not start HTTP server: {0}. \n Will now exit", ex.Message);
+                Console.Read();
             }
         }
-
-        private static string get_post_string(GenericPost gp)
-        {
-            Dictionary<string, object> dic = new Dictionary<string, object>();
-
-            if (gp.GetType() == typeof(AniWrap.DataTypes.Thread))
-            {
-                AniWrap.DataTypes.Thread t = (AniWrap.DataTypes.Thread)gp;
-                dic.Add("Closed", t.IsClosed);
-                dic.Add("Sticky", t.IsSticky);
-            }
-
-            dic.Add("Board", gp.Board);
-
-            dic.Add("ID", gp.ID);
-
-            dic.Add("Name", gp.Name);
-
-            if (gp.Capcode != GenericPost.CapcodeEnum.None)
-            {
-                dic.Add("Capcode", gp.Capcode);
-            }
-
-            if (!string.IsNullOrEmpty(gp.Comment))
-            {
-                dic.Add("RawComment", gp.Comment);
-
-                dic.Add("FormattedComment", gp.CommentText);
-            }
-            /*// Flag stuffs*/
-            if (!string.IsNullOrEmpty(gp.country_flag))
-            {
-                dic.Add("CountryFlag", gp.country_flag);
-
-            }
-
-            if (!string.IsNullOrEmpty(gp.country_name))
-            {
-                dic.Add("CountryName", gp.country_name);
-            }
-            /* Flag stuffs //*/
-
-            if (!string.IsNullOrEmpty(gp.Email))
-            {
-                dic.Add("Email", gp.Email);
-            }
-
-            if (!string.IsNullOrEmpty(gp.Trip))
-            {
-                dic.Add("Trip", gp.Trip);
-            }
-
-            if (!string.IsNullOrEmpty(gp.Subject))
-            {
-                dic.Add("Subject", gp.Subject);
-            }
-
-            if (!string.IsNullOrEmpty(gp.PosterID))
-            {
-                dic.Add("PosterID", gp.PosterID);
-            }
-
-            dic.Add("Time", gp.Time);
-
-            if (gp.File != null)
-            {
-                dic.Add("FileHash", base64tostring(gp.File.hash));
-                dic.Add("FileName", gp.File.filename + "." + gp.File.ext);
-                dic.Add("ThumbTime", gp.File.thumbnail_tim);
-                dic.Add("FileHeight", gp.File.height);
-                dic.Add("FileWidth", gp.File.width);
-                dic.Add("FileSize", gp.File.size);
-
-            }
-
-            return Newtonsoft.Json.JsonConvert.SerializeObject(dic, Newtonsoft.Json.Formatting.Indented);
-        }
-
-        //static List<string> files_in_progress = new List<string>();
-        //static List<string> thumb_in_progress = new List<string>();
 
         public static void dump_files(PostFile pf)
         {
@@ -326,10 +226,15 @@ namespace ChanArchiver
 
             if (!File.Exists(thumb_path))
             {
-                thumb_stp.QueueWorkItem(new Amib.Threading.Action((Action)delegate
+                if (!queued_files.ContainsKey("thumb" + md5))
                 {
-                    download_file(new string[] { thumb_path, pf.ThumbLink, reff });
-                }), Amib.Threading.WorkItemPriority.Highest);
+                    queued_files.Add("thumb" + md5, new FileQueueStateInfo(md5) { Type = FileQueueStateInfo.FileType.Thumbnail, Url = pf.ThumbLink });
+
+                    thumb_stp.QueueWorkItem(new Amib.Threading.Action((Action)delegate
+                    {
+                        download_file(new string[] { thumb_path, pf.ThumbLink, reff, "thumb" + md5 });
+                    }), Amib.Threading.WorkItemPriority.Highest);
+                }
 
             }
 
@@ -337,17 +242,18 @@ namespace ChanArchiver
             {
                 if (!File.Exists(file_path))
                 {
-                    file_stp.QueueWorkItem(new Amib.Threading.Action((Action)delegate
+                    if (!queued_files.ContainsKey("file" + md5))
                     {
-                        download_file(new string[] { file_path, pf.FullImageLink, reff });
-                    }), Amib.Threading.WorkItemPriority.Normal);
+                        queued_files.Add("file" + md5, new FileQueueStateInfo(md5) { Type = FileQueueStateInfo.FileType.FullFile, Url = pf.FullImageLink });
+
+                        file_stp.QueueWorkItem(new Amib.Threading.Action((Action)delegate
+                        {
+                            download_file(new string[] { file_path, pf.FullImageLink, reff, "file" + md5 });
+                        }), Amib.Threading.WorkItemPriority.Normal);
+                    }
                 }
             }
-
-
         }
-
-
 
         private static void download_file(string[] param)
         {
@@ -357,9 +263,14 @@ namespace ChanArchiver
             string url = param[1];
             string referer = param[2];
 
+            string key = param[3];
+
+            FileQueueStateInfo f = get_file_state(key);
+
             if (use_wget)
             {
                 System.Diagnostics.ProcessStartInfo psr = new System.Diagnostics.ProcessStartInfo(wget_path);
+
 
                 psr.UseShellExecute = false;
                 psr.CreateNoWindow = true;
@@ -369,6 +280,7 @@ namespace ChanArchiver
 
                 using (System.Diagnostics.Process p = System.Diagnostics.Process.Start(psr))
                 {
+                    f.Status = FileQueueStateInfo.DownloadStatus.Downloading;
                     p.WaitForExit();
                     return;
                 }
@@ -380,45 +292,125 @@ namespace ChanArchiver
                 {
                     nc.Headers.Add(HttpRequestHeader.UserAgent, user_agent);
                     nc.Headers.Add(HttpRequestHeader.Referer, referer);
+                    f.Status = FileQueueStateInfo.DownloadStatus.Downloading;
 
                     int count = 0;
-                    while (count < 20)
+                    while (true)
                     {
+                        f.RetryCount = count;
 
-                        byte[] file_data = null;
+                        if (count >= 30)
+                        {
+                            Program.LogMessage(new LogEntry()
+                            {
+                                Level = LogEntry.LogLevel.Fail,
+                                Message = string.Format("Failed to download file '{0}', exceeded retry count of 30", f.Url),
+                                Sender = "FileDumper",
+                                Title = "-"
+                            });
+                            break;
+                        }
+
+                        //  byte[] file_data = null;
 
                         try
                         {
-                            file_data = nc.DownloadData(url);
 
-                            int length = -1;
-
-                            Int32.TryParse(Convert.ToString(nc.ResponseHeaders[HttpRequestHeader.ContentLength]), out length);
-
-                            if (length > 0)
+                            using (Stream s = nc.OpenRead(url))
                             {
-                                if (file_data.Length != length)
+                                WebHeaderCollection whc = nc.ResponseHeaders;
+
+                                string content_length = whc[HttpRequestHeader.ContentLength];
+
+                                double total_length = Convert.ToDouble(content_length);
+
+                                f.Length = total_length;
+
+                                int b_s = 0;
+
+                                byte[] buffer = new byte[2048];
+
+                                using (FileStream fs = new FileStream(save_path, FileMode.OpenOrCreate, FileAccess.ReadWrite))
                                 {
-                                    //corrupte file, redownload.
-                                    count++;
-                                    continue;
+                                    while ((b_s = s.Read(buffer, 0, 2048)) > 0)
+                                    {
+                                        fs.Write(buffer, 0, b_s);
+                                        f.Downloaded += b_s;
+                                        if (f.Type == FileQueueStateInfo.FileType.Thumbnail) { NetworkUsageCounter.ThumbConsumed += b_s; }
+                                        if (f.Type == FileQueueStateInfo.FileType.FullFile) { NetworkUsageCounter.FileConsumed += b_s; }
+                                    }
                                 }
                             }
 
-                            File.WriteAllBytes(save_path, file_data);
+                            Program.LogMessage(new LogEntry()
+                            {
+                                Level = LogEntry.LogLevel.Success,
+                                Message = string.Format("Downloaded file '{0}' successfully", f.Url),
+                                Sender = "FileDumper",
+                                Title = "-"
+                            });
+
+
+                            /* file_data = nc.DownloadData(url);
+
+                             if (length > 0)
+                             {
+                                 if (file_data.Length != length)
+                                 {
+                                     //corrupte file, redownload.
+
+                                     if (file_type == "thumb") { NetworkUsageCounter.ThumbConsumed += file_data.Length; }
+                                     if (file_type == "file") { NetworkUsageCounter.FileConsumed += file_data.Length; }
+
+                                     count++;
+                                     continue;
+                                 }
+                             }
+
+                             File.WriteAllBytes(save_path, file_data);
+
+                             if (file_type == "thumb") { NetworkUsageCounter.ThumbConsumed += file_data.Length; }
+                             if (file_type == "file") { NetworkUsageCounter.FileConsumed += file_data.Length; }*/
+
                             break;
                         }
-                        catch (Exception)
+                        catch (Exception ex)
                         {
+
+                            Program.LogMessage(new LogEntry()
+                            {
+                                Level = LogEntry.LogLevel.Warning,
+                                Message = string.Format("Error occured while downloading file '{0}': {1} @ {2}", f.Url, ex.Message, ex.StackTrace),
+                                Sender = "FileDumper",
+                                Title = "-"
+                            });
+
                             count++;
                         }
                     }
+
+                    queued_files.Remove(key);
                     return;
                 }
             }
         }
 
-        private static string base64tostring(string s)
+        private static FileQueueStateInfo get_file_state(string hash)
+        {
+            if (queued_files.ContainsKey(hash))
+            {
+                return queued_files[hash];
+
+            }
+            else
+            {
+                FileQueueStateInfo a = new FileQueueStateInfo(hash);
+                queued_files.Add(hash, a);
+                return a;
+            }
+        }
+
+        public static string base64tostring(string s)
         {
             StringBuilder sb = new StringBuilder();
             foreach (byte b in Convert.FromBase64String(s))
@@ -428,6 +420,45 @@ namespace ChanArchiver
             return sb.ToString().ToLower();
         }
 
+        public static string format_size_string(double size)
+        {
+            double KB = 1024;
+            double MB = 1048576;
+            double GB = 1073741824;
+            if (size < KB)
+            {
+                return size.ToString() + " B";
+            }
+            else if (size > KB & size < MB)
+            {
+                return Math.Round(size / KB, 2).ToString() + " KB";
+            }
+            else if (size > MB & size < GB)
+            {
+                return Math.Round(size / MB, 2).ToString() + " MB";
+            }
+            else if (size > GB)
+            {
+                return Math.Round(size / GB, 2).ToString() + " GB";
+            }
+            else
+            {
+                return Convert.ToString(size);
+            }
+        }
+
+        public static List<LogEntry> logs = new List<LogEntry>();
+
+        public static void LogMessage(LogEntry entry)
+        {
+            if (verbose)
+            {
+                //[Level] Time (sender - title) : message
+                Console.WriteLine("[{0}] {1} {2}: {3}", entry.Level.ToString(), entry.Time.ToShortDateString() + entry.Time.ToShortTimeString(), entry.Title == "-" ? string.Format("({0})", entry.Sender) : string.Format("({0} - {1})", entry.Sender, entry.Title), entry.Message);
+            }
+
+            logs.Add(entry);
+        }
 
     }
 }
