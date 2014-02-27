@@ -25,18 +25,15 @@ namespace ChanArchiver
 
         public string Url { get; set; }
 
-        public string Percent
+        public string Percent()
         {
-            get
+            if (this.Length == 0)
             {
-                if (this.Length == 0)
-                {
-                    return "0 %";
-                }
-                else
-                {
-                    return string.Format("{0} %", Math.Round(Convert.ToDouble(Downloaded) / Convert.ToDouble(Length), MidpointRounding.AwayFromZero) * 100);
-                }
+                return "0 %";
+            }
+            else
+            {
+                return string.Format("{0} %", Math.Round(Convert.ToDouble(Downloaded) / Convert.ToDouble(Length), MidpointRounding.AwayFromZero) * 100);
             }
         }
 

@@ -16,7 +16,7 @@ namespace ChanArchiver
         public bool StartedByBW { get; set; }
         private BackgroundWorker worker;
 
-        public bool IsActive { get { return this.worker.IsBusy; } }
+        public bool IsActive { get { return this.worker.IsBusy | running; } }
 
         public ThreadWorker(BoardWatcher board, int id)
         {
@@ -31,13 +31,15 @@ namespace ChanArchiver
 
         int old_replies_count = 0;
 
+        private bool running = true;
+
         private void worker_DoWork(object sender, DoWorkEventArgs e)
         {
             string thread_folder = Path.Combine(Program.post_files_dir, this.Board.Board, this.ID.ToString());
 
             Directory.CreateDirectory(thread_folder);
 
-            while (true)
+            while (running)
             {
                 ThreadContainer tc = null;
                 try
@@ -117,11 +119,30 @@ namespace ChanArchiver
 
                 }
             }
+
+
+            Program.LogMessage(new LogEntry()
+            {
+                Level = LogEntry.LogLevel.Success,
+                Message = "Stopped thread worker successfully",
+                Sender = "ThreadWorker",
+                Title = string.Format("/{0}/ - {1}", this.Board.Board, this.ID)
+            });
+
         }
 
         public void Stop() 
         {
+            running = false;
             worker.CancelAsync();
+
+            Program.LogMessage(new LogEntry()
+            {
+                Level = LogEntry.LogLevel.Info,
+                Message = "Stopping thread worker...",
+                Sender = "ThreadWorker",
+                Title = string.Format("/{0}/ - {1}", this.Board.Board, this.ID)
+            });
         }
 
         private static string get_post_string(GenericPost gp)
@@ -203,7 +224,7 @@ namespace ChanArchiver
 
         public void Start()
         {
-            if (!worker.IsBusy) { worker.RunWorkerAsync(); }
+            if (!worker.IsBusy) { running = true; worker.RunWorkerAsync(); }
         }
 
         public delegate void Thread404Event(ThreadWorker instance);

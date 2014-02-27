@@ -320,7 +320,7 @@ namespace ChanArchiver
                             {
                                 WebHeaderCollection whc = nc.ResponseHeaders;
 
-                                string content_length = whc[HttpRequestHeader.ContentLength];
+                                string content_length = whc[HttpResponseHeader.ContentLength];
 
                                 double total_length = Convert.ToDouble(content_length);
 
@@ -335,7 +335,7 @@ namespace ChanArchiver
                                     while ((b_s = s.Read(buffer, 0, 2048)) > 0)
                                     {
                                         fs.Write(buffer, 0, b_s);
-                                        f.Downloaded += b_s;
+                                        f.Downloaded += Convert.ToDouble(b_s);
                                         if (f.Type == FileQueueStateInfo.FileType.Thumbnail) { NetworkUsageCounter.ThumbConsumed += b_s; }
                                         if (f.Type == FileQueueStateInfo.FileType.FullFile) { NetworkUsageCounter.FileConsumed += b_s; }
                                     }

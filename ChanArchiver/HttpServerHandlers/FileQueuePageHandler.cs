@@ -47,7 +47,7 @@ namespace ChanArchiver.HttpServerHandlers
 
                         sb.AppendFormat("<td>{0}</td>", f.Url);
 
-                        sb.AppendFormat("<td>{0}</td>", f.Percent);
+                        sb.AppendFormat("<td>{0}</td>", f.Percent());
                         sb.Append("</tr>");
 
                     }
