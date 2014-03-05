@@ -35,6 +35,9 @@ namespace ChanArchiver.HttpServerHandlers
                             case FileQueueStateInfo.DownloadStatus.Error:
                                 sb.Append("<td><span class=\"label label-danger\">Error</span></td>");
                                 break;
+                            case FileQueueStateInfo.DownloadStatus.Complete:
+                                sb.Append("<td><span class=\"label label-success\">Complete</span></td>");
+                                break;
                             default:
                                 sb.Append("<td><span class=\"label label-default\">Unkown</span></td>");
                                 break;
@@ -47,7 +50,10 @@ namespace ChanArchiver.HttpServerHandlers
 
                         sb.AppendFormat("<td>{0}</td>", f.Url);
 
-                        sb.AppendFormat("<td>{0}</td>", f.Percent());
+                        sb.AppendFormat("<td>{0} %</td>", Math.Round(f.Percent(), 2));
+
+                        sb.AppendFormat("<td> <a href=\"/fileinfo/{0}{1}\" class=\"label label-primary\">Info</a> </td>", f.Type == FileQueueStateInfo.FileType.FullFile ? "file" : "thumb", f.Hash);
+
                         sb.Append("</tr>");
 
                     }

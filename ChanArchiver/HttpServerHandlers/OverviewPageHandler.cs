@@ -183,26 +183,38 @@ namespace ChanArchiver.HttpServerHandlers
     {
         public DirectoryStats(string path)
         {
-
-            DirectoryInfo df = new DirectoryInfo(path);
-
-            FileInfo[] All_Files = df.GetFiles("*", SearchOption.AllDirectories);
-
-            this.FileCount = All_Files.Length;
-
-            IOrderedEnumerable<FileInfo> sorted = All_Files.OrderBy(x => x.Length); // ;_; poor poor poor performance
-
-            for (int index = 0; index < this.FileCount; index++)
+            if (Directory.Exists(path))
             {
-                FileInfo fifo = All_Files[index];
-                this.Size += fifo.Length;
+                DirectoryInfo df = new DirectoryInfo(path);
+
+                FileInfo[] All_Files = df.GetFiles("*", SearchOption.AllDirectories);
+
+                this.FileCount = All_Files.Length;
+
+                IOrderedEnumerable<FileInfo> sorted = All_Files.OrderBy(x => x.Length); // ;_; poor poor poor performance
+
+                for (int index = 0; index < this.FileCount; index++)
+                {
+                    FileInfo fifo = All_Files[index];
+                    this.Size += fifo.Length;
+                }
+
+                if (sorted.Count() > 0)
+                {
+                    this.BiggestFile = sorted.Last().Length;
+                    this.SmallestFile = sorted.First().Length;
+                }
+                else
+                {
+                    this.BiggestFile = 0;
+                    this.SmallestFile = 0;
+                }
+
+                if (this.FileCount > 0)
+                {
+                    this.AverageFileSize = Convert.ToInt32(this.Size / this.FileCount);
+                }
             }
-
-            this.BiggestFile = sorted.Last().Length;
-            this.SmallestFile = sorted.First().Length;
-
-
-            this.AverageFileSize = Convert.ToInt32(this.Size / this.FileCount);
         }
 
         public int FileCount { get; private set; }

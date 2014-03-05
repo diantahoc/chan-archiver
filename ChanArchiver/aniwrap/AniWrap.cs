@@ -81,6 +81,7 @@ namespace AniWrap
 
         }
 
+        /*
         public ThreadContainer[] GetPage(string board, int page)
         {
             APIResponse response = LoadAPI("http://api.4chan.org/%/$.json".Replace("%", board).Replace("$", page.ToString()));
@@ -124,7 +125,7 @@ namespace AniWrap
                 default:
                     return null;
             }
-        }
+        }*/
 
         public ThreadContainer GetThreadData(string board, int id)
         {
@@ -501,6 +502,8 @@ namespace AniWrap
 
         #endregion
 
+        private static readonly DateTime old_date = DateTime.Now.Subtract(new TimeSpan(365, 0, 0, 0));
+
         private APIResponse LoadAPI(string url)
         {
             string hash = Common.MD5(url);
@@ -508,95 +511,57 @@ namespace AniWrap
             string file_path = Path.Combine(_cache_dir, hash); // contain the last fetch date
             string file_path_data = Path.Combine(_cache_dir, hash + "_data");
 
-            DateTime d;
+            DateTime d = old_date;
 
-            APIResponse result;
+            APIResponse result = null;
 
             if (File.Exists(file_path))
             {
                 d = parse_datetime(File.ReadAllText(file_path));
             }
-            else
-            {
-                d = DateTime.UtcNow.Subtract(new TimeSpan(365, 0, 0, 0, 0));
-            }
 
             HttpWebRequest wr = (HttpWebRequest)HttpWebRequest.Create(url);
 
-
             wr.IfModifiedSince = d;
-            wr.UserAgent = "AniWrap Library";
+
+            wr.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:26.0) Gecko/20100101 Firefox/26.0";
 
             WebResponse wbr = null;
 
             try
             {
-
+                byte[] data;
+                
                 wbr = wr.GetResponse();
 
-                byte[] data;
-
-                Stream s = wbr.GetResponseStream();
-                string content_length = wbr.Headers["Content-Length"];
-
-                //int totalLength = Int32.Parse(content_length);
-
-                int iByteSize = 0;
-
-                byte[] byteBuffer = new byte[1024];
-
-                MemoryStream MemIo = new MemoryStream();
-
-                int total_processed = 0;
-
-                while ((iByteSize = s.Read(byteBuffer, 0, 1024)) > 0)
+                using (Stream s = wbr.GetResponseStream())
                 {
-                    MemIo.Write(byteBuffer, 0, iByteSize);
+                    int iByteSize = 0;
 
-                    total_processed += iByteSize;
+                    byte[] byteBuffer = new byte[2048];
 
-                    /*   if (callback != null)
-                       {
-                           double dIndex = Convert.ToDouble(total_processed);
-
-                           double dTotal = Convert.ToDouble(totalLength);
-
-                           int p = Convert.ToInt32((dIndex / dTotal) * 100);
-
-                           callback(p);
-                       }*/
+                    using (MemoryStream MemIo = new MemoryStream())
+                    {
+                        while ((iByteSize = s.Read(byteBuffer, 0, 2048)) > 0)
+                        {
+                            MemIo.Write(byteBuffer, 0, iByteSize);
+                            ChanArchiver.NetworkUsageCounter.ApiConsumed += iByteSize;
+                        }
+                        data = MemIo.ToArray();
+                    }
                 }
-
-                byteBuffer = null;
-                s.Close();
-                data = MemIo.ToArray();
-                MemIo.Close();
-                MemIo.Dispose();
-
-                ChanArchiver.NetworkUsageCounter.ApiConsumed += data.Length;// HACK
-
-                //MemoryStream s = new MemoryStream();
-
-                //using (var a = wbr.GetResponseStream()){a.CopyTo(s);}
 
                 string text = System.Text.Encoding.UTF8.GetString(data.ToArray());
 
-                //s.Close();
-
-                //Dictionary<string, object> dic = new Dictionary<string, object>();
-
-                //foreach (string q in wbr.Headers.AllKeys) 
-                //{ 
-                //    dic.Add(q, wbr.Headers[q]);
-                //}
-
                 string lm = wbr.Headers["Last-Modified"];
+
                 DateTime lmm = DateTime.Parse(lm);
 
                 File.WriteAllText(file_path, datetime_tostring(lmm));
                 File.WriteAllText(file_path_data, text);
 
                 result = new APIResponse(text, APIResponse.ErrorType.NoError);
+
             }
             catch (WebException wex)
             {
@@ -605,8 +570,7 @@ namespace AniWrap
                 {
                     if (httpResponse.StatusCode == HttpStatusCode.NotModified)
                     {
-                        bool data_file_exist = File.Exists(file_path_data);
-                        if (data_file_exist)
+                        if (File.Exists(file_path_data))
                         {
                             result = new APIResponse(File.ReadAllText(file_path_data), APIResponse.ErrorType.NoError);
                         }
@@ -621,6 +585,9 @@ namespace AniWrap
                     else if (httpResponse.StatusCode == HttpStatusCode.NotFound)
                     {
                         result = new APIResponse(null, APIResponse.ErrorType.NotFound);
+                        //delete api files since resource has 404'ed
+                        delete_file(file_path);
+                        delete_file(file_path_data);
                     }
                     else
                     {

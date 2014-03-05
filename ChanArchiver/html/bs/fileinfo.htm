@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
@@ -9,7 +9,7 @@
     <meta name="author" content=""/>
     <link rel="shortcut icon" href="/res/favicon.ico"/>
 
-    <title>[ChanArchiver] - File Queue</title>
+    <title>[ChanArchiver] - File Info</title>
 
     <!-- Bootstrap core CSS -->
     <link href="/res/bootstrap.css" rel="stylesheet"/>
@@ -54,7 +54,7 @@
             <li>
               <a href="/">Overview</a>
             </li>
-                        
+
             <li class="active">
               <a href="/fq">File Queue</a>
             </li>
@@ -70,35 +70,73 @@
 
         <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
 
-          <h1 class="page-header">File Queue</h1>
+          <h1 class="page-header">File Info</h1>
 
-          <div class="panel panel-default">
-            <div class="panel-heading">Actions</div>
-            <div class="panel-body">
-              <a href="/action/restartfailedfiles" class="btn btn-default">Restart failed files</a>
-              <a href="/action/removecompletefiles" class="btn btn-default">Remove complete files</a>
+          <div class="row">
+
+            <div class="col-xs-6 col-md-3">
+              <a href="{fullfilelink}" class="thumbnail">
+                <img src="{thumbsource}" alt="{url}" style="min-width: 128px; min-heigth: 128px"/>
+              </a>
             </div>
+
+            <div>
+              
+              <span>Name :</span>
+              <code>{name}</code>
+              <br/>
+              
+              <span>Url: </span>
+              <a href="{url}">{url}</a>
+
+              <br/>
+              <span>Hash (MD5):</span>
+              <code>{md5}</code>
+              <br/>
+              
+              <span>Job type :</span>
+              <code>{jtype}</code>
+              <br/>
+              
+              <span>Retry count:</span>
+              <code>{rcount}</code>
+
+              
+              
+              <br/>
+              <br/>
+              <div class="progress progress-striped active">
+                <div class="progress-bar" role="progressbar" aria-valuenow="{p}" aria-valuemin="0" aria-valuemax="100" style="width: {p}%;">
+                  <span>{downloaded} / {length}</span>
+                </div>
+              </div>
+
+            </div>
+
+            <div>
+              <a href="/action/restartfile/{workid}" class="btn btn-default">Restart</a>
+              <a href="/action/removefile/{workid}" class="btn btn-default">Remove</a>
+              <a href="/action/resetcount/{workid}" class="btn btn-default">Reset retry count</a>
+            </div>
+
           </div>
+
+          <hr/>
           
+          <h1 class="page-header">File logs</h1>
           <div class="table-responsive">
             <table class="table table-striped">
               <thead>
-                
                 <tr>
-                  <th>Status</th>
-                  <th># of retries</th>
-                  <th>Type</th>
-                  <th>MD5</th>
-                  <th>URL</th>
-                  <th>%</th>
-                  <th>Info</th>
+                  <th>Level</th>
+                  <th>Time</th>
+                  <th>Title</th>
+                  <th>Sender</th>
+                  <th>Message</th>
                 </tr>
-                
               </thead>
               <tbody>
-
-                {Files}
-
+                {Logs}
               </tbody>
             </table>
           </div>

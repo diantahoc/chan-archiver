@@ -39,6 +39,8 @@ namespace ChanArchiver.HttpServerHandlers
                         sb.AppendFormat("<td>{0}</td>", "N/A");
                         sb.AppendFormat("<td>{0}</td>", "-");
 
+                        sb.AppendFormat("<td> <a href='/logs/{0}/{1}' class='label label-primary'>Logs</a> </td>", "boardwatcher", bw.Board);
+
                         sb.Append("</tr>");
 
 
@@ -64,6 +66,8 @@ namespace ChanArchiver.HttpServerHandlers
                                 sb.AppendFormat("<td>{0}</td>", string.Format("/{0}/", bw.Board));
                                 sb.AppendFormat("<td>{0}</td>", tw.ID);
                                 sb.AppendFormat("<td>{0}</td>", tw.LastUpdated);
+
+                                sb.AppendFormat("<td> <a href='/logs/{0}/{1}/{2}' class='label label-primary'>Logs</a> </td>", "threadworker", bw.Board, tw.ID);
 
                                 sb.Append("</tr>");
                             }

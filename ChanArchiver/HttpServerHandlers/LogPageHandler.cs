@@ -11,66 +11,113 @@ namespace ChanArchiver.HttpServerHandlers
         {
             string command = request.UriPath.ToString();
 
-            if (command == "/logs")
+            if (command.StartsWith("/logs/"))
             {
+                string[] a = command.Split('/');
 
-
-                StringBuilder items = new StringBuilder();
-
-                for (int index = 0; index < Program.logs.Count; index++)
+                if (a.Length >= 3)
                 {
 
-                    try
+                    string mode = a[2];
+
+                    string id = a[3];
+
+                    LogEntry[] data = null;
+
+                    switch (mode)
                     {
-                        LogEntry e = Program.logs[index];
+                        case "file":
+                            FileQueueStateInfo st = Program.get_file_state(id);
+                            if (st != null)
+                            {
+                                data = st.Logs;
+                            }
+                            break;
+                        case "threadworker": // /logs/threadworker/board/tid
+                            if (Program.active_dumpers.ContainsKey(id))
+                            {
+                                BoardWatcher bw = Program.active_dumpers[id];
+                                if (bw.watched_threads.ContainsKey(Convert.ToInt32(a[4])))
+                                {
+                                    data = bw.watched_threads[Convert.ToInt32(a[4])].Logs;
+                                }
+                            }
+                            break;
+                        case "boardwatcher":
+                            if (Program.active_dumpers.ContainsKey(id))
+                            {
+                                BoardWatcher bw = Program.active_dumpers[id];
+                                data = bw.Logs;
+                            }
+                            break;
+                        default:
+                            break;
+                    }
 
-                        items.Append("<tr>");
+                    if (data != null)
+                    {
+                        StringBuilder items = new StringBuilder();
 
-                        switch (e.Level)
+                        for (int index = 0; index < data.Length; index++)
                         {
-                            case LogEntry.LogLevel.Fail:
-                                items.Append("<td><span class=\"label label-danger\">Fail</span></td>");
-                                break;
-                            case LogEntry.LogLevel.Info:
-                                items.Append("<td><span class=\"label label-info\">Info</span></td>");
-                                break;
-                            case LogEntry.LogLevel.Success:
-                                items.Append("<td><span class=\"label label-success\">Success</span></td>");
-                                break;
-                            case LogEntry.LogLevel.Warning:
-                                items.Append("<td><span class=\"label label-warning\">Warning</span></td>");
-                                break;
-                            default:
-                                items.Append("<td><span class=\"label label-default\">Unknown</span></td>");
-                                break;
+
+                            try
+                            {
+                                LogEntry e = data[index];
+
+                                items.Append("<tr>");
+
+                                switch (e.Level)
+                                {
+                                    case LogEntry.LogLevel.Fail:
+                                        items.Append("<td><span class=\"label label-danger\">Fail</span></td>");
+                                        break;
+                                    case LogEntry.LogLevel.Info:
+                                        items.Append("<td><span class=\"label label-info\">Info</span></td>");
+                                        break;
+                                    case LogEntry.LogLevel.Success:
+                                        items.Append("<td><span class=\"label label-success\">Success</span></td>");
+                                        break;
+                                    case LogEntry.LogLevel.Warning:
+                                        items.Append("<td><span class=\"label label-warning\">Warning</span></td>");
+                                        break;
+                                    default:
+                                        items.Append("<td><span class=\"label label-default\">Unknown</span></td>");
+                                        break;
+                                }
+
+                                items.AppendFormat("<td>{0}</td>", e.Time);
+                                items.AppendFormat("<td>{0}</td>", e.Title);
+                                items.AppendFormat("<td>{0}</td>", e.Sender);
+                                items.AppendFormat("<td>{0}</td>", e.Message);
+
+                                items.Append("</tr>");
+
+                            }
+                            catch (Exception) { continue; }
+
                         }
 
-                        items.AppendFormat("<td>{0}</td>", e.Time);
-                        items.AppendFormat("<td>{0}</td>", e.Title);
-                        items.AppendFormat("<td>{0}</td>", e.Sender);
-                        items.AppendFormat("<td>{0}</td>", e.Message);
+                        //write everything
+                        response.Status = System.Net.HttpStatusCode.OK;
+                        response.ContentType = "text/html";
 
-                        items.Append("</tr>");
+                        byte[] fdata = Encoding.UTF8.GetBytes(Properties.Resources.logs_page.Replace("{Logs}", items.ToString()));
+                        response.ContentLength = fdata.Length;
+                        response.SendHeaders();
+                        response.SendBody(fdata);
 
+                        return true;
                     }
-                    catch (Exception)
+                    else 
                     {
-                        if (index >= Program.logs.Count) { break; }
+                        //404
+                        return false;
                     }
-
                 }
-
-                //write everything
-                response.Status = System.Net.HttpStatusCode.OK;
-                response.ContentType = "text/html";
-
-                byte[] data = Encoding.UTF8.GetBytes(Properties.Resources.logs_page.Replace("{Logs}", items.ToString()));
-                response.ContentLength = data.Length;
-                response.SendHeaders();
-                response.SendBody(data);
-
-                return true;
             }
+
+
 
             return false;
         }

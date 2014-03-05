@@ -43,7 +43,7 @@
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\AniWrap\AniWrap\bin\Release\Newtonsoft.Json.dll</HintPath>
+      <HintPath>..\..\..\..\..\Desktop\chanb pro\Json50r6\Bin\Net20\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -100,6 +100,7 @@
     <Compile Include="FileFormatter.cs" />
     <Compile Include="FileQueueStateInfo.cs" />
     <Compile Include="HttpServerHandlers\FileHandler.cs" />
+    <Compile Include="HttpServerHandlers\FileInfoPageHandler.cs" />
     <Compile Include="HttpServerHandlers\FileQueuePageHandler.cs" />
     <Compile Include="HttpServerHandlers\LogPageHandler.cs" />
     <Compile Include="HttpServerHandlers\OverviewPageHandler.cs" />
@@ -171,7 +172,7 @@
     <Compile Include="stp\WorkItemsGroup.cs" />
     <Compile Include="stp\WorkItemsGroupBase.cs" />
     <Compile Include="stp\WorkItemsQueue.cs" />
-    <Compile Include="ThreadServerModule.cs" />
+    <Compile Include="HttpServerHandlers\ThreadServerModule.cs" />
     <Compile Include="ThreadWorker.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -184,7 +185,10 @@
   <ItemGroup>
     <Content Include="html\4" />
     <EmbeddedResource Include="html\full_page.html" />
-    <Content Include="html\bs\dashboard.htm" />
+    <Content Include="html\bs\dashboard.htm">
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="html\bs\fileinfo.htm" />
     <Content Include="html\bs\filequeue.htm" />
     <Content Include="html\bs\logs.htm" />
     <Content Include="html\bs\res\bootstrap.css" />
@@ -192,7 +196,9 @@
     <Content Include="html\bs\res\dashboard.css" />
     <Content Include="html\bs\res\docs.js" />
     <Content Include="html\bs\res\jquery.js" />
-    <Content Include="html\bs\wjobs.htm" />
+    <Content Include="html\bs\wjobs.htm">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="html\image_file.html" />
     <Content Include="html\layout.css" />
     <Content Include="html\op_post.html" />

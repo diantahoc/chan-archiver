@@ -1,23 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta http-equiv="content-type" content="text/html; charset=UTF-8">
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <link rel="shortcut icon" href="/favicon.ico">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta name="description" content=""/>
+    <meta name="author" content=""/>
+    <link rel="shortcut icon" href="/res/favicon.ico"/>
 
-    <title>ChanARCHIVER</title>
+    <title>[ChanArchiver] - Watch Jobs</title>
 
     <!-- Bootstrap core CSS -->
-    <link href="/res/bootstrap.css" rel="stylesheet">
+    <link href="/res/bootstrap.css" rel="stylesheet"/>
 
     <!-- Custom styles for this template -->
-    <link href="/res/dashboard.css" rel="stylesheet">
+    <link href="/res/dashboard.css" rel="stylesheet"/>
 
-  <style type="text/css" id="holderjs-style"></style></head>
+    <style type="text/css" id="holderjs-style"></style>
+  </head>
 
   <body>
 
@@ -30,12 +31,16 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="/">ChanARCHIVER</a>
+          <a class="navbar-brand" href="/">ChanArchiver</a>
         </div>
         <div class="navbar-collapse collapse">
           <ul class="nav navbar-nav navbar-right">
-            <li><a href="/boards">Archived Boards</a></li>
-            <li><a href="https://github.com/diantahoc/chan-archiver" target="_blank">Github</a></li>
+            <li>
+              <a href="/boards">Archived Boards</a>
+            </li>
+            <li>
+              <a href="https://github.com/diantahoc/chan-archiver" target="_blank">Github</a>
+            </li>
           </ul>
         </div>
       </div>
@@ -44,52 +49,67 @@
     <div class="container-fluid">
       <div class="row">
         <div class="col-sm-3 col-md-2 sidebar">
-		
+
           <ul class="nav nav-sidebar">
-            <li><a href="/">Overview</a></li>
-            <li><a href="/logs">Logs</a></li>
-            <li><a href="/fq">File Queue</a></li>
+            <li>
+              <a href="/">Overview</a>
+            </li>
+           
+            <!--<li>
+              <a href="/logs">Logs</a>
+            </li>-->
+            
+            <li>
+              <a href="/fq">File Queue</a>
+            </li>
           </ul>
-		  
+
           <ul class="nav nav-sidebar">
-              <li class="active"><a href="/wjobs">Watch Jobs</a></li>
+            <li class="active">
+              <a href="/wjobs">Watch Jobs</a>
+            </li>
           </ul>
-          
+
         </div>
-        
-		<div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+
+        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
           <h1 class="page-header">Watch Jobs</h1>
-          
-<div class="row">
 
-<form action="/add/thread/">
- <div class="col-lg-6">
-    <div class="input-group">
-      <div class="input-group"><input name="boardletter" type="text" class="form-control" placeholder="board letter">
-	   <input name="threadid" type="text" class="form-control" placeholder="thread id"> </div>
+          <div class="row">
 
-        <button class="btn btn-default" type="submit">Watch thread</button>
-      
-    </div><!-- /input-group -->
-  </div><!-- /.col-lg-6 -->
-  </form>
-  
-  <form action="/add/board/">
- <div class="col-lg-6">
-    <div class="input-group">
-      <input name="boardletter" type="text" class="form-control" placeholder="board letter">
-     
-        <button class="btn btn-default" type="submit">Watch board</button>
-      
-    </div><!-- /input-group -->
-  </div><!-- /.col-lg-6 -->
-  </form>
-  
-</div><!-- /.row -->
+            <form action="/add/thread/">
+              <div class="col-lg-6">
+                <span>
+                  Enter 4chan thread URL or text in this format <code>board:threadid</code>
+                </span>
+                <div class="input-group">
 
-<hr/>
-		  
-		  <div class="table-responsive">
+                  <input name="urlorformat" type="text" class="form-control" placeholder="4chan thread url or board:threadid"/>
+
+                  <button class="btn btn-default" type="submit">Watch thread</button>
+                </div>
+              </div>
+            </form>
+
+            <form action="/add/board/">
+              <div class="col-lg-6">
+                <div class="input-group">
+                  <input name="boardletter" type="text" class="form-control" placeholder="board letter"/>
+
+                  <button class="btn btn-default" type="submit">Watch board</button>
+
+                </div>
+                <!-- /input-group -->
+              </div>
+              <!-- /.col-lg-6 -->
+            </form>
+
+          </div>
+          <!-- /.row -->
+
+          <hr/>
+
+          <div class="table-responsive">
             <table class="table table-striped">
               <thead>
                 <tr>
@@ -97,19 +117,19 @@
                   <th>Type</th>
                   <th>Board</th>
                   <th>ID</th>
-				  <th>Last updated</th>
-				  
+                  <th>Last updated</th>
+                  <th>Logs</th>
                 </tr>
               </thead>
               <tbody>
-			  
-      {Items}
-				
+
+                {Items}
+
               </tbody>
             </table>
           </div>
-		 	 
-		  
+
+
         </div>
       </div>
     </div>
@@ -120,6 +140,7 @@
     <script src="/res/jquery.js"></script>
     <script src="/res/bootstrap.js"></script>
     <script src="/res/docs.js"></script>
-  
 
-</body></html>
+
+  </body>
+</html>

@@ -159,19 +159,19 @@ namespace ChanArchiver.Properties {
         /// <summary>
         ///   Looks up a localized string similar to &lt;!DOCTYPE html&gt;
         ///&lt;html lang=&quot;en&quot;&gt;
-        ///&lt;head&gt;
-        ///&lt;meta http-equiv=&quot;content-type&quot; content=&quot;text/html; charset=UTF-8&quot;&gt;
-        ///    &lt;meta charset=&quot;utf-8&quot;&gt;
-        ///    &lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=edge&quot;&gt;
-        ///    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;
-        ///    &lt;meta name=&quot;description&quot; content=&quot;&quot;&gt;
-        ///    &lt;meta name=&quot;author&quot; content=&quot;&quot;&gt;
-        ///    &lt;link rel=&quot;shortcut icon&quot; href=&quot;/favicon.ico&quot;&gt;
+        ///  &lt;head&gt;
+        ///    &lt;meta http-equiv=&quot;content-type&quot; content=&quot;text/html; charset=UTF-8&quot;/&gt;
+        ///    &lt;meta charset=&quot;utf-8&quot;/&gt;
+        ///    &lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=edge&quot;/&gt;
+        ///    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;/&gt;
+        ///    &lt;meta name=&quot;description&quot; content=&quot;&quot;/&gt;
+        ///    &lt;meta name=&quot;author&quot; content=&quot;&quot;/&gt;
+        ///    &lt;link rel=&quot;shortcut icon&quot; href=&quot;/res/favicon.ico&quot;/&gt;
         ///
-        ///    &lt;title&gt;ChanARCHIVER&lt;/title&gt;
+        ///    &lt;title&gt;[ChanArchiver] - Overview&lt;/title&gt;
         ///
         ///    &lt;!-- Bootstrap core CSS --&gt;
-        ///    &lt;link href=&quot;/res/bootstrap.css&quot; re [rest of string was truncated]&quot;;.
+        ///    &lt;lin [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string dashboard_page {
             get {
@@ -200,19 +200,42 @@ namespace ChanArchiver.Properties {
         /// <summary>
         ///   Looks up a localized string similar to &lt;!DOCTYPE html&gt;
         ///&lt;html lang=&quot;en&quot;&gt;
-        ///&lt;head&gt;
-        ///&lt;meta http-equiv=&quot;content-type&quot; content=&quot;text/html; charset=UTF-8&quot;&gt;
-        ///    &lt;meta charset=&quot;utf-8&quot;&gt;
-        ///    &lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=edge&quot;&gt;
-        ///    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;
-        ///    &lt;meta name=&quot;description&quot; content=&quot;&quot;&gt;
-        ///    &lt;meta name=&quot;author&quot; content=&quot;&quot;&gt;
-        ///    &lt;link rel=&quot;shortcut icon&quot; href=&quot;/favicon.ico&quot;&gt;
+        ///  &lt;head&gt;
+        ///    &lt;meta http-equiv=&quot;content-type&quot; content=&quot;text/html; charset=UTF-8&quot;/&gt;
+        ///    &lt;meta charset=&quot;utf-8&quot;/&gt;
+        ///    &lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=edge&quot;/&gt;
+        ///    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;/&gt;
+        ///    &lt;meta name=&quot;description&quot; content=&quot;&quot;/&gt;
+        ///    &lt;meta name=&quot;author&quot; content=&quot;&quot;/&gt;
+        ///    &lt;link rel=&quot;shortcut icon&quot; href=&quot;/res/favicon.ico&quot;/&gt;
         ///
-        ///    &lt;title&gt;ChanARCHIVER&lt;/title&gt;
+        ///    &lt;title&gt;[ChanArchiver] - File Info&lt;/title&gt;
         ///
         ///    &lt;!-- Bootstrap core CSS --&gt;
-        ///    &lt;link href=&quot;/res/bootstrap.css&quot; re [rest of string was truncated]&quot;;.
+        ///    &lt;li [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string fileinfo {
+            get {
+                return ResourceManager.GetString("fileinfo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;!DOCTYPE html&gt;
+        ///&lt;html lang=&quot;en&quot;&gt;
+        ///  &lt;head&gt;
+        ///    &lt;meta http-equiv=&quot;content-type&quot; content=&quot;text/html; charset=UTF-8&quot;/&gt;
+        ///    &lt;meta charset=&quot;utf-8&quot;/&gt;
+        ///    &lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=edge&quot;/&gt;
+        ///    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;/&gt;
+        ///    &lt;meta name=&quot;description&quot; content=&quot;&quot;/&gt;
+        ///    &lt;meta name=&quot;author&quot; content=&quot;&quot;/&gt;
+        ///    &lt;link rel=&quot;shortcut icon&quot; href=&quot;/res/favicon.ico&quot;/&gt;
+        ///
+        ///    &lt;title&gt;[ChanArchiver] - File Queue&lt;/title&gt;
+        ///
+        ///    &lt;!-- Bootstrap core CSS --&gt;
+        ///    &lt;l [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string filequeue_page {
             get {
@@ -226,7 +249,7 @@ namespace ChanArchiver.Properties {
         ///  &lt;head&gt;
         ///    &lt;meta charset=&quot;utf-8&quot;&gt;&lt;/meta&gt;
         ///    &lt;title&gt;ChanARCHIVER&lt;/title&gt;
-        ///    &lt;link rel=&quot;stylesheet&quot; href=&quot;/css/css.css&quot; /&gt;
+        ///    &lt;link rel=&quot;stylesheet&quot; href=&quot;/res/css.css&quot; /&gt;
         ///  &lt;/head&gt;
         ///
         ///  &lt;body&gt;
@@ -441,19 +464,19 @@ namespace ChanArchiver.Properties {
         /// <summary>
         ///   Looks up a localized string similar to &lt;!DOCTYPE html&gt;
         ///&lt;html lang=&quot;en&quot;&gt;
-        ///&lt;head&gt;
-        ///&lt;meta http-equiv=&quot;content-type&quot; content=&quot;text/html; charset=UTF-8&quot;&gt;
-        ///    &lt;meta charset=&quot;utf-8&quot;&gt;
-        ///    &lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=edge&quot;&gt;
-        ///    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;
-        ///    &lt;meta name=&quot;description&quot; content=&quot;&quot;&gt;
-        ///    &lt;meta name=&quot;author&quot; content=&quot;&quot;&gt;
-        ///    &lt;link rel=&quot;shortcut icon&quot; href=&quot;/favicon.ico&quot;&gt;
+        ///  &lt;head&gt;
+        ///    &lt;meta http-equiv=&quot;content-type&quot; content=&quot;text/html; charset=UTF-8&quot;/&gt;
+        ///    &lt;meta charset=&quot;utf-8&quot;/&gt;
+        ///    &lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=edge&quot;/&gt;
+        ///    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;/&gt;
+        ///    &lt;meta name=&quot;description&quot; content=&quot;&quot;/&gt;
+        ///    &lt;meta name=&quot;author&quot; content=&quot;&quot;/&gt;
+        ///    &lt;link rel=&quot;shortcut icon&quot; href=&quot;/res/favicon.ico&quot;/&gt;
         ///
-        ///    &lt;title&gt;ChanARCHIVER&lt;/title&gt;
+        ///    &lt;title&gt;[ChanArchiver] - Watch Jobs&lt;/title&gt;
         ///
         ///    &lt;!-- Bootstrap core CSS --&gt;
-        ///    &lt;link href=&quot;/res/bootstrap.css&quot; re [rest of string was truncated]&quot;;.
+        ///    &lt;l [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string wjobs_page {
             get {

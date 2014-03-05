@@ -18,6 +18,11 @@ namespace ChanArchiver
 
         public bool IsActive { get { return this.worker.IsBusy | running; } }
 
+        private List<LogEntry> mylogs = new List<LogEntry>();
+
+        public LogEntry[] Logs { get { return this.mylogs.ToArray(); } }
+
+
         public ThreadWorker(BoardWatcher board, int id)
         {
             this.ID = id;
@@ -48,7 +53,7 @@ namespace ChanArchiver
 
                     sw.Start();
 
-                    Program.LogMessage(new LogEntry()
+                    log(new LogEntry()
                     {
                         Level = LogEntry.LogLevel.Info,
                         Message = "Updating thread...",
@@ -86,7 +91,7 @@ namespace ChanArchiver
 
                     int new_rc = count - old_replies_count;
 
-                    Program.LogMessage(new LogEntry()
+                    log(new LogEntry()
                     {
                         Level = LogEntry.LogLevel.Success,
                         Message = string.Format("Updated in {0} seconds {1}", sw.Elapsed.Seconds, new_rc > 0 ? ", + " + new_rc.ToString() + " new replies" : ""),
@@ -107,7 +112,7 @@ namespace ChanArchiver
                     }
                     else
                     {
-                        Program.LogMessage(new LogEntry()
+                        log(new LogEntry()
                         {
                             Level = LogEntry.LogLevel.Fail,
                             Message = string.Format("An error occured '{0}' @ '{1}', retrying", ex.Message, ex.StackTrace),
@@ -121,7 +126,7 @@ namespace ChanArchiver
             }
 
 
-            Program.LogMessage(new LogEntry()
+            log(new LogEntry()
             {
                 Level = LogEntry.LogLevel.Success,
                 Message = "Stopped thread worker successfully",
@@ -131,18 +136,27 @@ namespace ChanArchiver
 
         }
 
-        public void Stop() 
+        public void Stop()
         {
             running = false;
             worker.CancelAsync();
 
-            Program.LogMessage(new LogEntry()
+            log(new LogEntry()
+           {
+               Level = LogEntry.LogLevel.Info,
+               Message = "Stopping thread worker...",
+               Sender = "ThreadWorker",
+               Title = string.Format("/{0}/ - {1}", this.Board.Board, this.ID)
+           });
+        }
+
+        private void log(LogEntry lo)
+        {
+            this.mylogs.Add(lo);
+            if (Program.verbose)
             {
-                Level = LogEntry.LogLevel.Info,
-                Message = "Stopping thread worker...",
-                Sender = "ThreadWorker",
-                Title = string.Format("/{0}/ - {1}", this.Board.Board, this.ID)
-            });
+                Program.PrintLog(lo);
+            }
         }
 
         private static string get_post_string(GenericPost gp)
