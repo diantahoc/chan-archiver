@@ -12,22 +12,36 @@ namespace ChanArchiver
         public int ID { get; private set; }
         public BoardWatcher Board { get; private set; }
 
+        public int BumpLimit { get; set; }
+        public int ImageLimit { get; set; }
+
         public DateTime LastUpdated { get; private set; }
-        public bool StartedByBW { get; set; }
+        
+        /// <summary>
+        /// A boolean value to indicate if this thread worker has been automatically started by a board watcher.
+        /// </summary>
+        
+        public bool AddedAutomatically { get; set; }
+
         private BackgroundWorker worker;
 
-        public bool IsActive { get { return this.worker.IsBusy | running; } }
+        public bool IsActive { get { return this.worker.IsBusy || running; } }
 
         private List<LogEntry> mylogs = new List<LogEntry>();
 
         public LogEntry[] Logs { get { return this.mylogs.ToArray(); } }
 
+        public double UpdateInterval { get; set; }
 
         public ThreadWorker(BoardWatcher board, int id)
         {
             this.ID = id;
             this.Board = board;
             this.LastUpdated = DateTime.Now;
+
+            this.BumpLimit = 300;
+            this.ImageLimit = 151;
+            this.UpdateInterval = board.ThreadWorkerInterval;
 
             worker = new BackgroundWorker() { WorkerReportsProgress = true, WorkerSupportsCancellation = true };
 
@@ -43,16 +57,16 @@ namespace ChanArchiver
             string thread_folder = Path.Combine(Program.post_files_dir, this.Board.Board, this.ID.ToString());
 
             Directory.CreateDirectory(thread_folder);
+            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
 
             while (running)
             {
                 ThreadContainer tc = null;
+                sw.Reset();
                 try
                 {
-                    System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
-
                     sw.Start();
-
+                    
                     log(new LogEntry()
                     {
                         Level = LogEntry.LogLevel.Info,
@@ -62,6 +76,21 @@ namespace ChanArchiver
                     });
 
                     tc = Program.aw.GetThreadData(this.Board.Board, this.ID);
+
+                   
+                    if (!can_i_run(tc.Instance)) 
+                    {
+                        log(new LogEntry()
+                        {
+                            Level = LogEntry.LogLevel.Info,
+                            Message = "ThreadWorker stopped because there is no matching filter",
+                            Sender = "ThreadWorker",
+                            Title = string.Format("/{0}/ - {1}", this.Board.Board, this.ID)
+                        });
+                        running = false;
+                        Directory.Delete(thread_folder);
+                        break;
+                    }
 
                     string op = Path.Combine(thread_folder, "op.json");
 
@@ -76,15 +105,22 @@ namespace ChanArchiver
 
                     int count = tc.Replies.Count();
 
+                    int with_image = 0;
+
                     for (int i = 0; i < count; i++)
                     {
                         string item_path = Path.Combine(thread_folder, tc.Replies[i].ID.ToString() + ".json");
+
                         if (!File.Exists(item_path))
                         {
                             string post_data = get_post_string(tc.Replies[i]);
                             File.WriteAllText(item_path, post_data);
                         }
-                        if (tc.Replies[i].File != null) { Program.dump_files(tc.Replies[i].File); }
+
+                        if (tc.Replies[i].File != null)
+                        {
+                            with_image++; Program.dump_files(tc.Replies[i].File);
+                        }
                     }
 
                     sw.Stop();
@@ -101,7 +137,40 @@ namespace ChanArchiver
 
                     old_replies_count = count;
                     this.LastUpdated = DateTime.Now;
-                    System.Threading.Thread.Sleep(this.Board.ThreadWorkerInterval * 60 * 1000); // refresh thread worker each X min
+
+                    if (count >= this.BumpLimit)
+                    {
+                        //auto-sage mode, we must archive faster
+                        if (this.Board.Speed == BoardWatcher.BoardSpeed.Fast)
+                        {
+                            this.UpdateInterval = 0.5; //each 30 sec
+                        }
+                        else if (this.Board.Speed == BoardWatcher.BoardSpeed.Normal)
+                        {
+                            this.UpdateInterval = 1; //each 60 sec
+                        }
+                    }
+
+                    //System.Threading.Tasks.Task wait = new System.Threading.Tasks.Task((Action)delegate 
+                    //    {
+                    //        int seconds_to_wait = (int)this.UpdateInterval * 60;
+                    //        for (int i = 0; i < seconds_to_wait; i++) 
+                    //        {
+                    //            if (running)
+                    //            {
+                    //                System.Threading.Thread.Sleep(1000); //1 sec
+                    //            }
+                    //            else 
+                    //            {
+                    //                return;
+                    //            }
+                    //        }
+                    //    });
+
+                    //wait.Start();
+                    //wait.Wait();
+
+                    System.Threading.Thread.Sleep(Convert.ToInt32(this.UpdateInterval * 60 * 1000));
                 }
                 catch (Exception ex)
                 {
@@ -134,6 +203,28 @@ namespace ChanArchiver
                 Title = string.Format("/{0}/ - {1}", this.Board.Board, this.ID)
             });
 
+        }
+
+        private bool can_i_run(AniWrap.DataTypes.GenericPost po) 
+        {
+            if (this.AddedAutomatically)
+            {
+                //if the container board is in monitor mode, we need to see
+                //if this thread has a matching filter
+                //otherwise we should not start it.
+                if (this.Board.Mode == BoardWatcher.BoardMode.Monitor)
+                {
+                    return this.Board.MatchFilters(po);
+                }
+                else
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                return true;
+            }
         }
 
         public void Stop()

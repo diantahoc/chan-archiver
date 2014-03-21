@@ -485,6 +485,24 @@ namespace AniWrap
                 ci.trails = repl.ToArray();
             }
 
+            if (thread["bumplimit"] != null)
+            {
+                ci.BumpLimit = Convert.ToInt32(thread["bumplimit"]);
+            }
+            else
+            {
+                ci.BumpLimit = 300; //most common one
+            }
+
+            if (thread["imagelimit"] != null)
+            {
+                ci.ImageLimit = Convert.ToInt32(thread["imagelimit"]);
+            }
+            else
+            {
+                ci.ImageLimit = 150;
+            }
+
             ci.image_replies = Convert.ToInt32(thread["images"]);
             ci.text_replies = Convert.ToInt32(thread["replies"]);
             ci.page_number = pagenumber;
@@ -498,6 +516,54 @@ namespace AniWrap
            "imagelimit": 0,
            "omitted_posts": 1,
            "omitted_images": 0,*/
+        }
+
+        public struct ThreadAndDate
+        {
+            public int ID;
+            public DateTime Time;
+        }
+
+        public ThreadAndDate[] GetBoardThreadsID(string board)
+        {
+            APIResponse response = LoadAPI("http://a.4cdn.org/#/threads.json".Replace("#", board));
+
+            switch (response.Error)
+            {
+                case APIResponse.ErrorType.NoError:
+
+                    List<ThreadAndDate> t = new List<ThreadAndDate>();
+
+                    List<object> pages = (List<object>)Newtonsoft.Json.JsonConvert.DeserializeObject(response.Data, typeof(List<object>));
+
+
+                    for (int i = 0; i < pages.Count; i++)
+                    {
+                        Newtonsoft.Json.Linq.JObject page = (Newtonsoft.Json.Linq.JObject)pages[i];
+                        Newtonsoft.Json.Linq.JArray threads = (Newtonsoft.Json.Linq.JArray)page["threads"];
+
+                        foreach (Newtonsoft.Json.Linq.JObject threadinfo in threads)
+                        {
+                            t.Add(new ThreadAndDate()
+                            {
+                                ID = Convert.ToInt32(threadinfo["no"]),
+                                Time = Common.ParseUTC_Stamp(Convert.ToInt32(threadinfo["last_modified"]))
+                            });
+                        }
+                    }
+
+
+                    return t.ToArray();
+
+                case APIResponse.ErrorType.NotFound:
+                    throw new Exception("404");
+
+                case APIResponse.ErrorType.Other:
+                    throw new Exception(response.Data);
+
+                default:
+                    return null;
+            }
         }
 
         #endregion
@@ -531,7 +597,7 @@ namespace AniWrap
             try
             {
                 byte[] data;
-                
+
                 wbr = wr.GetResponse();
 
                 using (Stream s = wbr.GetResponseStream())

@@ -170,6 +170,30 @@ namespace ChanArchiver
                 return true;
             }
 
+            if (command.StartsWith("/set/maxfilequeue/")) 
+            {
+                if (string.IsNullOrEmpty(request.QueryString["count"].Value))
+                {
+                    _404(response);
+                }
+                else 
+                {
+                    int t = Program.file_stp.MaxThreads;
+
+                    Int32.TryParse(request.QueryString["count"].Value, out t);
+
+                    if (t != Program.file_stp.MaxThreads)
+                    {
+                        if (t > Program.file_stp.MinThreads)
+                        {
+                            Program.file_stp.MaxThreads = t;
+                        }
+                    }
+                    response.Redirect("/fq");
+                }
+                return true;
+            }
+
             if (command.StartsWith("/add/"))
             {
                 string[] rdata = command.Split('/');
@@ -183,10 +207,18 @@ namespace ChanArchiver
                     }
 
                     string board = request.QueryString["boardletter"].Value;
-                    Program.archive_board(board);
+                    string mon_type = request.QueryString["montype"].Value;
+
+                    BoardWatcher.BoardMode m = BoardWatcher.BoardMode.None;
+
+                    if (mon_type == "part") { m = BoardWatcher.BoardMode.Monitor; }
+                    if (mon_type == "full") { m = BoardWatcher.BoardMode.FullBoard; }
+
+                    Program.archive_board(board, m);
+
                     response.Status = System.Net.HttpStatusCode.OK;
 
-                    response.Redirect("/wjobs");
+                    response.Redirect("/monboards");
 
                 }
                 else if (mode == "thread")
@@ -260,7 +292,7 @@ namespace ChanArchiver
                     if (Program.active_dumpers.ContainsKey(board))
                     {
                         BoardWatcher bw = Program.active_dumpers[board];
-                        bw.Stop();
+                        bw.StopMonitoring();
                         response.Redirect("/wjobs");
                     }
 
@@ -272,7 +304,7 @@ namespace ChanArchiver
                     if (Program.active_dumpers.ContainsKey(board))
                     {
                         BoardWatcher bw = Program.active_dumpers[board];
-                        bw.StartFullMode();
+                        bw.StartMonitoring(BoardWatcher.BoardMode.FullBoard);
                         response.Redirect("/wjobs");
                     }
                 }
@@ -325,6 +357,35 @@ namespace ChanArchiver
                     {
                         FileQueueStateInfo f = Program.queued_files.ElementAt(index).Value;
                         if (f.Status == FileQueueStateInfo.DownloadStatus.Complete)
+                        {
+                            hashes_to_remove.Add(Program.queued_files.ElementAt(index).Key);
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        if (index > Program.queued_files.Count()) { break; }
+                    }
+                }
+
+                foreach (string s in hashes_to_remove)
+                {
+                    Program.queued_files.Remove(s);
+                }
+
+                response.Redirect("/fq");
+
+                return true;
+            }
+
+            if (command == "/action/removefailedfiles")
+            {
+                List<string> hashes_to_remove = new List<string>();
+                for (int index = 0; index < Program.queued_files.Count(); index++)
+                {
+                    try
+                    {
+                        FileQueueStateInfo f = Program.queued_files.ElementAt(index).Value;
+                        if (f.Status == FileQueueStateInfo.DownloadStatus.Error)
                         {
                             hashes_to_remove.Add(Program.queued_files.ElementAt(index).Key);
                         }
@@ -445,6 +506,14 @@ namespace ChanArchiver
             response.SendBody(d);
         }
 
+        public static void write_text(string text, HttpServer.IHttpResponse response)
+        {
+            byte[] data = Encoding.UTF8.GetBytes(text);
+            response.ContentLength = data.Length;
+            response.SendHeaders();
+            response.SendBody(data);
+        }
+
         private string load_post_data(FileInfo fi, bool isop)
         {
             Dictionary<string, object> post_data = (Dictionary<string, object>)Newtonsoft.Json.JsonConvert.DeserializeObject(File.ReadAllText(fi.FullName), typeof(Dictionary<string, object>));
@@ -548,7 +617,6 @@ namespace ChanArchiver
 
             return pf.ToString();
         }
-
 
     }
 }

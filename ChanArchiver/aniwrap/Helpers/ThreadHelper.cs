@@ -166,7 +166,6 @@ namespace AniWrap.Helpers
                     {
                         return comment;
                     }
-
                 }
             }
             else

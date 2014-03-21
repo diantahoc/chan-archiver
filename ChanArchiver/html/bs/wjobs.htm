@@ -68,6 +68,13 @@
             <li class="active">
               <a href="/wjobs">Watch Jobs</a>
             </li>
+            <li>
+              <a href="/monboards">Monitored Boards</a>
+            </li>
+
+            <li>
+              <a href="/filters">Thread Filters</a>
+            </li>
           </ul>
 
         </div>
@@ -90,20 +97,7 @@
                 </div>
               </div>
             </form>
-
-            <form action="/add/board/">
-              <div class="col-lg-6">
-                <div class="input-group">
-                  <input name="boardletter" type="text" class="form-control" placeholder="board letter"/>
-
-                  <button class="btn btn-default" type="submit">Watch board</button>
-
-                </div>
-                <!-- /input-group -->
-              </div>
-              <!-- /.col-lg-6 -->
-            </form>
-
+            
           </div>
           <!-- /.row -->
 
@@ -114,9 +108,10 @@
               <thead>
                 <tr>
                   <th>#</th>
-                  <th>Type</th>
                   <th>Board</th>
                   <th>ID</th>
+                  <th>Added Automatically</th>
+                  <th>Link</th>
                   <th>Last updated</th>
                   <th>Logs</th>
                 </tr>

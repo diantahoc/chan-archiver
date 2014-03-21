@@ -11,6 +11,16 @@ namespace ChanArchiver.HttpServerHandlers
         {
             string command = request.UriPath.ToString();
 
+            if (command == "/favicon.ico") 
+            {
+                response.Status = System.Net.HttpStatusCode.OK;
+                response.ContentLength = Properties.Resources.favicon_ico.Length;
+                response.ContentType = "image/x-icon";
+                response.SendHeaders();
+                response.SendBody(Properties.Resources.favicon_ico);
+                return true;
+            }
+
             if (command.StartsWith("/res/"))
             {
                 byte[] data = null;
@@ -55,6 +65,10 @@ namespace ChanArchiver.HttpServerHandlers
                     case "css.css":
                         data = Encoding.UTF8.GetBytes(ChanArchiver.Properties.Resources.layout);  
                         response.ContentType = "text/css";
+                        break;
+                    case "favicon.ico":
+                        data = Properties.Resources.favicon_ico;
+                        response.ContentType = "image/x-icon";
                         break;
                     default:
                         break;

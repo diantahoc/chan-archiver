@@ -1,26 +1,19 @@
-ChanArchiver is an archive for 4chan. It has 3 operation modes:
+ChanArchiver is an archive for 4chan. 
 
-1 - Full board archival. Archive all threads, and monitor board for new threads to archive.
+By default, ChanArchiver start the http server (listen on port `8787`). You can modify it's behaviour with the following command line switches:
 
-2 - Single thread archival. Archive only a single thread until it 404. Useful for image dumping/info thread.
-
-3 - Server mode. ChanArchiver runs as an HTTP server, serving only the archived threads. No archiving is made in this mode.
-
-By default, ChanArchiver start the http server (listen on port `8787`) and archive /g/. You can modify it's behaviour with the following command line switches:
-
-* `--thread:a:133` : Archive thread `133` from the /a/ board. This will start the single thread archival mode. No other thread can be archived.
-* `--server` : Run ChanArchiver in the server mode.
+* `--thread:a:133` : Archive thread `133` from the /a/ board. Additional threads can be added via the web user interface. Cannot be used in conjunction with `--board`.
 * `--noserver` : To prevent ChanArchiver starting the HTTP server. Useful if you don't want to serve page right now, or another instance of ChanArchiver is running as server.
-* `--board:r` : Archive the /r/ board.
+* `--board:r` : Archive the /r/ board. Overrides the board for the `--thread` switch, so cannot be used with `--thread`
 * `--thumbonly` : Only save thumbnails.
-* `--wget` : Use wget as the download backend. In my testings, this has not worked. `wget` is only supported under a *nix os. Note: this feature is disabled for now.
-* `--verbose` : Output logs to the terminal console, instead of only logging them to the web ui.
+* `--verbose` : Output logs to the terminal console, instead of only logging them to the web ui. Plus perform additional loggings.
+* `--port:123`: Change the http server port to 123.
 * `--savedir <dir>` : Change the save directory.
 
 ChanArchiver can be integrated with 4chan pages by adding an `[Archive]` button next to the op post.
 
 User script: https://raw.github.com/diantahoc/chan-archiver/master/chan_archiver.user.js
-ChanArchiver must be running in order to work properly.
+ChanArchiver must be running in order to work properly. Modify the script if ChanArchiver to match your `ipadress:port` settings.
 
 ChanArchiver use the following libraries:
 	

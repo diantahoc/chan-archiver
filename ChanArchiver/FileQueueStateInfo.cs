@@ -15,7 +15,7 @@ namespace ChanArchiver
 
         public int RetryCount { get; set; }
 
-        public enum DownloadStatus { Pending, Downloading, Error, Complete };
+        public enum DownloadStatus { Unstarted, Pending, Downloading, Error, Complete };
 
         public DownloadStatus Status { get; set; }
 
@@ -66,7 +66,7 @@ namespace ChanArchiver
             this.FileName = pf.filename;
             this.PostFile = pf;
 
-            this.Status = DownloadStatus.Pending;
+            this.Status = DownloadStatus.Unstarted;
             this.RetryCount = 0;
         }
     }

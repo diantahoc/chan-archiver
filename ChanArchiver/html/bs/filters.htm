@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
@@ -9,7 +9,7 @@
     <meta name="author" content=""/>
     <link rel="shortcut icon" href="/res/favicon.ico"/>
 
-    <title>[ChanArchiver] - Overview</title>
+    <title>[ChanArchiver] - Thread Filters</title>
 
     <!-- Bootstrap core CSS -->
     <link href="/res/bootstrap.css" rel="stylesheet"/>
@@ -51,10 +51,14 @@
         <div class="col-sm-3 col-md-2 sidebar">
 
           <ul class="nav nav-sidebar">
-            <li class="active">
+            <li>
               <a href="/">Overview</a>
             </li>
-            
+
+            <!--<li>
+              <a href="/logs">Logs</a>
+            </li>-->
+
             <li>
               <a href="/fq">File Queue</a>
             </li>
@@ -64,110 +68,67 @@
             <li>
               <a href="/wjobs">Watch Jobs</a>
             </li>
-            
+
             <li>
               <a href="/monboards">Monitored Boards</a>
             </li>
-            
-            <li>
+
+            <li class="active">
               <a href="/filters">Thread Filters</a>
             </li>
-            
           </ul>
 
         </div>
 
         <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
-          <h1 class="page-header">Overview</h1>
-          {thumbmode}
-          <div class="table-responsive">
-            <table class="table table-striped">
-              <thead>
-                <tr>
-                  <th>Running Time</th>
-                  <th>Disk usage</th>
-                  <th>Network usage</th>
-                  <th>Archived threads</th>
-                  <th>App. Errors</th>
-                </tr>
-              </thead>
-              <tbody>
-                {RunningTime}
-              </tbody>
-            </table>
+          <h1 class="page-header">Thread Filters</h1>
+
+          <div class="row">
+
+            <form action="/filters/">
+            
+              <input type="hidden" name="mode" value="add"/>
+              <div class="col-lg-6">
+                <div class="input-group">
+                  <code>Except where otherwise noted, all filters are case sensitive and use C# regexp syntax</code>
+                  <input name="b" type="text" class="form-control" placeholder="board letter"/>
+
+                  <select name="type" class="form-control">
+                    {AvFilters}
+                    <!-- <option value="assemblyname">name</option> -->
+                  </select>
+
+                  <input type="text" class="form-control" name="exp" placeholder="filter expression"/>
+
+                  <button class="btn btn-default" type="submit">Add filter</button>
+                </div>
+                <!-- /input-group -->
+              </div>
+              <!-- /.col-lg-6 -->
+            </form>
+
           </div>
+          <!-- /.row -->
 
-          <h2 class="sub-header">Disk usage</h2>
-          <div class="table-responsive">
-            <table class="table table-striped">
-              <thead>
-                <tr>
-                  <th># of files</th>
-                  <th>Category</th>
-                  <th>Used space</th>
-                  <th>Average file size</th>
-                  <th>Biggest file</th>
-                  <th>Smallest file</th>
-                </tr>
-              </thead>
-              <tbody>
+          <hr/>
 
-                {DiskUsage}
-
-              </tbody>
-            </table>
-          </div>
-
-
-          <h2 class="sub-header">Network usage</h2>
-          <div class="table-responsive">
-            <table class="table table-striped">
-              <thead>
-                <tr>
-                  <th>% API files</th>
-                  <th>% Thumbnail</th>
-                  <th>% Full files</th>
-                  <th>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-
-                {NetworkStats}
-
-              </tbody>
-            </table>
-          </div>
-
-          <h2 class="sub-header">Archived threads</h2>
           <div class="table-responsive">
             <table class="table table-striped">
               <thead>
                 <tr>
                   <th>Board</th>
-                  <th>Count</th>
+                  <th>Filter Type</th>
+                  <th>Expression</th>
+                  
+                  <th>-</th>
                 </tr>
               </thead>
               <tbody>
-                {ArchivedThreads}
+                {Items}
               </tbody>
             </table>
           </div>
 
-          <h2 class="sub-header">Application errors</h2>
-          <div class="table-responsive">
-            <table class="table table-striped">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Type</th>
-                  <th>Description</th>
-                </tr>
-              </thead>
-              <tbody>
-
-              </tbody>
-            </table>
-          </div>
 
         </div>
       </div>

@@ -20,28 +20,13 @@ namespace ChanArchiver.HttpServerHandlers
                 {
                     try
                     {
-                        FileQueueStateInfo f = Program.queued_files.ElementAt(index).Value;
+                        KeyValuePair<string, FileQueueStateInfo> kvp = Program.queued_files.ElementAt(index);
 
-                        sb.Append("<tr>");
+                        FileQueueStateInfo f = kvp.Value;
 
-                        switch (f.Status)
-                        {
-                            case FileQueueStateInfo.DownloadStatus.Downloading:
-                                sb.Append("<td><span class=\"label label-info\">Downloading</span></td>");
-                                break;
-                            case FileQueueStateInfo.DownloadStatus.Pending:
-                                sb.Append("<td><span class=\"label label-warning\">Pending</span></td>");
-                                break;
-                            case FileQueueStateInfo.DownloadStatus.Error:
-                                sb.Append("<td><span class=\"label label-danger\">Error</span></td>");
-                                break;
-                            case FileQueueStateInfo.DownloadStatus.Complete:
-                                sb.Append("<td><span class=\"label label-success\">Complete</span></td>");
-                                break;
-                            default:
-                                sb.Append("<td><span class=\"label label-default\">Unkown</span></td>");
-                                break;
-                        }
+                        sb.AppendFormat("<tr id='{0}'>", kvp.Key);
+
+                        sb.AppendFormat("<td>{0}</td>", get_file_status(f.Status));
 
                         sb.AppendFormat("<td>{0}</td>", f.RetryCount);
 
@@ -69,7 +54,7 @@ namespace ChanArchiver.HttpServerHandlers
                 response.Status = System.Net.HttpStatusCode.OK;
                 response.ContentType = "text/html";
 
-                byte[] data = Encoding.UTF8.GetBytes(Properties.Resources.filequeue_page.Replace("{Files}", sb.ToString()));
+                byte[] data = Encoding.UTF8.GetBytes(Properties.Resources.filequeue_page.Replace("{mff}", Program.file_stp.MaxThreads.ToString()).Replace("{Files}", sb.ToString()));
                 response.ContentLength = data.Length;
                 response.SendHeaders();
                 response.SendBody(data);
@@ -77,9 +62,68 @@ namespace ChanArchiver.HttpServerHandlers
                 return true;
             }
 
+            if (command.StartsWith("/fq/json/"))
+            {
+                if (string.IsNullOrEmpty(request.QueryString["hash"].Value))
+                {
+                    ThreadServerModule._404(response);
+                }
+                else
+                {
+                    bool ifo = !string.IsNullOrWhiteSpace(request.QueryString["ifo"].Value);
+
+                    if (Program.queued_files.ContainsKey(request.QueryString["hash"].Value))
+                    {
+                        FileQueueStateInfo f = Program.queued_files[request.QueryString["hash"].Value];
+
+                        Dictionary<string, object> dt = new Dictionary<string, object>();
+                        if (ifo)
+                        {
+                            dt.Add("p", f.Percent().ToString());
+                            dt.Add("s", string.Format("{0} / {1}", Program.format_size_string(f.Downloaded), Program.format_size_string(f.Length)));
+                            dt.Add("c", f.Status == FileQueueStateInfo.DownloadStatus.Complete);
+                        }
+                        else
+                        {
+                            dt.Add("Status", get_file_status(f.Status));
+                            dt.Add("RetryCount", f.RetryCount);
+                            dt.Add("Percent", string.Format("{0} %", Math.Round(f.Percent(), 2)));
+                        }
+                        response.Status = System.Net.HttpStatusCode.OK;
+                        response.ContentType = "application/json";
+
+                        string text = Newtonsoft.Json.JsonConvert.SerializeObject(dt);
+
+                        ThreadServerModule.write_text(text, response);
+                    }
+                }
+                return true;
+            }
+
 
             return false;
         }
 
+        private string get_file_status(FileQueueStateInfo.DownloadStatus s)
+        {
+            switch (s)
+            {
+                case FileQueueStateInfo.DownloadStatus.Downloading:
+                    return "<span class=\"label label-info\">Downloading</span>";
+                case FileQueueStateInfo.DownloadStatus.Pending:
+                    return ("<span class=\"label label-warning\">Pending</span>");
+                case FileQueueStateInfo.DownloadStatus.Error:
+                    return ("<span class=\"label label-danger\">Error</span>");
+                case FileQueueStateInfo.DownloadStatus.Complete:
+                    return ("<span class=\"label label-success\">Complete</span>");
+                case FileQueueStateInfo.DownloadStatus.Unstarted:
+                    return ("<span class=\"label label-default\">Unstarted</span>");
+                default:
+                    return ("<span class=\"label label-default\">Unkown</span>");
+            }
+        }
+
     }
+
+
 }

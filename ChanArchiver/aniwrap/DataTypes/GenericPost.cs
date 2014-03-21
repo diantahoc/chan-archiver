@@ -20,27 +20,37 @@ namespace AniWrap.DataTypes
 
         public string Comment { get; set; }
 
+        private string _comment_text = "";
+
         public string CommentText
         {
             get
             {
-                HtmlAgilityPack.HtmlDocument doc = new HtmlAgilityPack.HtmlDocument();
-                doc.LoadHtml(this.Comment);
-
-                StringBuilder sb = new StringBuilder();
-
-                foreach (HtmlAgilityPack.HtmlNode node in doc.DocumentNode.ChildNodes) 
+                if (_comment_text == "")
                 {
-                    if (node.Name == "br")
+                    HtmlAgilityPack.HtmlDocument doc = new HtmlAgilityPack.HtmlDocument();
+                    doc.LoadHtml(this.Comment);
+
+                    StringBuilder sb = new StringBuilder();
+
+                    foreach (HtmlAgilityPack.HtmlNode node in doc.DocumentNode.ChildNodes)
                     {
-                        sb.AppendLine();
+                        if (node.Name == "br")
+                        {
+                            sb.AppendLine();
+                        }
+                        else
+                        {
+                            sb.Append(node.InnerText);
+                        }
                     }
-                    else 
-                    {
-                        sb.Append(node.InnerText);
-                    }
+                    _comment_text = HttpUtility.HtmlDecode(sb.ToString());
+                    return _comment_text;
                 }
-                return HttpUtility.HtmlDecode(sb.ToString());
+                else 
+                {
+                    return _comment_text;
+                }
             }
         }
 

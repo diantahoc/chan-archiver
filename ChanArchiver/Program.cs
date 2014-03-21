@@ -17,17 +17,18 @@ namespace ChanArchiver
         public static string api_cache_dir = "";
         public static string post_files_dir = "";
         public static string temp_files_dir = "";
+        public static string board_settings_dir = "";
 
         public static string program_dir;
 
-        static string board = "g";
+        static string board = "";
 
         public static Amib.Threading.SmartThreadPool thumb_stp;
         public static Amib.Threading.SmartThreadPool file_stp;
 
         public static AniWrap.AniWrap aw;
 
-        static bool thumb_only = false;
+        public static bool thumb_only = false;
 
         static bool use_wget = false;
 
@@ -41,12 +42,13 @@ namespace ChanArchiver
 
         public static DateTime StartUpTime = DateTime.Now;
 
+        private static int port = 8787;
+
         static void Main(string[] args)
         {
             int single_id = -1;
 
-            bool server = false;
-            bool force_no_server = false;
+            bool server = true;
 
             foreach (string arg in args)
             {
@@ -57,14 +59,14 @@ namespace ChanArchiver
                     single_id = Convert.ToInt32(arg.Split(':')[2]);
                 }
 
-                if (arg == "--server")
-                {
-                    server = true;
-                }
+                //if (arg == "--server")
+                //{
+                //    server = true;
+                //}
 
                 if (arg == "--noserver")
                 {
-                    force_no_server = true;
+                    server = false;
                 }
 
                 if (arg.StartsWith("--board:"))
@@ -80,6 +82,11 @@ namespace ChanArchiver
                 if (arg == "--verbose")
                 {
                     verbose = true;
+                }
+
+                if (arg.StartsWith("--port:")) 
+                {
+                    Int32.TryParse(arg.Split(':')[1], out port);
                 }
 
                 if (arg == "--wget")
@@ -110,7 +117,7 @@ namespace ChanArchiver
             thumb_stp = new Amib.Threading.SmartThreadPool() { MaxThreads = 20, MinThreads = 0 };
             thumb_stp.Start();
 
-            file_stp = new Amib.Threading.SmartThreadPool() { MaxThreads = 10, MinThreads = 0 };
+            file_stp = new Amib.Threading.SmartThreadPool() { MaxThreads = 15, MinThreads = 0 };
             file_stp.Start();
 
             if (string.IsNullOrEmpty(program_dir))
@@ -125,19 +132,21 @@ namespace ChanArchiver
             post_files_dir = Path.Combine(program_dir, "posts");
             api_cache_dir = Path.Combine(program_dir, "aniwrap_cache");
             temp_files_dir = Path.Combine(program_dir, "temp");
+            board_settings_dir = Path.Combine(program_dir, "settings");
 
             Directory.CreateDirectory(file_save_dir);
             Directory.CreateDirectory(thumb_save_dir);
             Directory.CreateDirectory(post_files_dir);
             Directory.CreateDirectory(api_cache_dir);
             Directory.CreateDirectory(temp_files_dir);
+            Directory.CreateDirectory(board_settings_dir);
 
             aw = new AniWrap.AniWrap(api_cache_dir);
-
+           
             Console.Title = "ChanArchiver";
 
             print("ChanArchiver", ConsoleColor.Cyan);
-            Console.WriteLine(" v0.69 semi-stable");
+            Console.WriteLine(" v0.70 stable");
 
             Console.Write("Saving files in ");
             print(string.Format("'{0}'\n", program_dir), ConsoleColor.Red);
@@ -156,27 +165,27 @@ namespace ChanArchiver
                 Console.WriteLine("ChanArchiver is running in server mode");
                 start_server();
             }
-            else
-            {
-                if (!force_no_server)
-                {
-                    start_server();
-                }
 
+            if (!string.IsNullOrEmpty(board))
+            {
                 if (single_id > 0)
                 {
                     archive_single(board, single_id);
                 }
                 else
                 {
-                    archive_board(board);
+                    archive_board(board, BoardWatcher.BoardMode.FullBoard);
                 }
             }
 
-            Console.WriteLine("Enter Q to exit");
+            Console.WriteLine("Enter Q to exit safely");
             while (Console.ReadLine().ToUpper() != "Q") { }
 
             save_stats();
+            foreach (KeyValuePair<string, BoardWatcher> bw in active_dumpers) 
+            {
+                bw.Value.SaveFilters();
+            }
         }
 
         private static void load_stats()
@@ -233,22 +242,21 @@ namespace ChanArchiver
 
         private static BoardWatcher get_board_watcher(string board)
         {
-            BoardWatcher b = new BoardWatcher(board);
-            return b;
+            return new BoardWatcher(board);
         }
 
-        public static void archive_board(string board)
+        public static void archive_board(string board, BoardWatcher.BoardMode mode)
         {
             if (active_dumpers.ContainsKey(board))
             {
                 BoardWatcher bw = active_dumpers[board];
-                bw.StartFullMode();
+                bw.StartMonitoring(mode);
             }
             else
             {
                 BoardWatcher bw = get_board_watcher(board);
                 active_dumpers.Add(board, bw);
-                bw.StartFullMode();
+                bw.StartMonitoring(mode);
             }
         }
 
@@ -264,14 +272,16 @@ namespace ChanArchiver
                 server.Add(new ChanArchiver.HttpServerHandlers.LogPageHandler());
                 server.Add(new ChanArchiver.HttpServerHandlers.FileQueuePageHandler());
                 server.Add(new ChanArchiver.HttpServerHandlers.WatchJobsPageHandler());
+                server.Add(new ChanArchiver.HttpServerHandlers.MonitoredBoardsPageHandler());
+                server.Add(new ChanArchiver.HttpServerHandlers.ThreadFiltersPageHandler());
                 server.Add(new ChanArchiver.HttpServerHandlers.FileInfoPageHandler());
                 server.Add(new ChanArchiver.HttpServerHandlers.ResourcesHandler());
                 server.Add(new ChanArchiver.HttpServerHandlers.FileHandler());
 
                 server.Add(new ThreadServerModule());
                 Console.WriteLine("Starting HTTP server...");
-                server.Start(IPAddress.Any, 8787);
-                Console.WriteLine("Listening on port 8787. \nWebsite is accessible at (http://*:8787)");
+                server.Start(IPAddress.Any, port);
+                Console.WriteLine("Listening on port {0}.\nWebsite is accessible at (http://*:{0})", port);
             }
             catch (Exception ex)
             {
@@ -297,9 +307,8 @@ namespace ChanArchiver
                     thumb_stp.QueueWorkItem(new Amib.Threading.Action((Action)delegate
                     {
                         download_file(new string[] { thumb_path, pf.ThumbLink, reff, "thumb" + md5 });
-                    }), Amib.Threading.WorkItemPriority.Highest);
+                    }));
                 }
-
             }
 
             if (!thumb_only)
@@ -309,13 +318,49 @@ namespace ChanArchiver
                     if (!queued_files.ContainsKey("file" + md5))
                     {
                         queued_files.Add("file" + md5, new FileQueueStateInfo(md5, pf) { Type = FileQueueStateInfo.FileType.FullFile, Url = pf.FullImageLink });
-
+                       
                         file_stp.QueueWorkItem(new Amib.Threading.Action((Action)delegate
                         {
                             download_file(new string[] { file_path, pf.FullImageLink, reff, "file" + md5 });
-                        }), Amib.Threading.WorkItemPriority.Normal);
+                        }), get_file_priority(pf));
                     }
                 }
+            }
+        }
+
+        private static Amib.Threading.WorkItemPriority get_file_priority(PostFile pf) 
+        {
+            //smaller than 50KB, Highest Priority
+            //between 50KB and 400KB, High pr
+            //between 400KB and 1MB, normal pr
+            //larger than 1MB, low
+            //larger than 3mb, lowest
+            int kb = 1024;
+            int mb = 1048576;
+
+            if (pf.size < 50 * kb) 
+            {
+                return Amib.Threading.WorkItemPriority.Highest;
+            }
+            else if (pf.size > 50 * kb && pf.size < 400 * kb)
+            {
+                return Amib.Threading.WorkItemPriority.AboveNormal;
+            }
+            else if (pf.size >= 400 * kb && pf.size <= 1 * mb) 
+            {
+                return Amib.Threading.WorkItemPriority.Normal;
+            }
+            else if (pf.size > 1 * mb && pf.size < 3 * mb) 
+            {
+                return Amib.Threading.WorkItemPriority.BelowNormal;
+            }
+            else if (pf.size >= 3 * mb)
+            {
+                return Amib.Threading.WorkItemPriority.Lowest;
+            }
+            else 
+            {
+                return Amib.Threading.WorkItemPriority.Normal;
             }
         }
 
@@ -330,6 +375,7 @@ namespace ChanArchiver
             string key = param[3];
 
             FileQueueStateInfo f = get_file_state(key);
+            f.Status = FileQueueStateInfo.DownloadStatus.Pending; //means download thread has started, but no content is being received
 
             if (use_wget)
             {
@@ -350,7 +396,6 @@ namespace ChanArchiver
             }
             else
             {
-                int retry_count = 0;
                 string temp_file_path = Path.Combine(temp_files_dir, f.Hash + f.Type.ToString());
 
                 while (true)
@@ -360,9 +405,7 @@ namespace ChanArchiver
                     nc.UserAgent = user_agent;
                     nc.Referer = referer;
 
-                    f.RetryCount = retry_count;
-
-                    if (retry_count >= 35)
+                    if (f.RetryCount > 35)
                     {
                         f.Log(new LogEntry()
                         {
@@ -466,17 +509,32 @@ namespace ChanArchiver
                     }
                     catch (Exception ex)
                     {
-                        f.Log(new LogEntry()
+                        if (ex.Message.Contains("404"))
                         {
-                            Level = LogEntry.LogLevel.Warning,
-                            Message = string.Format("Error occured while downloading file '{0}': {1} @ {2}", f.Url, ex.Message, ex.StackTrace),
-                            Sender = "FileDumper",
-                            Title = "-"
-                        });
+                            f.Log(new LogEntry()
+                            {
+                                Level = LogEntry.LogLevel.Fail,
+                                Message = string.Format("Cannot download this file '{0}', HTTP 404 Not Found.", f.Url, ex.Message, ex.StackTrace),
+                                Sender = "FileDumper",
+                                Title = "-"
+                            });
+                            f.Status = FileQueueStateInfo.DownloadStatus.Error;
+                            break;
+                        }
+                        else
+                        {
+                            f.Log(new LogEntry()
+                                {
+                                    Level = LogEntry.LogLevel.Warning,
+                                    Message = string.Format("Error occured while downloading file '{0}': {1} @ {2}", f.Url, ex.Message, ex.StackTrace),
+                                    Sender = "FileDumper",
+                                    Title = "-"
+                                });
+                        }
 
                         System.Threading.Thread.Sleep(1500);
 
-                        retry_count++;
+                        f.RetryCount++;
                     }//try block
                 }//while block
 

@@ -36,25 +36,25 @@ namespace AniWrap.DataTypes
             }
         }
 
-        public Reply GetPost(int id)
-        {
-            if (_childs.ContainsKey(id))
-            {
-                return _childs[id];
-            }
-            else
-            {
-                return null;
-            }
-        }
+        //public Reply GetPost(int id)
+        //{
+        //    if (_childs.ContainsKey(id))
+        //    {
+        //        return _childs[id];
+        //    }
+        //    else
+        //    {
+        //        return null;
+        //    }
+        //}
 
-        public void RemovePost(int id)
-        {
-            if (_childs.ContainsKey(id))
-            {
-                _childs.Remove(id);
-            }
-        }
+        //public void RemovePost(int id)
+        //{
+        //    if (_childs.ContainsKey(id))
+        //    {
+        //        _childs.Remove(id);
+        //    }
+        //}
 
         public Reply[] Replies { get { return _childs.Values.ToArray(); } }
 

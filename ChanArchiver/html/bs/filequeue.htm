@@ -64,6 +64,13 @@
             <li>
               <a href="/wjobs">Watch Jobs</a>
             </li>
+            <li>
+              <a href="/monboards">Monitored Boards</a>
+            </li>
+
+            <li>
+              <a href="/filters">Thread Filters</a>
+            </li>
           </ul>
 
         </div>
@@ -77,11 +84,18 @@
             <div class="panel-body">
               <a href="/action/restartfailedfiles" class="btn btn-default">Restart failed files</a>
               <a href="/action/removecompletefiles" class="btn btn-default">Remove complete files</a>
+              <a href="/action/removefailedfiles" class="btn btn-default">Remove failed files</a>
+
+              <form action="/set/maxfilequeue/">
+                <label for="countff">Max # FullFile</label>
+                <input id="countff" class="form-control" type="text" name="count" placeholder="{mff}"/>
+                <input type="submit" class="btn btn-default">Set</input>
+              </form>
             </div>
           </div>
           
           <div class="table-responsive">
-            <table class="table table-striped">
+            <table id="filequeue" class="table table-striped">
               <thead>
                 
                 <tr>
@@ -114,7 +128,39 @@
     <script src="/res/jquery.js"></script>
     <script src="/res/bootstrap.js"></script>
     <script src="/res/docs.js"></script>
+    <script>
+      function update_cols()
+      {
+      var cols = document.getElementById("filequeue").children[1].children;
+      var update = function (item)
+      {
+      var id = item.getAttribute("id");
+      $.get("/fq/json/",
+      {
+      hash: id
+      },
+      function (data)
+      {
+      item.children[0].innerHTML = data.Status;
+      item.children[1].textContent = data.RetryCount;
+      item.children[5].textContent = data.Percent;
+      }, "json");
+      };
+      for (i = 0; i < cols.length; i++)
+    {
+        var item = cols[i];
+        if (item.children[5].textContent != "100 %")
+        {
+            continue;
+        }
+        else
+        {
+            update(item);
+        }
+    }
+}
 
-
+        window.setInterval(update_cols, 1000);
+    </script>
   </body>
 </html>

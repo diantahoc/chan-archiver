@@ -17,6 +17,8 @@ namespace ChanArchiver.HttpServerHandlers
 
                 StringBuilder sb = new StringBuilder(Properties.Resources.dashboard_page);
 
+                sb.Replace("{thumbmode}",  Program .thumb_only ? "<label class='label label-warning'>Warning: Running in thumbnail only mode</label>" : "");
+
                 sb.Replace("{RunningTime}", (new RunningTimeInfo()).ToString());
 
                 sb.Replace("{DiskUsage}", get_DiskUsageInfo());

@@ -181,4 +181,13 @@
   <data name="fileinfo" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\html\bs\fileinfo.htm;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>
+  <data name="boards_page" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\html\bs\boards.htm;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="favicon_ico" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\html\favicon.ico.bin;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="filters_page" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\html\bs\filters.htm;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
 </root>

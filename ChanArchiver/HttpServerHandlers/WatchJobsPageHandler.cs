@@ -10,7 +10,7 @@ namespace ChanArchiver.HttpServerHandlers
 
         public override bool Process(HttpServer.IHttpRequest request, HttpServer.IHttpResponse response, HttpServer.Sessions.IHttpSession session)
         {
-            string command = request.UriPath.ToString();
+            string command = request.UriPath;
 
             if (command == "/wjobs")
             {
@@ -23,28 +23,6 @@ namespace ChanArchiver.HttpServerHandlers
                     {
                         BoardWatcher bw = Program.active_dumpers.ElementAt(i).Value;
 
-                        sb.Append("<tr>");
-
-                        if (bw.IsFullMode) //is running
-                        {
-                            sb.AppendFormat("<td><a class=\"btn btn-warning\" href=\"/cancel/bw/{0}\">Stop</a></td>", bw.Board);
-                        }
-                        else
-                        {
-                            sb.AppendFormat("<td><a class=\"btn btn-info\" href=\"/cancel/bwr/{0}\">Start</a></td>", bw.Board);
-                        }
-
-                        sb.AppendFormat("<td>{0}</td>", "BoardWatcher");
-                        sb.AppendFormat("<td>{0}</td>", string.Format("/{0}/", bw.Board));
-                        sb.AppendFormat("<td>{0}</td>", "N/A");
-                        sb.AppendFormat("<td>{0}</td>", "-");
-
-                        sb.AppendFormat("<td> <a href='/logs/{0}/{1}' class='label label-primary'>Logs</a> </td>", "boardwatcher", bw.Board);
-
-                        sb.Append("</tr>");
-
-
-
                         for (int index = 0; index < bw.watched_threads.Count; index++)
                         {
 
@@ -52,6 +30,8 @@ namespace ChanArchiver.HttpServerHandlers
                             {
                                 ThreadWorker tw = bw.watched_threads.ElementAt(index).Value;
 
+                                //don't pollute the list with unactive thread workers (because no filter match) in monitor only mode
+                                if (tw.AddedAutomatically && (!tw.IsActive) && bw.Mode == BoardWatcher.BoardMode.Monitor) { continue; }
 
                                 sb.Append("<tr>");
                                 if (tw.IsActive)
@@ -62,9 +42,15 @@ namespace ChanArchiver.HttpServerHandlers
                                 {
                                     sb.AppendFormat("<td><a class=\"btn btn-info\" href=\"/cancel/twr/{0}/{1}\">Start</a></td>", bw.Board, tw.ID);
                                 }
-                                sb.AppendFormat("<td>{0}</td>", "ThreadWorker");
+
                                 sb.AppendFormat("<td>{0}</td>", string.Format("/{0}/", bw.Board));
-                                sb.AppendFormat("<td>{0}</td>", tw.ID);
+                                sb.AppendFormat("<td>{0}</td>", tw.ID); 
+                                
+                                sb.AppendFormat("<td><code>{0}</code></td>", tw.AddedAutomatically);
+
+                                sb.AppendFormat("<td><a href='/view/{0}/{1}' class='label label-danger'>*click*</a></td>", bw.Board, tw.ID);
+
+
                                 sb.AppendFormat("<td>{0}</td>", tw.LastUpdated);
 
                                 sb.AppendFormat("<td> <a href='/logs/{0}/{1}/{2}' class='label label-primary'>Logs</a> </td>", "threadworker", bw.Board, tw.ID);
@@ -82,9 +68,7 @@ namespace ChanArchiver.HttpServerHandlers
                     {
                         if (i >= Program.active_dumpers.Count) { break; }
                     }
-
                 }
-
 
                 //write everything
                 response.Status = System.Net.HttpStatusCode.OK;
