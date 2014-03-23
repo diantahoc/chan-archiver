@@ -29,7 +29,8 @@ namespace ChanArchiver.HttpServerHandlers
                         }
                         else
                         {
-                            sb.AppendFormat("<td><a class=\"btn btn-info\" href=\"/cancel/bwr/{0}\">Start (Full Mode)</a></td>", bw.Board);
+                            //sb.AppendFormat("<td><a class=\"btn btn-info\" href=\"/cancel/bwr/{0}\">Start (Full Mode)</a></td>", bw.Board);
+                            sb.AppendFormat("<td>-</td>", bw.Board);
                         }
 
                         sb.AppendFormat("<td>{0}</td>", string.Format("/{0}/", bw.Board));
@@ -38,7 +39,7 @@ namespace ChanArchiver.HttpServerHandlers
 
                         sb.AppendFormat("<td>{0}</td>", bw.ActiveThreadWorkers);
 
-                        sb.AppendFormat("<td><a href='/all/{0}' class='label label-danger'>*click*</a></td>", bw.Board);
+                        sb.AppendFormat("<td><a href='/boards/{0}' class='label label-danger'>*click*</a></td>", bw.Board);
 
                         sb.AppendFormat("<td> <a href='/logs/{0}/{1}' class='label label-primary'>Logs</a> </td>", "boardwatcher", bw.Board);
 
@@ -46,7 +47,7 @@ namespace ChanArchiver.HttpServerHandlers
                     }
                     catch (Exception)
                     {
-                        if (i >= Program.active_dumpers.Count) { break; }
+                        if (i >= Program.active_dumpers.Count()) { break; }
                     }
                 }
 

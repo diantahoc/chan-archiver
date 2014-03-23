@@ -48,7 +48,7 @@ namespace ChanArchiver.HttpServerHandlers
                                 
                                 sb.AppendFormat("<td><code>{0}</code></td>", tw.AddedAutomatically);
 
-                                sb.AppendFormat("<td><a href='/view/{0}/{1}' class='label label-danger'>*click*</a></td>", bw.Board, tw.ID);
+                                sb.AppendFormat("<td><a href='/boards/{0}/{1}' class='label label-danger'>*click*</a></td>", bw.Board, tw.ID);
 
 
                                 sb.AppendFormat("<td>{0}</td>", tw.LastUpdated);

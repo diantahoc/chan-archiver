@@ -12,127 +12,133 @@ namespace ChanArchiver
         {
             string command = request.UriPath.ToString();
 
-            if (command.StartsWith("/view/"))
+            if (command.StartsWith("/boards/"))
             {
                 response.Encoding = System.Text.Encoding.UTF8;
-                response.ContentType = "text/html";
-                response.Status = System.Net.HttpStatusCode.OK;
 
-                string[] data = command.Split('/');
-                if (data.Length != 4)
+                string[] parame = command.Split('/');
+
+                if (parame.Length == 3)
                 {
-                    _404(response);
-                    return true;
-                }
-                string board = data[2];
-                string tid = data[3];
-
-                string thread_folder_path = Path.Combine(Program.post_files_dir, board, tid);
-
-                if (Directory.Exists(thread_folder_path))
-                {
-
-                    StringBuilder body = new StringBuilder();
-
-                    body.AppendFormat("<div class=\"thread\" id=\"t{0}\">", tid);
-
-                    DirectoryInfo info = new DirectoryInfo(thread_folder_path);
-
-                    FileInfo[] files = info.GetFiles("*.json", SearchOption.TopDirectoryOnly);
-
-                    body.Append(load_post_data(new FileInfo(Path.Combine(thread_folder_path, "op.json")), true));
-
-                    body.Replace("{op:replycount}", Convert.ToString(files.Count() - 1));
-
-                    IOrderedEnumerable<FileInfo> sorted = files.OrderBy(x => x.Name);
-
-                    int cou = sorted.Count();
-
-                    for (int i = 0; i < cou - 1; i++)
+                    //board index view mode
+                    string board = parame[2];
+                    if (string.IsNullOrEmpty(board))
                     {
-                        body.Append(load_post_data(sorted.ElementAt(i), false));
+                        _404(response);
+                        return true;
                     }
-
-                    body.Append("</div>");
-
-
-                    byte[] respon = System.Text.Encoding.UTF8.GetBytes(Properties.Resources.full_page.Replace("{DocumentBody}", body.ToString()));
-
-                    response.ContentLength = respon.Length;
-
-                    response.SendHeaders();
-                    response.SendBody(respon);
-                }
-                else
-                {
-                    _404(response);
-                }
-
-                return true;
-            }
-
-            if (command.StartsWith("/all/"))
-            {
-                response.Encoding = System.Text.Encoding.UTF8;
-                string board = command.Split('/')[2];
-
-                if (string.IsNullOrEmpty(board))
-                {
-                    _404(response);
-                    return true;
-                }
-
-                string board_folder = Path.Combine(Program.post_files_dir, board);
-
-                if (Directory.Exists(board_folder))
-                {
-
-                    response.ContentType = "text/html";
-                    response.Status = System.Net.HttpStatusCode.OK;
-
-                    DirectoryInfo info = new DirectoryInfo(board_folder);
-
-                    DirectoryInfo[] folders = info.GetDirectories();
-
-                    StringBuilder s = new StringBuilder();
-
-                    for (int i = 0; i < folders.Length; i++)
+                    else
                     {
+                        string board_folder = Path.Combine(Program.post_files_dir, board);
 
-                        string op_file = Path.Combine(folders[i].FullName, "op.json");
-                        if (File.Exists(op_file))
+                        if (Directory.Exists(board_folder))
                         {
+                            DirectoryInfo info = new DirectoryInfo(board_folder);
 
-                            FileInfo ifo = new FileInfo(op_file);
+                            DirectoryInfo[] folders = info.GetDirectories();
 
-                            s.Append("<thread>");
+                            StringBuilder s = new StringBuilder();
 
-                            // s.AppendFormat("<a href='/view/{0}/{1}'>{1}</a><br/>", board, folders[i].Name);
+                            for (int i = 0; i < folders.Length; i++)
+                            {
+                                string op_file = Path.Combine(folders[i].FullName, "op.json");
+                                if (File.Exists(op_file))
+                                {
+                                    FileInfo ifo = new FileInfo(op_file);
 
-                            s.Append
-                                (
-                                      load_post_data(ifo, true)
-                                      .Replace("{op:replycount}", "")
-                                      .Replace("{postLink}", string.Format("/view/{0}/{1}", board, folders[i].Name))
-                                );
+                                    s.Append("<div class='row'>");
 
-                            s.Append("</thread><hr/>");
+                                    s.Append
+                                        (
+                                              load_post_data(ifo, true)
+                                              .Replace("{op:replycount}", "")
+                                              .Replace("{postLink}", string.Format("/boards/{0}/{1}", board, folders[i].Name))
+                                        );
+
+                                    s.Append("</div>");
+                                }
+                            }
+
+                            byte[] data = System.Text.Encoding.UTF8.GetBytes(Properties.Resources.board_index_page.Replace("{Items}", s.ToString()));
+                            response.ContentType = "text/html";
+                            response.Status = System.Net.HttpStatusCode.OK;
+                            response.ContentLength = data.Length;
+                            response.SendHeaders();
+                            response.SendBody(data);
                         }
+                        else
+                        {
+                            _404(response);
+                        }
+
+                        return true;
                     }
+                }
+                else if (parame.Length == 4)
+                {
+                    //thread view mode
+                    string board = parame[2];
+                    string threadid = parame[3];
 
-                    byte[] data = System.Text.Encoding.UTF8.GetBytes(Properties.Resources.full_page.Replace("{DocumentBody}", s.ToString()));
+                    if (string.IsNullOrEmpty(board) || string.IsNullOrEmpty(threadid))
+                    {
+                        _404(response);
+                    }
+                    else
+                    {
+                        string thread_folder_path = Path.Combine(Program.post_files_dir, board, threadid);
 
-                    response.ContentLength = data.Length;
-                    response.SendHeaders();
-                    response.SendBody(data);
+                        if (Directory.Exists(thread_folder_path))
+                        {
+                            StringBuilder body = new StringBuilder();
 
+                            body.AppendFormat("<div class=\"thread\" id=\"t{0}\">", threadid);
+
+                            DirectoryInfo info = new DirectoryInfo(thread_folder_path);
+
+                            FileInfo[] files = info.GetFiles("*.json", SearchOption.TopDirectoryOnly);
+
+                            body.Append(load_post_data(new FileInfo(Path.Combine(thread_folder_path, "op.json")), true));
+
+                            body.Replace("{op:replycount}", Convert.ToString(files.Count() - 1));
+
+                            IOrderedEnumerable<FileInfo> sorted = files.OrderBy(x => x.Name);
+
+                            int cou = sorted.Count();
+
+                            for (int i = 0; i < cou - 1; i++)
+                            {
+                                body.Append(load_post_data(sorted.ElementAt(i), false));
+                            }
+
+                            body.Append("</div>");
+
+
+                            byte[] respon = System.Text.Encoding.UTF8.GetBytes(Properties.Resources.full_page.Replace("{board}", board).Replace("{DocumentBody}", body.ToString()));
+
+                            response.ContentLength = respon.Length;
+
+                            response.SendHeaders();
+                            response.SendBody(respon);
+                        }
+                        else
+                        {
+                            _404(response);
+                        }
+
+                        return true;
+                    }
+                }
+                else if (parame.Length == 5)
+                {
+                    _404(response);
+                    return true;
+                    //thread files view mode
                 }
                 else
                 {
                     _404(response);
                 }
-
-                return true;
             }
 
             if (command == "/boards")
@@ -152,10 +158,19 @@ namespace ChanArchiver
 
                     for (int i = 0; i < folders.Length; i++)
                     {
-                        s.AppendFormat("<a href='/all/{0}'>/{0}/</a><br/>", folders[i].Name);
+                        s.Append("<div class=\"col-6 col-sm-6 col-lg-4\">");
+
+                        s.AppendFormat("<h2>/{0}/</h2>", folders[i].Name);
+                        s.AppendFormat("<p>Thread Count: {0}</p>", folders[i].GetDirectories().Count());
+
+                        s.AppendFormat("<p><a class=\"btn btn-default\" href=\"/boards/{0}\" role=\"button\">browse »</a></p>", folders[i].Name);
+                        
+                        s.Append("</div>");
+
+                       // s.AppendFormat("<a href='/boards/{0}'>/{0}/</a><br/>", folders[i].Name);
                     }
 
-                    byte[] data = System.Text.Encoding.UTF8.GetBytes(Properties.Resources.full_page.Replace("{DocumentBody}", s.ToString()));
+                    byte[] data = System.Text.Encoding.UTF8.GetBytes(Properties.Resources.archivedboard_page.Replace("{Items}", s.ToString()));
 
                     response.ContentLength = data.Length;
                     response.SendHeaders();
@@ -170,13 +185,13 @@ namespace ChanArchiver
                 return true;
             }
 
-            if (command.StartsWith("/set/maxfilequeue/")) 
+            if (command.StartsWith("/set/maxfilequeue/"))
             {
                 if (string.IsNullOrEmpty(request.QueryString["count"].Value))
                 {
                     _404(response);
                 }
-                else 
+                else
                 {
                     int t = Program.file_stp.MaxThreads;
 
@@ -293,7 +308,7 @@ namespace ChanArchiver
                     {
                         BoardWatcher bw = Program.active_dumpers[board];
                         bw.StopMonitoring();
-                        response.Redirect("/wjobs");
+                        response.Redirect("/monboards");
                     }
 
                 }
@@ -305,7 +320,7 @@ namespace ChanArchiver
                     {
                         BoardWatcher bw = Program.active_dumpers[board];
                         bw.StartMonitoring(BoardWatcher.BoardMode.FullBoard);
-                        response.Redirect("/wjobs");
+                        response.Redirect("/monboards");
                     }
                 }
 
@@ -322,7 +337,7 @@ namespace ChanArchiver
                         {
                             ThreadWorker tw = bw.watched_threads[id];
                             tw.Stop();
-                            response.Redirect("/wjobs");
+                            response.Redirect("/monboards");
                         }
                     }
                 }
@@ -340,7 +355,7 @@ namespace ChanArchiver
                         {
                             ThreadWorker tw = bw.watched_threads[id];
                             tw.Start();
-                            response.Redirect("/wjobs");
+                            response.Redirect("/monboards");
                         }
                     }
                 }

@@ -191,9 +191,11 @@
     <None Include="html\sticky" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="html\4" />
-    <EmbeddedResource Include="html\full_page.html" />
+    <None Include="html\4" />
+    <None Include="html\full_page.html" />
     <Content Include="html\bs\boards.htm" />
+    <Content Include="html\bs\board_index.htm" />
+    <Content Include="html\bs\board_list.htm" />
     <Content Include="html\bs\dashboard.htm">
       <SubType>Designer</SubType>
     </Content>
@@ -213,11 +215,12 @@
       <SubType>Designer</SubType>
     </Content>
     <None Include="html\favicon.ico.bin" />
-    <Content Include="html\image_file.html" />
-    <Content Include="html\layout.css" />
-    <Content Include="html\op_post.html" />
-    <Content Include="html\reply_post.html" />
-    <Content Include="html\thread.html" />
+    <None Include="html\image_file.html" />
+    <None Include="html\layout.css" />
+    <None Include="html\op_post.html" />
+    <None Include="html\reply_post.html" />
+    <None Include="html\theme.css" />
+    <None Include="html\thread.html" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>

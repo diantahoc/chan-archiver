@@ -71,12 +71,60 @@ namespace ChanArchiver.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &lt;!DOCTYPE html&gt;
+        ///&lt;html lang=&quot;en&quot;&gt;
+        ///  &lt;head&gt;
+        ///    &lt;meta http-equiv=&quot;content-type&quot; content=&quot;text/html; charset=UTF-8&quot;/&gt;
+        ///    &lt;meta charset=&quot;utf-8&quot;/&gt;
+        ///    &lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=edge&quot;/&gt;
+        ///    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;/&gt;
+        ///    &lt;meta name=&quot;description&quot; content=&quot;&quot;/&gt;
+        ///    &lt;meta name=&quot;author&quot; content=&quot;&quot;/&gt;
+        ///
+        ///    &lt;link rel=&quot;shortcut icon&quot; href=&quot;/favicon.ico&quot;/&gt;
+        ///
+        ///    &lt;title&gt;[ChanArchiver] - Archived Boards&lt;/title&gt;
+        ///
+        ///    &lt;!-- Bootstrap core CSS --&gt;
+        ///    [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string archivedboard_page {
+            get {
+                return ResourceManager.GetString("archivedboard_page", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
         internal static byte[] bgwhite {
             get {
                 object obj = ResourceManager.GetObject("bgwhite", resourceCulture);
                 return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;!DOCTYPE html&gt;
+        ///&lt;html lang=&quot;en&quot;&gt;
+        ///  &lt;head&gt;
+        ///    &lt;meta http-equiv=&quot;content-type&quot; content=&quot;text/html; charset=UTF-8&quot;/&gt;
+        ///    &lt;meta charset=&quot;utf-8&quot;/&gt;
+        ///    &lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=edge&quot;/&gt;
+        ///    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;/&gt;
+        ///    &lt;meta name=&quot;description&quot; content=&quot;&quot;/&gt;
+        ///    &lt;meta name=&quot;author&quot; content=&quot;&quot;/&gt;
+        ///
+        ///    &lt;link rel=&quot;shortcut icon&quot; href=&quot;/favicon.ico&quot;/&gt;
+        ///
+        ///    &lt;title&gt;[ChanArchiver] - Archived Boards&lt;/title&gt;
+        ///
+        ///    &lt;!-- Bootstrap core CSS --&gt;
+        ///    [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string board_index_page {
+            get {
+                return ResourceManager.GetString("board_index_page", resourceCulture);
             }
         }
         
@@ -304,15 +352,16 @@ namespace ChanArchiver.Properties {
         ///&lt;html&gt;
         ///  &lt;head&gt;
         ///    &lt;meta charset=&quot;utf-8&quot;&gt;&lt;/meta&gt;
-        ///    &lt;title&gt;ChanARCHIVER&lt;/title&gt;
+        ///    &lt;title&gt;ChanArchiver&lt;/title&gt;
         ///    &lt;link rel=&quot;stylesheet&quot; href=&quot;/res/css.css&quot; /&gt;
+        ///    &lt;link rel=&quot;stylesheet&quot; href=&quot;/res/bootstrap.css&quot; /&gt;
         ///  &lt;/head&gt;
         ///
         ///  &lt;body&gt;
         ///    
         ///    &lt;div class=&quot;boardBanner&quot;&gt;
         ///      &lt;div class=&quot;boardTitle&quot;&gt;
-        ///        ChanARCHIVER
+        ///        ChanArchiver
         ///      &lt;/div&gt;
         ///      &lt;div class=&quot;boardSubtitle&quot;&gt;
         ///        C#.NET 4chan archiver
@@ -324,9 +373,7 @@ namespace ChanArchiver.Properties {
         ///    &lt;br /&gt;
         ///
         ///    &lt;div class=&quot;desktop&quot;&gt;
-        ///      &lt;a class=&quot;button&quot; href=&quot;#bottom&quot;&gt;Bottom&lt;/a&gt;
-        ///    &lt;/div&gt;
-        /// [rest of string was truncated]&quot;;.
+        ///       [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string full_page {
             get {
@@ -372,13 +419,15 @@ namespace ChanArchiver.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to html
-        ///{
+        ///   Looks up a localized string similar to html {
         ///    -webkit-text-size-adjust: 100%;
         ///}
         ///
-        ///body
-        ///{
+        ///body {
+        ///    background: #FFFFFF url(../res/bgwhite.png);
+        ///    color: #000000;
+        ///    font-family: &apos;Lucida Grande&apos;;
+        ///    font-size: medium;
         ///    margin-left: 0;
         ///    margin-right: 0;
         ///    margin-top: 5px;
@@ -386,26 +435,24 @@ namespace ChanArchiver.Properties {
         ///    padding-right: 15px;
         ///}
         ///
-        ///.mobile, .mobileinline, .mobileib
-        ///{
-        ///    display: none !important;
+        ///.mobile,.mobileinline,.mobileib {
+        ///    display: none!important;
         ///}
         ///
-        ///div#footer
-        ///{
-        ///    clear: both;
-        ///    text-align: center;
+        ///img {
+        ///    border: none;
         ///}
         ///
-        ///hr
-        ///{
-        ///    background: url(&quot;../res/hr.png&quot;) repeat-x scroll 0px 0px transparent;
-        ///    border: 0px none;
-        ///    color: rgb(204, 204, 204);
-        ///    height: 4px;
-        ///    padding: 0px;
+        ///div.board&gt;hr {
         ///    clear: both;
-        ///}        /// [rest of string was truncated]&quot;;.
+        ///}
+        ///
+        ///.mobile {
+        ///    display: none;
+        ///}
+        ///
+        ///ul.rules {
+        ///    margin: 0px [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string layout {
             get {

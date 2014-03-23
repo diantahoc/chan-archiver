@@ -11,8 +11,10 @@ namespace ChanArchiver
        /// Title is used to identifie the sender.
        /// Such as : "/g/" or "/g/ - 124" or "-"
        /// </summary>
+       /// 
        public string Title { get; set; }
        public string Sender { get; set; }
+
        public string Message { get; set; }
        public DateTime Time { get; private set; }
 

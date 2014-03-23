@@ -1,0 +1,140 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta name="description" content=""/>
+    <meta name="author" content=""/>
+
+    <link rel="shortcut icon" href="/favicon.ico"/>
+
+    <title>[ChanArchiver] - Archived Boards</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="/res/bootstrap.css" rel="stylesheet"/>
+
+    <!-- Custom styles for this template -->
+    <style>
+      /*
+      * Style tweaks
+      * --------------------------------------------------
+      */
+      html,
+      body {
+      overflow-x: hidden; /* Prevent scroll on narrow devices */
+      }
+      body {
+      padding-top: 70px;
+      }
+      footer {
+      padding: 30px 0;
+      }
+
+      /*
+      * Off Canvas
+      * --------------------------------------------------
+      */
+      @media screen and (max-width: 767px) {
+      .row-offcanvas {
+      position: relative;
+      -webkit-transition: all .25s ease-out;
+      -moz-transition: all .25s ease-out;
+      transition: all .25s ease-out;
+      }
+
+      .row-offcanvas-right {
+      right: 0;
+      }
+
+      .row-offcanvas-left {
+      left: 0;
+      }
+
+      .row-offcanvas-right
+      .sidebar-offcanvas {
+      right: -50%; /* 6 columns */
+      }
+
+      .row-offcanvas-left
+      .sidebar-offcanvas {
+      left: -50%; /* 6 columns */
+      }
+
+      .row-offcanvas-right.active {
+      right: 50%; /* 6 columns */
+      }
+
+      .row-offcanvas-left.active {
+      left: 50%; /* 6 columns */
+      }
+
+      .sidebar-offcanvas {
+      position: absolute;
+      top: 0;
+      width: 50%; /* 6 columns */
+      }
+      }
+
+    </style>
+  </head>
+
+  <body>
+
+    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">ChanArchiver</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right">
+            <li class="active">
+              <a href="/boards">Archived Boards</a>
+            </li>
+            <li>
+              <a href="https://github.com/diantahoc/chan-archiver" target="_blank">Github</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+
+      <div class="row row-offcanvas row-offcanvas-right">
+
+        <div class="col-xs-12 col-sm-9">
+          
+          <div class="row">
+
+            {Items}
+            
+          </div>
+          
+        </div>
+
+        <!--/span-->
+      </div>
+      <!--/row-->
+
+      <hr/>
+
+    </div>
+
+
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="/res/jquery.js"></script>
+    <script src="/res/bootstrap.js"></script>
+
+  </body>
+</html>

@@ -13,6 +13,8 @@ namespace ChanArchiver
 
         private RSSWatcher rss_w;
         private List<LogEntry> mylogs = new List<LogEntry>();
+        
+        private bool board_404 = false;
 
         private List<int> _404_threads = new List<int>();
 
@@ -79,10 +81,25 @@ namespace ChanArchiver
 
         public void StartMonitoring(BoardMode mode)
         {
+            if (board_404) 
+            {
+                Log(new LogEntry()
+                {
+                    Level = LogEntry.LogLevel.Fail,
+                    Message = "This board does not exist",
+                    Sender = "BoardWatcher",
+                    Title = string.Format("/{0}/", this.Board)
+                });
+
+                return; 
+            }
+
             if (mode == BoardMode.None) { return; }
+
             //First we load the catalog data, then we start the RSS watcher.
             //The reason that we don't use the RSS watcher at first, because the RSS feed is limited to 
             //20 thread. So the RSS watcher is used to check for new threads instead of re-downloading the catalog
+
             if (this.Mode == BoardMode.None /*|| this.Mode != mode*/)
             {
                 this.Mode = mode;
@@ -139,8 +156,6 @@ namespace ChanArchiver
                 {
                     List<DateTime> post_dates = new List<DateTime>();
 
-                    List<DateTime> op_post_dates = new List<DateTime>();
-
                     Log(new LogEntry()
                     {
                         Level = LogEntry.LogLevel.Info,
@@ -150,7 +165,6 @@ namespace ChanArchiver
                     });
 
                     CatalogItem[][] catalog = Program.aw.GetCatalog(this.Board);
-
 
                     Log(new LogEntry()
                     {
@@ -173,6 +187,12 @@ namespace ChanArchiver
                                     //in monitor mode, don't add unacceptable threads
                                     continue;
                                 }
+                            }
+
+                            if (Mode == BoardMode.None) 
+                            {
+                                //board watcher have been stopped, return
+                                return;
                             }
 
                             if (!watched_threads.ContainsKey(thread.ID)) 
@@ -204,8 +224,6 @@ namespace ChanArchiver
                                 }
                             }
 
-                            op_post_dates.Add(thread.Time);
-
                             loaded_count++;
                         }
                     }
@@ -218,56 +236,47 @@ namespace ChanArchiver
                         Title = string.Format("/{0}/", this.Board)
                     });
 
-
-                    IOrderedEnumerable<DateTime> sorted_dates = post_dates.OrderBy(x => x);
-
-                    TimeSpan ts = sorted_dates.Last() - sorted_dates.First();
-
-                    this.AvgPostPerMinute = post_dates.Count / ts.TotalMinutes;
-
-                    //IOrderedEnumerable<DateTime> sorted_op = op_post_dates.OrderBy(x => x);
-
-                    //this.AvgThreadLifeTime = sorted_op.Last() - sorted_op.First();
-
-                    /*
-                       if the ppm < 1, it is a slow board.
-                       if the 5 <= ppm, it is a fast board.
-                       if (1 < ppm < 5), it is a normal board. 
-                     */
-
-                    if (this.AvgPostPerMinute < 1.0)
+                    if (post_dates.Count >= 2)
                     {
-                        this.Speed = BoardSpeed.Slow;
-                    }
-                    else if (1.0 < this.AvgPostPerMinute && this.AvgPostPerMinute < 5.0)
-                    {
-                        this.Speed = BoardSpeed.Normal;
-                    }
-                    else
-                    {
-                        this.Speed = BoardSpeed.Fast;
-                    }
+                        IOrderedEnumerable<DateTime> sorted_dates = post_dates.OrderBy(x => x);
 
-                    //Log(new LogEntry()
-                    //{
-                    //    Level = LogEntry.LogLevel.Info,
-                    //    Message = string.Format("Average thread lifetime: {0}", this.AvgThreadLifeTime),
-                    //    Sender = "BoardWatcher",
-                    //    Title = string.Format("/{0}/", this.Board)
-                    //});
+                        TimeSpan ts = sorted_dates.Last() - sorted_dates.First();
 
-                    //Log(new LogEntry()
-                    //{
-                    //    Level = LogEntry.LogLevel.Info,
-                    //    Message = string.Format("Average post per minute (ppm): {0}", this.AvgPostPerMinute),
-                    //    Sender = "BoardWatcher",
-                    //    Title = string.Format("/{0}/", this.Board)
-                    //});
+                        if (ts.TotalMinutes > 0)
+                        {
+                            this.AvgPostPerMinute = post_dates.Count / ts.TotalMinutes;
+
+                            /*
+                               if the ppm < 1, it is a slow board.
+                               if the 5 <= ppm, it is a fast board.
+                               if (1 < ppm < 5), it is a normal board. 
+                             */
+
+                            if (this.AvgPostPerMinute < 1.0)
+                            {
+                                this.Speed = BoardSpeed.Slow;
+                            }
+                            else if (1.0 < this.AvgPostPerMinute && this.AvgPostPerMinute < 5.0)
+                            {
+                                this.Speed = BoardSpeed.Normal;
+                            }
+                            else
+                            {
+                                this.Speed = BoardSpeed.Fast;
+                            }
+                        }
+                    }
 
                     break;
                 }
                 catch (Exception ex)
                 {
+                    if (ex.Message.Contains("404")) 
+                    {
+                        //board does not exist!
+
+                    }
+
                     Log(new LogEntry()
                     {
                         Level = LogEntry.LogLevel.Fail,
@@ -284,6 +293,8 @@ namespace ChanArchiver
 
         public void StopMonitoring()
         {
+            this.Mode = BoardMode.None;
+
             int[] keys = this.watched_threads.Keys.ToArray();
 
             foreach (int id in keys)
@@ -305,8 +316,6 @@ namespace ChanArchiver
             }
 
             if (this.rss_w != null) { this.rss_w.Stop(); }
-
-            this.Mode = BoardMode.None;
         }
 
         private void catalog_loaded_callback()
@@ -315,6 +324,11 @@ namespace ChanArchiver
             {
                 if (w.Value.AddedAutomatically)
                 {
+                    if (this.Mode == BoardMode.None) 
+                    {
+                        //board watcher have been stopped, exit
+                        return;
+                    }
                     w.Value.Thread404 += this.handle_thread_404;
                     w.Value.Start();
 

@@ -84,7 +84,7 @@ namespace ChanArchiver
                     verbose = true;
                 }
 
-                if (arg.StartsWith("--port:")) 
+                if (arg.StartsWith("--port:"))
                 {
                     Int32.TryParse(arg.Split(':')[1], out port);
                 }
@@ -117,7 +117,7 @@ namespace ChanArchiver
             thumb_stp = new Amib.Threading.SmartThreadPool() { MaxThreads = 20, MinThreads = 0 };
             thumb_stp.Start();
 
-            file_stp = new Amib.Threading.SmartThreadPool() { MaxThreads = 15, MinThreads = 0 };
+            file_stp = new Amib.Threading.SmartThreadPool() { MaxThreads = 2, MinThreads = 0 };
             file_stp.Start();
 
             if (string.IsNullOrEmpty(program_dir))
@@ -142,7 +142,7 @@ namespace ChanArchiver
             Directory.CreateDirectory(board_settings_dir);
 
             aw = new AniWrap.AniWrap(api_cache_dir);
-           
+
             Console.Title = "ChanArchiver";
 
             print("ChanArchiver", ConsoleColor.Cyan);
@@ -182,7 +182,7 @@ namespace ChanArchiver
             while (Console.ReadLine().ToUpper() != "Q") { }
 
             save_stats();
-            foreach (KeyValuePair<string, BoardWatcher> bw in active_dumpers) 
+            foreach (KeyValuePair<string, BoardWatcher> bw in active_dumpers)
             {
                 bw.Value.SaveFilters();
             }
@@ -318,7 +318,7 @@ namespace ChanArchiver
                     if (!queued_files.ContainsKey("file" + md5))
                     {
                         queued_files.Add("file" + md5, new FileQueueStateInfo(md5, pf) { Type = FileQueueStateInfo.FileType.FullFile, Url = pf.FullImageLink });
-                       
+
                         file_stp.QueueWorkItem(new Amib.Threading.Action((Action)delegate
                         {
                             download_file(new string[] { file_path, pf.FullImageLink, reff, "file" + md5 });
@@ -328,7 +328,7 @@ namespace ChanArchiver
             }
         }
 
-        private static Amib.Threading.WorkItemPriority get_file_priority(PostFile pf) 
+        private static Amib.Threading.WorkItemPriority get_file_priority(PostFile pf)
         {
             //smaller than 50KB, Highest Priority
             //between 50KB and 400KB, High pr
@@ -338,7 +338,7 @@ namespace ChanArchiver
             int kb = 1024;
             int mb = 1048576;
 
-            if (pf.size < 50 * kb) 
+            if (pf.size < 50 * kb)
             {
                 return Amib.Threading.WorkItemPriority.Highest;
             }
@@ -346,11 +346,11 @@ namespace ChanArchiver
             {
                 return Amib.Threading.WorkItemPriority.AboveNormal;
             }
-            else if (pf.size >= 400 * kb && pf.size <= 1 * mb) 
+            else if (pf.size >= 400 * kb && pf.size <= 1 * mb)
             {
                 return Amib.Threading.WorkItemPriority.Normal;
             }
-            else if (pf.size > 1 * mb && pf.size < 3 * mb) 
+            else if (pf.size > 1 * mb && pf.size < 3 * mb)
             {
                 return Amib.Threading.WorkItemPriority.BelowNormal;
             }
@@ -358,7 +358,7 @@ namespace ChanArchiver
             {
                 return Amib.Threading.WorkItemPriority.Lowest;
             }
-            else 
+            else
             {
                 return Amib.Threading.WorkItemPriority.Normal;
             }
@@ -371,7 +371,6 @@ namespace ChanArchiver
             string save_path = param[0];
             string url = param[1];
             string referer = param[2];
-
             string key = param[3];
 
             FileQueueStateInfo f = get_file_state(key);
@@ -410,8 +409,7 @@ namespace ChanArchiver
                         f.Log(new LogEntry()
                         {
                             Level = LogEntry.LogLevel.Fail,
-                            Message = string.Format("Failed to download file '{0}', exceeded retry count of 35", f.Url),
-                            Sender = "FileDumper",
+                            Message = "Failed to download the file, exceeded retry count of 35",
                             Title = "-"
                         });
                         f.Status = FileQueueStateInfo.DownloadStatus.Error;
@@ -437,7 +435,7 @@ namespace ChanArchiver
                             f.Log(new LogEntry()
                             {
                                 Level = LogEntry.LogLevel.Info,
-                                Message = string.Format("Resuming file {0} download from offset {1}", f.Url, downloaded),
+                                Message = string.Format("Resuming file download from offset {0}", downloaded),
                                 Sender = "FileDumper",
                                 Title = "-"
                             });
@@ -483,22 +481,39 @@ namespace ChanArchiver
 
                         if (File.Exists(temp_file_path))
                         {
-                            File.Move(temp_file_path, save_path);
-                            f.Log(new LogEntry()
+                            //don't check hashes for thumbnails
+                            if (f.Type == FileQueueStateInfo.FileType.Thumbnail || verify_file_checksums(temp_file_path, f.Hash))
                             {
-                                Level = LogEntry.LogLevel.Success,
-                                Message = string.Format("Downloaded file '{0}' successfully", f.Url),
-                                Sender = "FileDumper",
-                                Title = "-"
-                            });
-                            f.Status = FileQueueStateInfo.DownloadStatus.Complete;
+                                File.Move(temp_file_path, save_path);
+
+                                f.Log(new LogEntry()
+                                {
+                                    Level = LogEntry.LogLevel.Success,
+                                    Message = "Downloaded file successfully",
+                                    Sender = "FileDumper",
+                                    Title = "-"
+                                });
+                                f.Status = FileQueueStateInfo.DownloadStatus.Complete;
+                            }
+                            else
+                            {
+
+                                f.Log(new LogEntry()
+                                {
+                                    Level = LogEntry.LogLevel.Warning,
+                                    Message = string.Format("Downloaded file was corrupted, retrying", f.Url),
+                                    Sender = "FileDumper",
+                                    Title = "-"
+                                });
+                                File.Delete(temp_file_path);
+                            }
                         }
                         else
                         {
                             f.Log(new LogEntry()
                             {
                                 Level = LogEntry.LogLevel.Fail,
-                                Message = string.Format("Could not download the file '{0}' because temporary file does not exist", f.Url),
+                                Message = "Could not download the file because temporary file does not exist",
                                 Sender = "FileDumper",
                                 Title = "-"
                             });
@@ -514,7 +529,7 @@ namespace ChanArchiver
                             f.Log(new LogEntry()
                             {
                                 Level = LogEntry.LogLevel.Fail,
-                                Message = string.Format("Cannot download this file '{0}', HTTP 404 Not Found.", f.Url, ex.Message, ex.StackTrace),
+                                Message = "Cannot download the file, server returned HTTP 404 Not Found.",
                                 Sender = "FileDumper",
                                 Title = "-"
                             });
@@ -526,20 +541,51 @@ namespace ChanArchiver
                             f.Log(new LogEntry()
                                 {
                                     Level = LogEntry.LogLevel.Warning,
-                                    Message = string.Format("Error occured while downloading file '{0}': {1} @ {2}", f.Url, ex.Message, ex.StackTrace),
+                                    Message = string.Format("Error occured while downloading the file: {0} @ {1}", ex.Message, ex.StackTrace),
                                     Sender = "FileDumper",
                                     Title = "-"
                                 });
                         }
-
-                        System.Threading.Thread.Sleep(1500);
-
+                        System.Threading.Thread.Sleep(1000);
                         f.RetryCount++;
                     }//try block
                 }//while block
 
                 return;
             }//wget check block
+        }
+
+        private static bool verify_file_checksums(string path, string md5_hash)
+        {
+            string computed_hash = "";
+
+            using (System.Security.Cryptography.MD5CryptoServiceProvider md = new System.Security.Cryptography.MD5CryptoServiceProvider())
+            {
+                StringBuilder sb = new StringBuilder();
+                try
+                {
+                    using (FileStream fs = new FileStream(path, FileMode.Open))
+                    {
+                        byte[] hash = md.ComputeHash(fs);
+
+                        foreach (byte b in hash)
+                        {
+                            sb.Append(b.ToString("X2"));
+                        }
+                        computed_hash = sb.ToString().ToLower();
+                    }
+
+                }
+                catch (Exception)
+                {
+                    //probably the file does not exist
+                    //this return statement should NEVER occure, since the calling function check for file existance 
+                    //before calling, however, I don't want any execption throwing.
+                    return false;
+                }
+            }
+
+            return md5_hash.ToLower() == computed_hash;
         }
 
         public static FileQueueStateInfo get_file_state(string hash)
@@ -569,6 +615,7 @@ namespace ChanArchiver
             double KB = 1024;
             double MB = 1048576;
             double GB = 1073741824;
+
             if (size < KB)
             {
                 return size.ToString() + " B";

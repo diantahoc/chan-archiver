@@ -190,4 +190,10 @@
   <data name="filters_page" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\html\bs\filters.htm;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>
+  <data name="archivedboard_page" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\html\bs\board_list.htm;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="board_index_page" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\html\bs\board_index.htm;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
 </root>
