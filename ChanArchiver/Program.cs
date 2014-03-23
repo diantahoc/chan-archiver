@@ -46,6 +46,9 @@ namespace ChanArchiver
 
         static void Main(string[] args)
         {
+            WebRequest.DefaultWebProxy = null;
+            ServicePointManager.DefaultConnectionLimit = 100;
+
             int single_id = -1;
 
             bool server = true;
@@ -114,10 +117,10 @@ namespace ChanArchiver
 
             }
 
-            thumb_stp = new Amib.Threading.SmartThreadPool() { MaxThreads = 20, MinThreads = 0 };
+            thumb_stp = new Amib.Threading.SmartThreadPool() { MaxThreads = 10, MinThreads = 0 };
             thumb_stp.Start();
 
-            file_stp = new Amib.Threading.SmartThreadPool() { MaxThreads = 2, MinThreads = 0 };
+            file_stp = new Amib.Threading.SmartThreadPool() { MaxThreads = 5, MinThreads = 0 };
             file_stp.Start();
 
             if (string.IsNullOrEmpty(program_dir))
@@ -506,6 +509,8 @@ namespace ChanArchiver
                                     Title = "-"
                                 });
                                 File.Delete(temp_file_path);
+                                f.RetryCount++;
+                                continue;
                             }
                         }
                         else
