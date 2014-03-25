@@ -459,6 +459,7 @@ namespace ChanArchiver
 
                 if (f != null)
                 {
+                    f.ForceStop = true;
                     Program.queued_files.Remove(workid);
                     Program.dump_files(f.PostFile);
                     response.Redirect("/fileinfo/" + workid);
@@ -490,7 +491,7 @@ namespace ChanArchiver
                 return true;
             }
 
-            if (command.StartsWith("/action/resetcount/"))
+            if (command.StartsWith("/action/resetfileretrycount/"))
             {
                 string workid = command.Split('/').Last();
 
@@ -499,6 +500,25 @@ namespace ChanArchiver
                 if (f != null)
                 {
                     f.RetryCount = 0;
+                    response.Redirect("/fileinfo/" + workid);
+                }
+                else
+                {
+                    response.Redirect("/fq");
+                }
+
+                return true;
+            }
+
+            if (command.StartsWith("/action/forcestopfile/"))
+            {
+                string workid = command.Split('/').Last();
+
+                FileQueueStateInfo f = Program.get_file_state(workid);
+
+                if (f != null)
+                {
+                    f.ForceStop = true;
                     response.Redirect("/fileinfo/" + workid);
                 }
                 else
@@ -531,7 +551,7 @@ namespace ChanArchiver
 
         private string load_post_data(FileInfo fi, bool isop)
         {
-            Dictionary<string, object> post_data = (Dictionary<string, object>)Newtonsoft.Json.JsonConvert.DeserializeObject(File.ReadAllText(fi.FullName), typeof(Dictionary<string, object>));
+            Dictionary<string, object> post_data = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(File.ReadAllText(fi.FullName));
 
             PostFormatter pf = new PostFormatter();
 

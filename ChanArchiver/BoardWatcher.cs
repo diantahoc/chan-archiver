@@ -13,7 +13,7 @@ namespace ChanArchiver
 
         private RSSWatcher rss_w;
         private List<LogEntry> mylogs = new List<LogEntry>();
-        
+
         private bool board_404 = false;
 
         private List<int> _404_threads = new List<int>();
@@ -47,7 +47,8 @@ namespace ChanArchiver
             {
                 this.Board = board;
                 this.Mode = BoardMode.None;
-                 LoadFilters();
+                LoadFilters();
+                LoadManuallyAddedThreads();
                 // Task.Factory.StartNew(load_board_sleep_times);
             }
         }
@@ -81,7 +82,7 @@ namespace ChanArchiver
 
         public void StartMonitoring(BoardMode mode)
         {
-            if (board_404) 
+            if (board_404)
             {
                 Log(new LogEntry()
                 {
@@ -91,7 +92,7 @@ namespace ChanArchiver
                     Title = string.Format("/{0}/", this.Board)
                 });
 
-                return; 
+                return;
             }
 
             if (mode == BoardMode.None) { return; }
@@ -122,14 +123,59 @@ namespace ChanArchiver
                 this.watched_threads.Add(id, t);
                 t.Thread404 += this.handle_thread_404;
                 t.Start();
+                SaveManuallyAddedThreads();
             }
         }
 
-        public int ActiveThreadWorkers 
+        public void LoadManuallyAddedThreads()
         {
-            get 
+            if (System.IO.File.Exists(this.ManuallyAddedThreadsSaveFilePath))
             {
-                int act=0;
+                string data = System.IO.File.ReadAllText(this.ManuallyAddedThreadsSaveFilePath);
+
+                List<object> t = Newtonsoft.Json.JsonConvert.DeserializeObject<List<object>>(data);
+
+                foreach (object id in t) 
+                {
+                    try
+                    {
+                        AddThreadId(Convert.ToInt32(id));
+                    }
+                    catch (Exception)
+                    {
+                        continue;
+                    }
+                }
+            }
+        }
+
+        public void SaveManuallyAddedThreads()
+        {
+            List<int> t = new List<int>();
+
+            for (int i = 0; i < watched_threads.Count(); i++)
+            {
+                try
+                {
+                    ThreadWorker tw = watched_threads.ElementAt(i).Value;
+                    if (!tw.AddedAutomatically)
+                    {
+                        t.Add(tw.ID);
+                    }
+                }
+                catch (Exception)
+                {
+                    if (i > watched_threads.Count() - 1) { break; }
+                }
+            }
+            System.IO.File.WriteAllText(this.ManuallyAddedThreadsSaveFilePath, Newtonsoft.Json.JsonConvert.SerializeObject(t));
+        }
+
+        public int ActiveThreadWorkers
+        {
+            get
+            {
+                int act = 0;
 
                 int[] keys = this.watched_threads.Keys.ToArray();
 
@@ -180,22 +226,22 @@ namespace ChanArchiver
                     {
                         foreach (CatalogItem thread in page)
                         {
-                            if (this.Mode == BoardMode.Monitor) 
+                            if (this.Mode == BoardMode.Monitor)
                             {
-                                if (!this.MatchFilters(thread)) 
+                                if (!this.MatchFilters(thread))
                                 {
                                     //in monitor mode, don't add unacceptable threads
                                     continue;
                                 }
                             }
 
-                            if (Mode == BoardMode.None) 
+                            if (Mode == BoardMode.None)
                             {
                                 //board watcher have been stopped, return
                                 return;
                             }
 
-                            if (!watched_threads.ContainsKey(thread.ID)) 
+                            if (!watched_threads.ContainsKey(thread.ID))
                             {
                                 watched_threads.Add(thread.ID, new ThreadWorker(this, thread.ID)
                                 {
@@ -271,7 +317,7 @@ namespace ChanArchiver
                 }
                 catch (Exception ex)
                 {
-                    if (ex.Message.Contains("404")) 
+                    if (ex.Message.Contains("404"))
                     {
                         //board does not exist!
 
@@ -324,7 +370,7 @@ namespace ChanArchiver
             {
                 if (w.Value.AddedAutomatically)
                 {
-                    if (this.Mode == BoardMode.None) 
+                    if (this.Mode == BoardMode.None)
                     {
                         //board watcher have been stopped, exit
                         return;
@@ -392,7 +438,7 @@ namespace ChanArchiver
                         t.AddedAutomatically = true;
                         this.watched_threads.Add(id, t);
                         t.Thread404 += this.handle_thread_404;
-                      
+
                         t.Start();
                         Log(new LogEntry()
                         {
@@ -408,10 +454,10 @@ namespace ChanArchiver
 
         List<ChanArchiver.Filters.IFilter> my_filters = new List<Filters.IFilter>();
 
-        public ChanArchiver.Filters.IFilter[] Filters 
+        public ChanArchiver.Filters.IFilter[] Filters
         {
             get { return this.my_filters.ToArray(); }
-        } 
+        }
 
         public void AddFilter(ChanArchiver.Filters.IFilter filter)
         {
@@ -421,7 +467,7 @@ namespace ChanArchiver
             }
         }
 
-        public void RemoveFilter(int index) 
+        public void RemoveFilter(int index)
         {
             this.my_filters.RemoveAt(index);
         }
@@ -432,7 +478,7 @@ namespace ChanArchiver
             {
                 try
                 {
-                    if (my_filters[i].Detect(post)) 
+                    if (my_filters[i].Detect(post))
                     {
                         return true;
                     }
@@ -464,6 +510,14 @@ namespace ChanArchiver
             get
             {
                 return System.IO.Path.Combine(Program.board_settings_dir, string.Format("filters-{0}.json", this.Board));
+            }
+        }
+
+        private string ManuallyAddedThreadsSaveFilePath
+        {
+            get
+            {
+                return System.IO.Path.Combine(Program.board_settings_dir, string.Format("manuallyaddedthreads-{0}.json", this.Board));
             }
         }
 

@@ -61,6 +61,7 @@ namespace ChanArchiver
 
         public FileQueueStateInfo(string md5, AniWrap.DataTypes.PostFile pf)
         {
+            this.ForceStop = false;
             this.Hash = md5;
             this.Ext = pf.ext;
             this.FileName = pf.filename;
@@ -69,6 +70,8 @@ namespace ChanArchiver
             this.Status = DownloadStatus.Unstarted;
             this.RetryCount = 0;
         }
+
+        public bool ForceStop { get; set; }
     }
 
 }

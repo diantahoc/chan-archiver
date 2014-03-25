@@ -282,7 +282,6 @@ namespace ChanArchiver
             if (!string.IsNullOrEmpty(gp.country_flag))
             {
                 dic.Add("CountryFlag", gp.country_flag);
-
             }
 
             if (!string.IsNullOrEmpty(gp.country_name))
@@ -321,10 +320,9 @@ namespace ChanArchiver
                 dic.Add("FileHeight", gp.File.height);
                 dic.Add("FileWidth", gp.File.width);
                 dic.Add("FileSize", gp.File.size);
-
             }
 
-            return Newtonsoft.Json.JsonConvert.SerializeObject(dic, Newtonsoft.Json.Formatting.Indented);
+            return Newtonsoft.Json.JsonConvert.SerializeObject(dic, Newtonsoft.Json.Formatting.None);
         }
 
         public void Start()

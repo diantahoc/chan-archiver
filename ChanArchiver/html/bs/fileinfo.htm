@@ -116,7 +116,7 @@
               <br/>
               <div class="progress progress-striped active">
                 <div id="progressbar" class="progress-bar" role="progressbar" aria-valuenow="{p}" aria-valuemin="0" aria-valuemax="100" style="width: {p}%;">
-                  <span>{downloaded} / {length}</span>
+                  {downloaded} / {length}
                 </div>
               </div>
 
@@ -124,8 +124,9 @@
 
             <div>
               <a href="/action/restartfile/{workid}" class="btn btn-default">Restart</a>
+              <a href="/action/forcestopfile/{workid}" class="btn btn-default">Stop</a>
               <a href="/action/removefile/{workid}" class="btn btn-default">Remove</a>
-              <a href="/action/resetcount/{workid}" class="btn btn-default">Reset retry count</a>
+              <a href="/action/resetfileretrycount/{workid}" class="btn btn-default">Reset retry count</a>
             </div>
 
           </div>
@@ -169,13 +170,12 @@
       $.get("/fq/json/", { hash: "{workid}", ifo: "1" },
 
       function (data) {
-      if (!data.c)
-      {
+
       var progress_bar = document.getElementById("progressbar");
       progress_bar.setAttribute("style", "width: " + data.p + "%;");
       progress_bar.setAttribute("aria-valuenow", data.p);
       progress_bar.childNodes[0].textContent = data.s;
-      }
+            
       }, "json");
       }
 

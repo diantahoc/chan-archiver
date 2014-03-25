@@ -154,9 +154,8 @@ namespace ChanArchiver
             Console.Write("Saving files in ");
             print(string.Format("'{0}'\n", program_dir), ConsoleColor.Red);
 
-            // Console.WriteLine(string.Format("Saving files in '{0}'", program_dir));
-
             load_stats();
+            load_boards();
 
             if (thumb_only)
             {
@@ -185,9 +184,39 @@ namespace ChanArchiver
             while (Console.ReadLine().ToUpper() != "Q") { }
 
             save_stats();
+            save_boards();
+        }
+
+        private static void save_boards()
+        {
+            List<string> boards = new List<string>(active_dumpers.Count);
+
             foreach (KeyValuePair<string, BoardWatcher> bw in active_dumpers)
             {
-                bw.Value.SaveFilters();
+                bw.Value.SaveManuallyAddedThreads();
+                bw.Value.SaveFilters(); 
+                boards.Add(bw.Key);
+            }
+
+            File.WriteAllLines(added_boards_save_file_path, boards.ToArray());
+        }
+
+        private static string added_boards_save_file_path
+        {
+            get { return Path.Combine(board_settings_dir, "added-boards.txt"); }
+        }
+
+        private static void load_boards()
+        {
+            if (File.Exists(added_boards_save_file_path))
+            {
+                foreach (string s in File.ReadAllLines(added_boards_save_file_path)) 
+                {
+                    if (!string.IsNullOrEmpty(s)) 
+                    {
+                        archive_board(s, BoardWatcher.BoardMode.None);
+                    }
+                }
             }
         }
 
@@ -473,10 +502,31 @@ namespace ChanArchiver
                                     f.Status = FileQueueStateInfo.DownloadStatus.Downloading;
                                     while ((b_s = s.Read(buffer, 0, 2048)) > 0)
                                     {
+                                        if (f.ForceStop)
+                                        {
+                                            f.Log(new LogEntry()
+                                            {
+                                                Level = LogEntry.LogLevel.Success,
+                                                Message = "File download stopped by user",
+                                                Sender = "FileDumper",
+                                                Title = "-"
+                                            });
+
+                                            fs.Close();
+                                            File.Delete(temp_file_path);
+                                            f.Status = FileQueueStateInfo.DownloadStatus.Error;
+                                            return;
+                                        }
+
                                         fs.Write(buffer, 0, b_s);
+
                                         f.Downloaded += Convert.ToDouble(b_s);
-                                        if (f.Type == FileQueueStateInfo.FileType.Thumbnail) { NetworkUsageCounter.ThumbConsumed += b_s; }
-                                        if (f.Type == FileQueueStateInfo.FileType.FullFile) { NetworkUsageCounter.FileConsumed += b_s; }
+
+                                        if (f.Type == FileQueueStateInfo.FileType.Thumbnail)
+                                        { NetworkUsageCounter.ThumbConsumed += b_s; }
+                                        else
+                                        { NetworkUsageCounter.FileConsumed += b_s; }
+
                                     }
                                 }//web response stream block
                             }// temporary file stream block
@@ -508,6 +558,7 @@ namespace ChanArchiver
                                     Sender = "FileDumper",
                                     Title = "-"
                                 });
+                                f.Downloaded = 0;
                                 File.Delete(temp_file_path);
                                 f.RetryCount++;
                                 continue;
