@@ -97,11 +97,10 @@ namespace ChanArchiver
                     if (!File.Exists(op))
                     {
                         string post_data = get_post_string(tc.Instance);
-
-                        if (tc.Instance.File != null) { Program.dump_files(tc.Instance.File); }
-
                         File.WriteAllText(op, post_data);
                     }
+
+                    if (tc.Instance.File != null) { Program.dump_files(tc.Instance.File); }
 
                     int count = tc.Replies.Count();
 
