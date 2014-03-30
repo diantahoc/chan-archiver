@@ -49,7 +49,13 @@ namespace ChanArchiver.HttpServerHandlers
                 response.Status = System.Net.HttpStatusCode.OK;
                 response.ContentType = "text/html";
 
-                byte[] data = Encoding.UTF8.GetBytes(Properties.Resources.filters_page.Replace("{AvFilters}", get_available_filters()).Replace("{Items}", sb.ToString()));
+                byte[] data = Encoding.UTF8.GetBytes
+                    (Properties.Resources.filters_page
+                    .Replace("{blist}", ThreadServerModule.get_board_list("b"))
+                    .Replace("{AvFilters}", get_available_filters())
+                    .Replace("{Items}", sb.ToString())
+                    );
+
                 response.ContentLength = data.Length;
                 response.SendHeaders();
                 response.SendBody(data);

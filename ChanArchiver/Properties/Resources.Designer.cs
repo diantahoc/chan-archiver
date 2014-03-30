@@ -71,6 +71,16 @@ namespace ChanArchiver.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] _b {
+            get {
+                object obj = ResourceManager.GetObject("_b", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &lt;!DOCTYPE html&gt;
         ///&lt;html lang=&quot;en&quot;&gt;
         ///  &lt;head&gt;
@@ -177,6 +187,37 @@ namespace ChanArchiver.Properties {
         internal static string bootstrap_js {
             get {
                 return ResourceManager.GetString("bootstrap_js", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {
+        ///    &quot;boards&quot;: [{
+        ///        &quot;board&quot;: &quot;3&quot;,
+        ///        &quot;title&quot;: &quot;3DCG&quot;,
+        ///        &quot;ws_board&quot;: 1,
+        ///        &quot;per_page&quot;: 15,
+        ///        &quot;pages&quot;: 11
+        ///    }, {
+        ///        &quot;board&quot;: &quot;a&quot;,
+        ///        &quot;title&quot;: &quot;Anime \u0026 Manga&quot;,
+        ///        &quot;ws_board&quot;: 1,
+        ///        &quot;per_page&quot;: 15,
+        ///        &quot;pages&quot;: 11
+        ///    }, {
+        ///        &quot;board&quot;: &quot;adv&quot;,
+        ///        &quot;title&quot;: &quot;Advice&quot;,
+        ///        &quot;ws_board&quot;: 1,
+        ///        &quot;per_page&quot;: 15,
+        ///        &quot;pages&quot;: 11
+        ///    }, {
+        ///        &quot;board&quot;: &quot;an&quot;,
+        ///        &quot;title&quot;: &quot;Animals \u0026 Nature&quot;,
+        ///        &quot;ws_board&quot;: [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string cached_boards {
+            get {
+                return ResourceManager.GetString("cached_boards", resourceCulture);
             }
         }
         
@@ -419,15 +460,13 @@ namespace ChanArchiver.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to html {
+        ///   Looks up a localized string similar to html
+        ///{
         ///    -webkit-text-size-adjust: 100%;
         ///}
         ///
-        ///body {
-        ///    background: #FFFFFF url(../res/bgwhite.png);
-        ///    color: #000000;
-        ///    font-family: &apos;Lucida Grande&apos;;
-        ///    font-size: medium;
+        ///body
+        ///{
         ///    margin-left: 0;
         ///    margin-right: 0;
         ///    margin-top: 5px;
@@ -435,24 +474,26 @@ namespace ChanArchiver.Properties {
         ///    padding-right: 15px;
         ///}
         ///
-        ///.mobile,.mobileinline,.mobileib {
-        ///    display: none!important;
+        ///.mobile, .mobileinline, .mobileib
+        ///{
+        ///    display: none !important;
         ///}
         ///
-        ///img {
-        ///    border: none;
-        ///}
-        ///
-        ///div.board&gt;hr {
+        ///div#footer
+        ///{
         ///    clear: both;
+        ///    text-align: center;
         ///}
         ///
-        ///.mobile {
-        ///    display: none;
-        ///}
-        ///
-        ///ul.rules {
-        ///    margin: 0px [rest of string was truncated]&quot;;.
+        ///hr
+        ///{
+        ///    background: url(&quot;../res/hr.png&quot;) repeat-x scroll 0px 0px transparent;
+        ///    border: 0px none;
+        ///    color: rgb(204, 204, 204);
+        ///    height: 4px;
+        ///    padding: 0px;
+        ///    clear: both;
+        ///}        /// [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string layout {
             get {
@@ -495,22 +536,24 @@ namespace ChanArchiver.Properties {
         
         /// <summary>
         ///   Looks up a localized string similar to &lt;div class=&quot;opContainer&quot; id=&quot;pc{wpost:id}&quot;&gt;
-        ///  
-        ///    &lt;div id=&quot;p{wpost:id}&quot; class=&quot;post op&quot;&gt;
-        ///        {wpost:file}
         ///
-        ///        &lt;div class=&quot;postInfo desktop&quot;&gt;
-        ///            {wpost:subject}
-        ///            &lt;span class=&quot;name&quot;&gt;{wpost:name}&lt;/span&gt;
-        ///            {wpost:posterId}
-        ///            &lt;span class=&quot;dateTime&quot;&gt;{wpost:time}&lt;/span&gt;
+        ///  &lt;div id=&quot;p{wpost:id}&quot; class=&quot;post op&quot;&gt;
+        ///    {wpost:file}
         ///
-        ///            &lt;span class=&quot;postNum&quot;&gt;
-        ///               &lt;a href=&quot;{postLink}&quot;&gt;No.&lt;/a&gt;
+        ///    &lt;div class=&quot;postInfo desktop&quot;&gt;
+        ///      {wpost:subject}
+        ///      &lt;span class=&quot;name&quot;&gt;{wpost:name}&lt;/span&gt;
+        ///      {wpost:posterId}
+        ///      &lt;span class=&quot;dateTime&quot;&gt;{wpost:time}&lt;/span&gt;
         ///
-        ///               &lt;a href=&quot;#p{wpost:id}&quot; title=&quot;{wpost:id}&quot;&gt;{wpost:id}&lt;/a&gt;
-        ///            &lt;/span&gt;
-        ///          [rest of string was truncated]&quot;;.
+        ///      &lt;span class=&quot;postNum&quot;&gt;
+        ///        &lt;a href=&quot;{postLink}&quot;&gt;No.&lt;/a&gt;
+        ///
+        ///        &lt;a href=&quot;#p{wpost:id}&quot; title=&quot;{wpost:id}&quot;&gt;{wpost:id}&lt;/a&gt;
+        ///      &lt;/span&gt;
+        ///      {op:replycount} {op:sticky} {op:locked}
+        ///    &lt;/div&gt;
+        ///    {wpost:c [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string op_post {
             get {
@@ -520,22 +563,28 @@ namespace ChanArchiver.Properties {
         
         /// <summary>
         ///   Looks up a localized string similar to &lt;div class=&quot;replyContainer&quot; id=&quot;pc{wpost:id}&quot;&gt;
-        ///    
-        ///    &lt;div id=&quot;p{wpost:id}&quot; class=&quot;post reply&quot;&gt;
-        ///       
-        ///        &lt;div class=&quot;postInfo desktop&quot;&gt;
         ///
-        ///            {wpost:subject}
-        ///            &lt;span class=&quot;name&quot;&gt;{wpost:name}&lt;/span&gt;
-        ///            {wpost:posterId}
-        ///            &lt;span class=&quot;dateTime&quot;&gt;{wpost:time}&lt;/span&gt;
+        ///  &lt;div id=&quot;p{wpost:id}&quot; class=&quot;post reply&quot;&gt;
         ///
-        ///            &lt;span class=&quot;postNum&quot;&gt;
-        ///                &lt;a href=&quot;#{wpost:id}&quot;&gt;No.&lt;/a&gt;
-        ///                &lt;a href=&quot;#p{wpost:id}&quot; title=&quot;{wpost:id}&quot;&gt;{wpost:id}&lt;/a&gt;
-        ///            &lt;/span&gt;
+        ///    &lt;div class=&quot;postInfo desktop&quot;&gt;
         ///
-        ///        &lt;/d [rest of string was truncated]&quot;;.
+        ///      {wpost:subject}
+        ///      &lt;span class=&quot;name&quot;&gt;{wpost:name}&lt;/span&gt;
+        ///      {wpost:posterId}
+        ///      &lt;span class=&quot;dateTime&quot;&gt;{wpost:time}&lt;/span&gt;
+        ///
+        ///      &lt;span class=&quot;postNum&quot;&gt;
+        ///        &lt;a href=&quot;#{wpost:id}&quot;&gt;No.&lt;/a&gt;
+        ///        &lt;a href=&quot;#p{wpost:id}&quot; title=&quot;{wpost:id}&quot;&gt;{wpost:id}&lt;/a&gt;
+        ///      &lt;/span&gt;
+        ///
+        ///    &lt;/div&gt;
+        ///
+        ///    {wpost:file}
+        ///
+        ///    {wpost:comment}
+        ///  &lt;/div&gt;
+        ///&lt;/div&gt;.
         /// </summary>
         internal static string reply_post {
             get {

@@ -44,6 +44,8 @@ namespace ChanArchiver
 
         private static int port = 8787;
 
+        public static KeyValuePair<string, string>[] ValidBoards { get; private set; }
+
         static void Main(string[] args)
         {
             WebRequest.DefaultWebProxy = null;
@@ -61,11 +63,6 @@ namespace ChanArchiver
                     board = arg.Split(':')[1];
                     single_id = Convert.ToInt32(arg.Split(':')[2]);
                 }
-
-                //if (arg == "--server")
-                //{
-                //    server = true;
-                //}
 
                 if (arg == "--noserver")
                 {
@@ -151,14 +148,18 @@ namespace ChanArchiver
             print("ChanArchiver", ConsoleColor.Cyan);
             Console.WriteLine(" v0.70 stable");
 
+            Console.Write("Downloading board data...");
+            ValidBoards = aw.GetAvailableBoards();
+            Console.Write("loaded {0} board.\n", ValidBoards.Length);
+
             Console.Write("Saving files in ");
             print(string.Format("'{0}'\n", program_dir), ConsoleColor.Red);
 
-            load_stats();
-            load_boards();
+            load_settings();
 
             if (thumb_only)
             {
+                print("Warning:", ConsoleColor.Yellow);
                 Console.WriteLine("ChanArchiver is running in thumbnail only mode");
             }
 
@@ -180,11 +181,37 @@ namespace ChanArchiver
                 }
             }
 
-            Console.WriteLine("Enter Q to exit safely");
-            while (Console.ReadLine().ToUpper() != "Q") { }
+            Console.WriteLine("Enter 'Q' to exit safely, any other key to save settings");
+            while (Console.ReadLine().ToUpper() != "Q") 
+            {
+                save_settings();
+            }
 
+            save_settings();
+        }
+
+        private static void load_settings() 
+        {
+            Console.WriteLine("Loading banned files list...");
+            load_banned_files_list();
+
+            Console.WriteLine("Loading network statistics...");
+            load_stats();
+
+            Console.WriteLine("Loading manually added threads...");
+            load_boards();
+        }
+
+        private static void save_settings() 
+        {
+            Console.WriteLine("Saving network statistics...");
             save_stats();
+
+            Console.WriteLine("Saving manually added threads...");
             save_boards();
+
+            Console.WriteLine("Saving banned files list...");
+            save_banned_files_list();
         }
 
         private static void save_boards()
@@ -194,7 +221,7 @@ namespace ChanArchiver
             foreach (KeyValuePair<string, BoardWatcher> bw in active_dumpers)
             {
                 bw.Value.SaveManuallyAddedThreads();
-                bw.Value.SaveFilters(); 
+                bw.Value.SaveFilters();
                 boards.Add(bw.Key);
             }
 
@@ -210,9 +237,9 @@ namespace ChanArchiver
         {
             if (File.Exists(added_boards_save_file_path))
             {
-                foreach (string s in File.ReadAllLines(added_boards_save_file_path)) 
+                foreach (string s in File.ReadAllLines(added_boards_save_file_path))
                 {
-                    if (!string.IsNullOrEmpty(s)) 
+                    if (!string.IsNullOrEmpty(s))
                     {
                         archive_board(s, BoardWatcher.BoardMode.None);
                     }
@@ -299,7 +326,7 @@ namespace ChanArchiver
                 HttpServer.HttpServer server = new HttpServer.HttpServer();
 
                 server.ServerName = "ChanArchiver";
-
+               
                 server.Add(new ChanArchiver.HttpServerHandlers.OverviewPageHandler());
                 server.Add(new ChanArchiver.HttpServerHandlers.LogPageHandler());
                 server.Add(new ChanArchiver.HttpServerHandlers.FileQueuePageHandler());
@@ -345,16 +372,19 @@ namespace ChanArchiver
 
             if (!thumb_only)
             {
-                if (!File.Exists(file_path))
+                if (!is_file_banned(md5))
                 {
-                    if (!queued_files.ContainsKey("file" + md5))
+                    if (!File.Exists(file_path))
                     {
-                        queued_files.Add("file" + md5, new FileQueueStateInfo(md5, pf) { Type = FileQueueStateInfo.FileType.FullFile, Url = pf.FullImageLink });
-
-                        file_stp.QueueWorkItem(new Amib.Threading.Action((Action)delegate
+                        if (!queued_files.ContainsKey("file" + md5))
                         {
-                            download_file(new string[] { file_path, pf.FullImageLink, reff, "file" + md5 });
-                        }), get_file_priority(pf));
+                            queued_files.Add("file" + md5, new FileQueueStateInfo(md5, pf) { Type = FileQueueStateInfo.FileType.FullFile, Url = pf.FullImageLink });
+
+                            file_stp.QueueWorkItem(new Amib.Threading.Action((Action)delegate
+                            {
+                                download_file(new string[] { file_path, pf.FullImageLink, reff, "file" + md5 });
+                            }), get_file_priority(pf));
+                        }
                     }
                 }
             }
@@ -610,6 +640,43 @@ namespace ChanArchiver
                 return;
             }//wget check block
         }
+
+
+        static List<string> banned_hashes = new List<string>();
+
+        public static bool is_file_banned(string hash)
+        {
+            return banned_hashes.Contains(hash);
+        }
+
+        public static void ban_file(string hash)
+        {
+            if (!banned_hashes.Contains(hash)) { banned_hashes.Add(hash); save_banned_files_list(); }
+        }
+
+        private static string banned_files_savepath
+        {
+            get { return Path.Combine(board_settings_dir, "banned-files.json");}
+        }
+
+        private static void save_banned_files_list()
+        {
+           File.WriteAllText( banned_files_savepath, Newtonsoft.Json.JsonConvert.SerializeObject(banned_hashes));
+        }
+
+        private static void load_banned_files_list()
+        {
+            if (File.Exists(banned_files_savepath))
+            {
+                Newtonsoft.Json.Linq.JArray arr = Newtonsoft.Json.JsonConvert.DeserializeObject<Newtonsoft.Json.Linq.JArray>(File.ReadAllText(banned_files_savepath));
+
+                foreach (Newtonsoft.Json.Linq.JValue obj in arr) 
+                {
+                    banned_hashes.Add(Convert.ToString(obj));
+                }
+            }
+        }
+
 
         private static bool verify_file_checksums(string path, string md5_hash)
         {

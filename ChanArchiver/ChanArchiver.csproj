@@ -113,6 +113,7 @@
     <Compile Include="HttpServerHandlers\ResourcesHandler.cs" />
     <Compile Include="HttpServerHandlers\ThreadFiltersPageHandler.cs" />
     <Compile Include="HttpServerHandlers\WatchJobsPageHandler.cs" />
+    <Compile Include="LightWatcher.cs" />
     <Compile Include="LogEntry.cs" />
     <Compile Include="NetworkUsageCounter.cs" />
     <Compile Include="PostFormatter.cs" />
@@ -189,8 +190,10 @@
     <None Include="html\hr" />
     <None Include="html\locked" />
     <None Include="html\sticky" />
+    <None Include="Resources\_b" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\cached_boards.txt" />
     <None Include="html\4" />
     <None Include="html\full_page.html" />
     <Content Include="html\bs\boards.htm" />

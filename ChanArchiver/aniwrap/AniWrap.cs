@@ -8,7 +8,8 @@ using System.Web;
 using System.Xml;
 using AniWrap.DataTypes;
 using AniWrap.Helpers;
-
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 namespace AniWrap
 {
     public class AniWrap
@@ -564,6 +565,36 @@ namespace AniWrap
                 default:
                     return null;
             }
+        }
+
+        public KeyValuePair<string, string>[] GetAvailableBoards()
+        {
+            APIResponse api_r = LoadAPI("http://a.4cdn.org/boards.json");
+
+            string data = ChanArchiver.Properties.Resources.cached_boards;
+
+            if (api_r.Error == APIResponse.ErrorType.NoError)
+            {
+                data = api_r.Data;
+            }
+
+            JObject json = JsonConvert.DeserializeObject<JObject>(data);
+
+            JArray boards = (JArray)json["boards"];
+
+            List<KeyValuePair<string, string>> il = new List<KeyValuePair<string, string>>();
+
+            for (int i = 0; i < boards.Count; i++)
+            {
+                JToken board = boards[i];
+
+                string letter = Convert.ToString(board["board"]);
+                string desc = Convert.ToString(board["title"]);
+
+                il.Add(new KeyValuePair<string, string>(letter, desc));
+            }
+
+            return il.ToArray();
         }
 
         #endregion

@@ -55,7 +55,11 @@ namespace ChanArchiver.HttpServerHandlers
                 response.Status = System.Net.HttpStatusCode.OK;
                 response.ContentType = "text/html";
 
-                byte[] data = Encoding.UTF8.GetBytes(Properties.Resources.boards_page.Replace("{Items}", sb.ToString()));
+                byte[] data = Encoding.UTF8.GetBytes
+                    (Properties.Resources.boards_page
+                    .Replace("{blist}", ThreadServerModule.get_board_list("boardletter"))
+                    .Replace("{Items}", sb.ToString())
+                    );
                 response.ContentLength = data.Length;
                 response.SendHeaders();
                 response.SendBody(data);

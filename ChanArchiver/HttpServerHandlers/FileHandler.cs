@@ -14,7 +14,8 @@ namespace ChanArchiver.HttpServerHandlers
 
             if (command.StartsWith("/file/"))
             {
-                string path = Path.Combine(Program.file_save_dir, command.Split('/').Last());
+                string hash = command.Split('/').Last();
+                string path = Path.Combine(Program.file_save_dir, hash);
                 if (File.Exists(path))
                 {
                     response.ContentType = get_mime(command.Split('.').Last().ToLower());
@@ -29,11 +30,18 @@ namespace ChanArchiver.HttpServerHandlers
                 }
                 else
                 {
+                    byte[] data = Properties.Resources._4;
+
+                    if (Program.is_file_banned(hash))
+                    {
+                        data = Properties.Resources._b;
+                    }
+
                     response.ContentType = "image/gif";
                     response.Status = System.Net.HttpStatusCode.NotFound;
-                    response.ContentLength = Properties.Resources._4.Length;
+                    response.ContentLength = data.Length;
                     response.SendHeaders();
-                    response.SendBody(Properties.Resources._4);
+                    response.SendBody(data);
                 }
                 return true;
             }

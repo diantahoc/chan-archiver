@@ -55,10 +55,6 @@
               <a href="/">Overview</a>
             </li>
            
-            <!--<li>
-              <a href="/logs">Logs</a>
-            </li>-->
-            
             <li>
               <a href="/fq">File Queue</a>
             </li>
@@ -88,7 +84,7 @@
             <form action="/add/board/">
               <div class="col-lg-6">
                 <div class="input-group">
-                  <input name="boardletter" type="text" class="form-control" placeholder="board letter"/>
+                  {blist}
                   <select name="montype" class="form-control">
                     <option value="none">No monitoring (only add the board to this list, useful for managing filters)</option>
                     <option value="full">Full Monitoring (actively dump all threads)</option>

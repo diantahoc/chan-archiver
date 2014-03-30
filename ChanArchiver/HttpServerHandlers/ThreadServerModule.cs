@@ -164,10 +164,10 @@ namespace ChanArchiver
                         s.AppendFormat("<p>Thread Count: {0}</p>", folders[i].GetDirectories().Count());
 
                         s.AppendFormat("<p><a class=\"btn btn-default\" href=\"/boards/{0}\" role=\"button\">browse »</a></p>", folders[i].Name);
-                        
+
                         s.Append("</div>");
 
-                       // s.AppendFormat("<a href='/boards/{0}'>/{0}/</a><br/>", folders[i].Name);
+                        // s.AppendFormat("<a href='/boards/{0}'>/{0}/</a><br/>", folders[i].Name);
                     }
 
                     byte[] data = System.Text.Encoding.UTF8.GetBytes(Properties.Resources.archivedboard_page.Replace("{Items}", s.ToString()));
@@ -337,7 +337,7 @@ namespace ChanArchiver
                         {
                             ThreadWorker tw = bw.watched_threads[id];
                             tw.Stop();
-                            response.Redirect("/monboards");
+                            response.Redirect("/wjobs");
                         }
                     }
                 }
@@ -355,7 +355,7 @@ namespace ChanArchiver
                         {
                             ThreadWorker tw = bw.watched_threads[id];
                             tw.Start();
-                            response.Redirect("/monboards");
+                            response.Redirect("/wjobs");
                         }
                     }
                 }
@@ -472,6 +472,28 @@ namespace ChanArchiver
                 return true;
             }
 
+            if (command.StartsWith("/action/stopandbanfile/"))
+            {
+                string workid = command.Split('/').Last();
+
+                FileQueueStateInfo f = Program.get_file_state(workid);
+
+                if (f != null)
+                {
+                    f.ForceStop = true;
+                    Program.ban_file(f.Hash);
+                    f.Log(new LogEntry() { Level = LogEntry.LogLevel.Success, Message = "File was banned", Sender = "-", Title = "" });
+                    // Program.queued_files.Remove(workid);
+                    response.Redirect("/fileinfo/" + workid);
+                }
+                else
+                {
+                    response.Redirect("/fq");
+                }
+
+                return true;
+            }
+
             if (command.StartsWith("/action/removefile/"))
             {
                 string workid = command.Split('/').Last();
@@ -547,6 +569,21 @@ namespace ChanArchiver
             response.ContentLength = data.Length;
             response.SendHeaders();
             response.SendBody(data);
+        }
+
+        public static string get_board_list(string name)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            sb.AppendFormat("<select name=\"{0}\" class=\"form-control\">", name);
+
+            foreach (KeyValuePair<string, string> bb in Program.ValidBoards)
+            {
+                sb.AppendFormat("<option value='{0}'>/{0}/ - {1}</option>", bb.Key, bb.Value);
+            }
+
+            sb.Append("</select>");
+            return sb.ToString();
         }
 
         private string load_post_data(FileInfo fi, bool isop)
