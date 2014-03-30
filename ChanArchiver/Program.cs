@@ -642,7 +642,7 @@ namespace ChanArchiver
         }
 
 
-        static List<string> banned_hashes = new List<string>();
+        static List<string> banned_hashes;
 
         public static bool is_file_banned(string hash)
         {
@@ -670,11 +670,14 @@ namespace ChanArchiver
             {
                 Newtonsoft.Json.Linq.JArray arr = Newtonsoft.Json.JsonConvert.DeserializeObject<Newtonsoft.Json.Linq.JArray>(File.ReadAllText(banned_files_savepath));
 
-                foreach (Newtonsoft.Json.Linq.JValue obj in arr) 
+                banned_hashes = new List<string>(arr.Count);
+
+                foreach (Newtonsoft.Json.Linq.JValue obj in arr)
                 {
                     banned_hashes.Add(Convert.ToString(obj));
                 }
             }
+            else { banned_hashes = new List<string>(); }
         }
 
 

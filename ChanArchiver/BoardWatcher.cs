@@ -340,7 +340,12 @@ namespace ChanArchiver
         public void StopMonitoring()
         {
             this.Mode = BoardMode.None;
-
+            
+            if (this.rss_w != null) 
+            {
+                this.rss_w.Stop();
+            }
+            
             int[] keys = this.watched_threads.Keys.ToArray();
 
             foreach (int id in keys)
@@ -361,7 +366,7 @@ namespace ChanArchiver
                 catch (Exception) { }
             }
 
-            if (this.rss_w != null) { this.rss_w.Stop(); }
+         
         }
 
         private void catalog_loaded_callback()
@@ -428,25 +433,28 @@ namespace ChanArchiver
 
         private void handle_rss_watcher_newdata(int[] data)
         {
-            foreach (int id in data)
+            if (this.Mode != BoardMode.None)
             {
-                if (!this.watched_threads.ContainsKey(id))
+                foreach (int id in data)
                 {
-                    if (!this._404_threads.Contains(id))
+                    if (!this.watched_threads.ContainsKey(id))
                     {
-                        ThreadWorker t = new ThreadWorker(this, id);
-                        t.AddedAutomatically = true;
-                        this.watched_threads.Add(id, t);
-                        t.Thread404 += this.handle_thread_404;
-
-                        t.Start();
-                        Log(new LogEntry()
+                        if (!this._404_threads.Contains(id))
                         {
-                            Level = LogEntry.LogLevel.Info,
-                            Message = string.Format("Found new thread {0}", id),
-                            Sender = "RSSWatcher",
-                            Title = string.Format("/{0}/", this.Board)
-                        });
+                            ThreadWorker t = new ThreadWorker(this, id);
+                            t.AddedAutomatically = true;
+                            this.watched_threads.Add(id, t);
+                            t.Thread404 += this.handle_thread_404;
+
+                            t.Start();
+                            Log(new LogEntry()
+                            {
+                                Level = LogEntry.LogLevel.Info,
+                                Message = string.Format("Found new thread {0}", id),
+                                Sender = "RSSWatcher",
+                                Title = string.Format("/{0}/", this.Board)
+                            });
+                        }
                     }
                 }
             }
