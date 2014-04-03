@@ -30,11 +30,7 @@ namespace ChanArchiver
 
         public static bool thumb_only = false;
 
-        static bool use_wget = false;
-
         public static bool verbose = false;
-
-        static string wget_path = "/usr/bin/wget";
 
         public static Dictionary<string, BoardWatcher> active_dumpers = new Dictionary<string, BoardWatcher>();
 
@@ -87,18 +83,6 @@ namespace ChanArchiver
                 if (arg.StartsWith("--port:"))
                 {
                     Int32.TryParse(arg.Split(':')[1], out port);
-                }
-
-                if (arg == "--wget")
-                {
-                    //if (Environment.OSVersion.Platform == PlatformID.Unix)
-                    //{
-                    //    if (File.Exists(wget_path))
-                    //    {
-                    //        use_wget = true;
-                    //    }
-                    //}
-                    Console.WriteLine("Sorry, wget backend is dropped");
                 }
 
                 if (arg.StartsWith("--savedir"))
@@ -182,7 +166,7 @@ namespace ChanArchiver
             }
 
             Console.WriteLine("Enter 'Q' to exit safely, any other key to save settings");
-            while (Console.ReadLine().ToUpper() != "Q") 
+            while (Console.ReadLine().ToUpper() != "Q")
             {
                 save_settings();
             }
@@ -190,7 +174,7 @@ namespace ChanArchiver
             save_settings();
         }
 
-        private static void load_settings() 
+        private static void load_settings()
         {
             Console.WriteLine("Loading banned files list...");
             load_banned_files_list();
@@ -202,7 +186,7 @@ namespace ChanArchiver
             load_boards();
         }
 
-        private static void save_settings() 
+        private static void save_settings()
         {
             Console.WriteLine("Saving network statistics...");
             save_stats();
@@ -326,7 +310,7 @@ namespace ChanArchiver
                 HttpServer.HttpServer server = new HttpServer.HttpServer();
 
                 server.ServerName = "ChanArchiver";
-               
+
                 server.Add(new ChanArchiver.HttpServerHandlers.OverviewPageHandler());
                 server.Add(new ChanArchiver.HttpServerHandlers.LogPageHandler());
                 server.Add(new ChanArchiver.HttpServerHandlers.FileQueuePageHandler());
@@ -438,209 +422,187 @@ namespace ChanArchiver
             FileQueueStateInfo f = get_file_state(key);
             f.Status = FileQueueStateInfo.DownloadStatus.Pending; //means download thread has started, but no content is being received
 
-            if (use_wget)
+            string temp_file_path = Path.Combine(temp_files_dir, f.Hash + f.Type.ToString());
+
+            while (true)
             {
-                System.Diagnostics.ProcessStartInfo psr = new System.Diagnostics.ProcessStartInfo(wget_path);
+                HttpWebRequest nc = (HttpWebRequest)(WebRequest.Create(url));
 
-                psr.UseShellExecute = false;
-                psr.CreateNoWindow = true;
-                psr.RedirectStandardError = true;
-                psr.RedirectStandardOutput = true;
-                psr.Arguments = string.Format("-U \"{0}\" -–referer=\"{1}\" -O \"{2}\" {3}", user_agent, referer, save_path, url);
+                nc.UserAgent = user_agent;
+                nc.Referer = referer;
 
-                using (System.Diagnostics.Process p = System.Diagnostics.Process.Start(psr))
+                if (f.RetryCount > 35)
                 {
-                    f.Status = FileQueueStateInfo.DownloadStatus.Downloading;
-                    p.WaitForExit();
-                    return;
+                    f.Log(new LogEntry()
+                    {
+                        Level = LogEntry.LogLevel.Fail,
+                        Message = "Failed to download the file, exceeded retry count of 35",
+                        Title = "-"
+                    });
+                    f.Status = FileQueueStateInfo.DownloadStatus.Error;
+                    break;
                 }
-            }
-            else
-            {
-                string temp_file_path = Path.Combine(temp_files_dir, f.Hash + f.Type.ToString());
 
-                while (true)
+                int downloaded = 0;
+
+                if (File.Exists(temp_file_path))
                 {
-                    HttpWebRequest nc = (HttpWebRequest)(WebRequest.Create(url));
+                    FileInfo fifo = new FileInfo(temp_file_path);
+                    if (fifo.Length > 0)
+                    {
+                        downloaded = Convert.ToInt32(fifo.Length);
 
-                    nc.UserAgent = user_agent;
-                    nc.Referer = referer;
+                        if (nc.Headers[HttpRequestHeader.Range] != null)
+                        {
+                            nc.Headers.Remove(HttpRequestHeader.Range);
+                        }
 
-                    if (f.RetryCount > 35)
+                        nc.AddRange(downloaded);
+
+                        f.Log(new LogEntry()
+                        {
+                            Level = LogEntry.LogLevel.Info,
+                            Message = string.Format("Resuming file download from offset {0}", downloaded),
+                            Sender = "FileDumper",
+                            Title = "-"
+                        });
+
+                        f.Downloaded = downloaded;
+                    }
+                }
+
+                try
+                {
+                    using (WebResponse wr = nc.GetResponse())
+                    {
+                        string content_length = wr.Headers[HttpResponseHeader.ContentLength];
+
+                        double total_length = Convert.ToDouble(content_length);
+
+                        f.Length = total_length;
+                        //byte size
+                        int b_s = 0;
+
+                        byte[] buffer = new byte[2048];
+
+                        using (FileStream fs = new FileStream(temp_file_path, FileMode.OpenOrCreate, FileAccess.ReadWrite))
+                        {
+                            if (downloaded > 0)
+                            {
+                                fs.Seek(fs.Length, SeekOrigin.Begin);
+                            }
+
+                            using (Stream s = wr.GetResponseStream())
+                            {
+                                f.Status = FileQueueStateInfo.DownloadStatus.Downloading;
+                                while ((b_s = s.Read(buffer, 0, 2048)) > 0)
+                                {
+                                    if (f.ForceStop)
+                                    {
+                                        f.Log(new LogEntry()
+                                        {
+                                            Level = LogEntry.LogLevel.Success,
+                                            Message = "File download stopped by user",
+                                            Sender = "FileDumper",
+                                            Title = "-"
+                                        });
+
+                                        fs.Close();
+                                        File.Delete(temp_file_path);
+                                        f.Status = FileQueueStateInfo.DownloadStatus.Error;
+                                        return;
+                                    }
+
+                                    fs.Write(buffer, 0, b_s);
+
+                                    f.Downloaded += Convert.ToDouble(b_s);
+
+                                    if (f.Type == FileQueueStateInfo.FileType.Thumbnail)
+                                    { NetworkUsageCounter.ThumbConsumed += b_s; }
+                                    else
+                                    { NetworkUsageCounter.FileConsumed += b_s; }
+
+                                }
+                            }//web response stream block
+                        }// temporary file stream block
+                    }//web response block
+
+                    if (File.Exists(temp_file_path))
+                    {
+                        //don't check hashes for thumbnails
+                        if (f.Type == FileQueueStateInfo.FileType.Thumbnail || verify_file_checksums(temp_file_path, f.Hash))
+                        {
+                            File.Move(temp_file_path, save_path);
+
+                            f.Log(new LogEntry()
+                            {
+                                Level = LogEntry.LogLevel.Success,
+                                Message = "Downloaded file successfully",
+                                Sender = "FileDumper",
+                                Title = "-"
+                            });
+                            f.Status = FileQueueStateInfo.DownloadStatus.Complete;
+                        }
+                        else
+                        {
+                            f.Log(new LogEntry()
+                            {
+                                Level = LogEntry.LogLevel.Warning,
+                                Message = string.Format("Downloaded file was corrupted, retrying", f.Url),
+                                Sender = "FileDumper",
+                                Title = "-"
+                            });
+                            f.Downloaded = 0;
+                            File.Delete(temp_file_path);
+                            f.RetryCount++;
+                            continue;
+                        }
+                    }
+                    else
                     {
                         f.Log(new LogEntry()
                         {
                             Level = LogEntry.LogLevel.Fail,
-                            Message = "Failed to download the file, exceeded retry count of 35",
+                            Message = "Could not download the file because temporary file does not exist",
+                            Sender = "FileDumper",
+                            Title = "-"
+                        });
+                        f.Status = FileQueueStateInfo.DownloadStatus.Error;
+                    }//temporary file block
+
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    if (ex.Message.Contains("404"))
+                    {
+                        f.Log(new LogEntry()
+                        {
+                            Level = LogEntry.LogLevel.Fail,
+                            Message = "Cannot download the file, server returned HTTP 404 Not Found.",
+                            Sender = "FileDumper",
                             Title = "-"
                         });
                         f.Status = FileQueueStateInfo.DownloadStatus.Error;
                         break;
                     }
-
-                    int downloaded = 0;
-
-                    if (File.Exists(temp_file_path))
+                    else
                     {
-                        FileInfo fifo = new FileInfo(temp_file_path);
-                        if (fifo.Length > 0)
-                        {
-                            downloaded = Convert.ToInt32(fifo.Length);
-
-                            if (nc.Headers[HttpRequestHeader.Range] != null)
+                        f.Log(new LogEntry()
                             {
-                                nc.Headers.Remove(HttpRequestHeader.Range);
-                            }
-
-                            nc.AddRange(downloaded);
-
-                            f.Log(new LogEntry()
-                            {
-                                Level = LogEntry.LogLevel.Info,
-                                Message = string.Format("Resuming file download from offset {0}", downloaded),
+                                Level = LogEntry.LogLevel.Warning,
+                                Message = string.Format("Error occured while downloading the file: {0} @ {1}", ex.Message, ex.StackTrace),
                                 Sender = "FileDumper",
                                 Title = "-"
                             });
-
-                        }
                     }
+                    System.Threading.Thread.Sleep(1000);
+                    f.RetryCount++;
+                }//try block
+            }//while block
 
-                    try
-                    {
-                        using (WebResponse wr = nc.GetResponse())
-                        {
-
-                            string content_length = wr.Headers[HttpResponseHeader.ContentLength];
-
-                            double total_length = Convert.ToDouble(content_length);
-
-                            f.Length = total_length;
-                            //byte size
-                            int b_s = 0;
-
-                            byte[] buffer = new byte[2048];
-
-                            using (FileStream fs = new FileStream(temp_file_path, FileMode.OpenOrCreate, FileAccess.ReadWrite))
-                            {
-                                if (downloaded > 0)
-                                {
-                                    fs.Seek(fs.Length, SeekOrigin.Begin);
-                                }
-
-                                using (Stream s = wr.GetResponseStream())
-                                {
-                                    f.Status = FileQueueStateInfo.DownloadStatus.Downloading;
-                                    while ((b_s = s.Read(buffer, 0, 2048)) > 0)
-                                    {
-                                        if (f.ForceStop)
-                                        {
-                                            f.Log(new LogEntry()
-                                            {
-                                                Level = LogEntry.LogLevel.Success,
-                                                Message = "File download stopped by user",
-                                                Sender = "FileDumper",
-                                                Title = "-"
-                                            });
-
-                                            fs.Close();
-                                            File.Delete(temp_file_path);
-                                            f.Status = FileQueueStateInfo.DownloadStatus.Error;
-                                            return;
-                                        }
-
-                                        fs.Write(buffer, 0, b_s);
-
-                                        f.Downloaded += Convert.ToDouble(b_s);
-
-                                        if (f.Type == FileQueueStateInfo.FileType.Thumbnail)
-                                        { NetworkUsageCounter.ThumbConsumed += b_s; }
-                                        else
-                                        { NetworkUsageCounter.FileConsumed += b_s; }
-
-                                    }
-                                }//web response stream block
-                            }// temporary file stream block
-                        }//web response block
-
-                        if (File.Exists(temp_file_path))
-                        {
-                            //don't check hashes for thumbnails
-                            if (f.Type == FileQueueStateInfo.FileType.Thumbnail || verify_file_checksums(temp_file_path, f.Hash))
-                            {
-                                File.Move(temp_file_path, save_path);
-
-                                f.Log(new LogEntry()
-                                {
-                                    Level = LogEntry.LogLevel.Success,
-                                    Message = "Downloaded file successfully",
-                                    Sender = "FileDumper",
-                                    Title = "-"
-                                });
-                                f.Status = FileQueueStateInfo.DownloadStatus.Complete;
-                            }
-                            else
-                            {
-
-                                f.Log(new LogEntry()
-                                {
-                                    Level = LogEntry.LogLevel.Warning,
-                                    Message = string.Format("Downloaded file was corrupted, retrying", f.Url),
-                                    Sender = "FileDumper",
-                                    Title = "-"
-                                });
-                                f.Downloaded = 0;
-                                File.Delete(temp_file_path);
-                                f.RetryCount++;
-                                continue;
-                            }
-                        }
-                        else
-                        {
-                            f.Log(new LogEntry()
-                            {
-                                Level = LogEntry.LogLevel.Fail,
-                                Message = "Could not download the file because temporary file does not exist",
-                                Sender = "FileDumper",
-                                Title = "-"
-                            });
-                            f.Status = FileQueueStateInfo.DownloadStatus.Error;
-                        }//temporary file block
-
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
-                        if (ex.Message.Contains("404"))
-                        {
-                            f.Log(new LogEntry()
-                            {
-                                Level = LogEntry.LogLevel.Fail,
-                                Message = "Cannot download the file, server returned HTTP 404 Not Found.",
-                                Sender = "FileDumper",
-                                Title = "-"
-                            });
-                            f.Status = FileQueueStateInfo.DownloadStatus.Error;
-                            break;
-                        }
-                        else
-                        {
-                            f.Log(new LogEntry()
-                                {
-                                    Level = LogEntry.LogLevel.Warning,
-                                    Message = string.Format("Error occured while downloading the file: {0} @ {1}", ex.Message, ex.StackTrace),
-                                    Sender = "FileDumper",
-                                    Title = "-"
-                                });
-                        }
-                        System.Threading.Thread.Sleep(1000);
-                        f.RetryCount++;
-                    }//try block
-                }//while block
-
-                return;
-            }//wget check block
+            return;
         }
-
 
         static List<string> banned_hashes;
 
@@ -656,12 +618,12 @@ namespace ChanArchiver
 
         private static string banned_files_savepath
         {
-            get { return Path.Combine(board_settings_dir, "banned-files.json");}
+            get { return Path.Combine(board_settings_dir, "banned-files.json"); }
         }
 
         private static void save_banned_files_list()
         {
-           File.WriteAllText( banned_files_savepath, Newtonsoft.Json.JsonConvert.SerializeObject(banned_hashes));
+            File.WriteAllText(banned_files_savepath, Newtonsoft.Json.JsonConvert.SerializeObject(banned_hashes));
         }
 
         private static void load_banned_files_list()
@@ -679,7 +641,6 @@ namespace ChanArchiver
             }
             else { banned_hashes = new List<string>(); }
         }
-
 
         private static bool verify_file_checksums(string path, string md5_hash)
         {

@@ -249,7 +249,7 @@ namespace ChanArchiver
             }
         }
 
-        private static string get_post_string(GenericPost gp)
+        private string get_post_string(GenericPost gp)
         {
             Dictionary<string, object> dic = new Dictionary<string, object>();
 

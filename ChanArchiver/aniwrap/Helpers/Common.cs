@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Security.Cryptography;
 
 namespace AniWrap
 {
@@ -17,11 +18,12 @@ namespace AniWrap
             return UnixEpoch.AddSeconds(timestamp); ;
         }
 
-        private static System.Security.Cryptography.MD5CryptoServiceProvider md5s = new System.Security.Cryptography.MD5CryptoServiceProvider();
-
         public static string MD5(string s)
         {
-            return ByteArrayToString(md5s.ComputeHash(System.Text.Encoding.ASCII.GetBytes(s))); ;
+            using (MD5CryptoServiceProvider md5s = new MD5CryptoServiceProvider())
+            { 
+                return ByteArrayToString(md5s.ComputeHash(System.Text.Encoding.ASCII.GetBytes(s)));
+            }
         }
 
         private static string ByteArrayToString(byte[] arrInput)
