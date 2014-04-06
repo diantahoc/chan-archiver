@@ -46,12 +46,29 @@ namespace ChanArchiver
 
                             for (int i = 0; i < folders.Count(); i++)
                             {
-                                  string op_file = Path.Combine(folders[i].FullName, "op.json");
-                                  if (File.Exists(op_file)) 
-                                  {
-                                      thread_count++;
-                                      threads.Add(new FileInfo(op_file));
-                                  }
+                                string op_file = Path.Combine(folders[i].FullName, "op.json");
+                                if (File.Exists(op_file))
+                                {
+                                    thread_count++;
+                                    threads.Add(new FileInfo(op_file));
+                                }
+                                else
+                                {
+                                    if (Program.active_dumpers.ContainsKey(board_folder))
+                                    {
+                                        BoardWatcher bw = Program.active_dumpers[board_folder];
+                                        int tid = -1;
+                                        Int32.TryParse(folders[i].Name, out tid);
+                                        if (tid > 0) 
+                                        {
+                                            if (!bw.watched_threads.ContainsKey(tid))
+                                            {
+                                                Directory.Delete(folders[i].FullName);
+                                            }
+                                        }
+                                        
+                                    }
+                                }
                             }
 
                             int page_count = (int)Math.Round(Convert.ToDouble(thread_count / ThreadPerPage), MidpointRounding.AwayFromZero);
@@ -76,7 +93,7 @@ namespace ChanArchiver
                                     (
                                           load_post_data(threads[i], true)
                                           .Replace("{op:replycount}", "")
-                                          .Replace("{postLink}", string.Format("/boards/{0}/{1}", board, folders[i].Name))
+                                          .Replace("{postLink}", string.Format("/boards/{0}/{1}", board, threads[i].Directory.Name))
                                     );
 
                                 s.Append("</div>");
@@ -84,7 +101,7 @@ namespace ChanArchiver
 
                             StringBuilder page_numbers = new StringBuilder();
 
-                            for (int i = 0; i < page_count+3; i++)
+                            for (int i = 0; i < page_count + 3; i++)
                             {
                                 if (i == page_offset)
                                 {
