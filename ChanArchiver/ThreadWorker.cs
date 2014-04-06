@@ -150,6 +150,8 @@ namespace ChanArchiver
                         }
                     }
 
+                    if (tc.Instance.IsClosed) { this.UpdateInterval = 5; }
+
                     //System.Threading.Tasks.Task wait = new System.Threading.Tasks.Task((Action)delegate 
                     //    {
                     //        int seconds_to_wait = (int)this.UpdateInterval * 60;

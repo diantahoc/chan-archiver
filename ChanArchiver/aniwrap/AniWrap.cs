@@ -689,13 +689,13 @@ namespace AniWrap
                     else
                     {
                         result = new APIResponse(wex.Message, APIResponse.ErrorType.Other);
-                        throw wex;
+                        //throw wex;
                     }
                 }
                 else
                 {
                     result = new APIResponse(wex.Message, APIResponse.ErrorType.Other);
-                    throw wex;
+                    //throw wex;
                 }
             }
 

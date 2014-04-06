@@ -87,6 +87,10 @@ namespace ChanArchiver.HttpServerHandlers
                     return "image/png";
                 case "gif":
                     return "image/gif";
+                case "webm":
+                    return "video/webm";
+                case "pdf":
+                    return "application/pdf";
                 default:
                     return "application/octect-stream";
             }

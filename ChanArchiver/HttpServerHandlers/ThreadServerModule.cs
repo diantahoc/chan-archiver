@@ -8,6 +8,9 @@ namespace ChanArchiver
 {
     public class ThreadServerModule : HttpServer.HttpModules.HttpModule
     {
+
+        private const int ThreadPerPage = 10;
+
         public override bool Process(HttpServer.IHttpRequest request, HttpServer.IHttpResponse response, HttpServer.Sessions.IHttpSession session)
         {
             string command = request.UriPath.ToString();
@@ -16,7 +19,7 @@ namespace ChanArchiver
             {
                 response.Encoding = System.Text.Encoding.UTF8;
 
-                string[] parame = command.Split('/');
+                string[] parame = command.Split('?')[0].Split('/');
 
                 if (parame.Length == 3)
                 {
@@ -37,29 +40,69 @@ namespace ChanArchiver
 
                             DirectoryInfo[] folders = info.GetDirectories();
 
+                            int thread_count = 0;
+
+                            List<FileInfo> threads = new List<FileInfo>();
+
+                            for (int i = 0; i < folders.Count(); i++)
+                            {
+                                  string op_file = Path.Combine(folders[i].FullName, "op.json");
+                                  if (File.Exists(op_file)) 
+                                  {
+                                      thread_count++;
+                                      threads.Add(new FileInfo(op_file));
+                                  }
+                            }
+
+                            int page_count = (int)Math.Round(Convert.ToDouble(thread_count / ThreadPerPage), MidpointRounding.AwayFromZero);
+
+                            if (page_count <= 0) { page_count = 1; }
+
+                            int page_offset = 0;
+
+                            Int32.TryParse(request.QueryString["pn"].Value, out page_offset);
+
+                            page_offset = Math.Abs(page_offset);
+
                             StringBuilder s = new StringBuilder();
 
-                            for (int i = 0; i < folders.Length; i++)
+                            int start = page_offset * (ThreadPerPage - 1);
+                            int end = start + ThreadPerPage;
+
+                            for (int i = start; i < end && i < thread_count; i++)
                             {
-                                string op_file = Path.Combine(folders[i].FullName, "op.json");
-                                if (File.Exists(op_file))
+                                s.Append("<div class='row'>");
+                                s.Append
+                                    (
+                                          load_post_data(threads[i], true)
+                                          .Replace("{op:replycount}", "")
+                                          .Replace("{postLink}", string.Format("/boards/{0}/{1}", board, folders[i].Name))
+                                    );
+
+                                s.Append("</div>");
+                            }
+
+                            StringBuilder page_numbers = new StringBuilder();
+
+                            for (int i = 0; i < page_count+3; i++)
+                            {
+                                if (i == page_offset)
                                 {
-                                    FileInfo ifo = new FileInfo(op_file);
-
-                                    s.Append("<div class='row'>");
-
-                                    s.Append
-                                        (
-                                              load_post_data(ifo, true)
-                                              .Replace("{op:replycount}", "")
-                                              .Replace("{postLink}", string.Format("/boards/{0}/{1}", board, folders[i].Name))
-                                        );
-
-                                    s.Append("</div>");
+                                    page_numbers.AppendFormat("<li class=\"active\"><a href=\"?pn={0}\">{1}</a></li>", i, i + 1);
+                                }
+                                else
+                                {
+                                    page_numbers.AppendFormat("<li><a href=\"?pn={0}\">{1}</a></li>", i, i + 1);
                                 }
                             }
 
-                            byte[] data = System.Text.Encoding.UTF8.GetBytes(Properties.Resources.board_index_page.Replace("{Items}", s.ToString()));
+                            byte[] data = System.Text.Encoding.UTF8.GetBytes(
+                                Properties.Resources.board_index_page
+                                .Replace("{po}", Convert.ToString(page_offset - 1))
+                                .Replace("{no}", Convert.ToString(page_offset + 1))
+                                .Replace("{pagen}", page_numbers.ToString())
+                                .Replace("{Items}", s.ToString()));
+
                             response.ContentType = "text/html";
                             response.Status = System.Net.HttpStatusCode.OK;
                             response.ContentLength = data.Length;

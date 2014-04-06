@@ -196,7 +196,9 @@
     <None Include="Resources\cached_boards.txt" />
     <None Include="html\4" />
     <None Include="html\full_page.html" />
-    <Content Include="html\bs\boards.htm" />
+    <Content Include="html\bs\boards.htm">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="html\bs\board_index.htm" />
     <Content Include="html\bs\board_list.htm" />
     <Content Include="html\bs\dashboard.htm">
