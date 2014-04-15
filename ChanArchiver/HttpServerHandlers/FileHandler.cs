@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text;
 using System.IO;
 
-namespace ChanArchiver.HttpServerHandlers 
+namespace ChanArchiver.HttpServerHandlers
 {
     public class FileHandler : HttpServer.HttpModules.HttpModule
     {
-        public override bool Process(HttpServer.IHttpRequest request, HttpServer.IHttpResponse response, HttpServer.Sessions.IHttpSession session) 
+        public override bool Process(HttpServer.IHttpRequest request, HttpServer.IHttpResponse response, HttpServer.Sessions.IHttpSession session)
         {
             string command = request.UriPath.ToString();
 
@@ -42,6 +42,40 @@ namespace ChanArchiver.HttpServerHandlers
                     response.ContentLength = data.Length;
                     response.SendHeaders();
                     response.SendBody(data);
+                }
+                return true;
+            }
+
+            if (command.StartsWith("/filecn/"))
+            {
+                string hash = command.Split('?').First().Split('/').Last();
+                string path = Path.Combine(Program.file_save_dir, hash);
+                if (File.Exists(path))
+                {
+                    string custom_name = request.QueryString["cn"].Value;
+
+                    if (!string.IsNullOrEmpty(custom_name))
+                    {
+                        response.AddHeader("content-disposition", string.Format("attachment; filename=\"{0}\"", custom_name));
+                    }
+
+                    response.ContentType = get_mime(command.Split('.').Last().ToLower());
+                    response.Status = System.Net.HttpStatusCode.OK;
+
+                    byte[] data = File.ReadAllBytes(path);
+                    response.ContentLength = data.Length;
+
+                    response.SendHeaders();
+
+                    response.SendBody(data);
+                }
+                else
+                {
+                    response.ContentType = "image/gif";
+                    response.Status = System.Net.HttpStatusCode.NotFound;
+                    response.ContentLength = Properties.Resources._4.Length;
+                    response.SendHeaders();
+                    response.SendBody(Properties.Resources._4);
                 }
                 return true;
             }

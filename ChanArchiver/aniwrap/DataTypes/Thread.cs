@@ -7,6 +7,10 @@ namespace AniWrap.DataTypes
 {
     public class Thread : GenericPost
     {
+        public Thread() 
+        {
+            base.OwnerThread = this;
+        }
         public int image_replies;
         public int text_replies;
         public int page_number;

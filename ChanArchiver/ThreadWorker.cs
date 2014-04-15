@@ -16,11 +16,11 @@ namespace ChanArchiver
         public int ImageLimit { get; set; }
 
         public DateTime LastUpdated { get; private set; }
-        
+
         /// <summary>
         /// A boolean value to indicate if this thread worker has been automatically started by a board watcher.
         /// </summary>
-        
+
         public bool AddedAutomatically { get; set; }
 
         private BackgroundWorker worker;
@@ -66,7 +66,7 @@ namespace ChanArchiver
                 try
                 {
                     sw.Start();
-                    
+
                     log(new LogEntry()
                     {
                         Level = LogEntry.LogLevel.Info,
@@ -77,8 +77,8 @@ namespace ChanArchiver
 
                     tc = Program.aw.GetThreadData(this.Board.Board, this.ID);
 
-                   
-                    if (!can_i_run(tc.Instance)) 
+
+                    if (!can_i_run(tc.Instance))
                     {
                         log(new LogEntry()
                         {
@@ -87,6 +87,7 @@ namespace ChanArchiver
                             Sender = "ThreadWorker",
                             Title = string.Format("/{0}/ - {1}", this.Board.Board, this.ID)
                         });
+                        this.Board.MarkThreadAsFilterTestFailed(this.ID);
                         running = false;
                         Directory.Delete(thread_folder);
                         break;
@@ -177,6 +178,14 @@ namespace ChanArchiver
                 {
                     if (ex.Message.Contains("404"))
                     {
+                        log(new LogEntry()
+                        {
+                            Level = LogEntry.LogLevel.Info,
+                            Message = string.Format("Optimizing thread data..."),
+                            Sender = "ThreadWorker",
+                            Title = string.Format("/{0}/ - {1}", this.Board.Board, this.ID)
+                        });
+                        optimize_thread_file(thread_folder);
                         Thread404(this);
                         return;
                     }
@@ -206,7 +215,29 @@ namespace ChanArchiver
 
         }
 
-        private bool can_i_run(AniWrap.DataTypes.GenericPost po) 
+        public static void optimize_thread_file(string thread_folder)
+        {
+            if (Directory.Exists(thread_folder))
+            {
+                DirectoryInfo t = new DirectoryInfo(thread_folder);
+
+                FileInfo[] files = t.GetFiles("*.json");
+
+                Dictionary<string, string> il = new Dictionary<string, string>();
+
+                foreach (FileInfo fi in files)
+                {
+                    il.Add(fi.Name.Split('.')[0], File.ReadAllText(fi.FullName));
+
+                    File.Delete(fi.FullName);
+                }
+
+                string data = Newtonsoft.Json.JsonConvert.SerializeObject(il);
+                File.WriteAllText(Path.Combine(thread_folder, t.Name + "-opt.json"), data);
+            }
+        }
+
+        private bool can_i_run(AniWrap.DataTypes.GenericPost po)
         {
             if (this.AddedAutomatically)
             {

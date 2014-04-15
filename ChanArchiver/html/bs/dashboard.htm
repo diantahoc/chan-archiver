@@ -54,7 +54,7 @@
             <li class="active">
               <a href="/">Overview</a>
             </li>
-            
+
             <li>
               <a href="/fq">File Queue</a>
             </li>
@@ -64,15 +64,15 @@
             <li>
               <a href="/wjobs">Watch Jobs</a>
             </li>
-            
+
             <li>
               <a href="/monboards">Monitored Boards</a>
             </li>
-            
+
             <li>
               <a href="/filters">Thread Filters</a>
             </li>
-            
+
           </ul>
 
         </div>
@@ -119,7 +119,7 @@
           </div>
 
 
-          <h2 class="sub-header">Network usage</h2>
+          <h2 class="sub-header">Network usage (this hour)</h2>
           <div class="table-responsive">
             <table class="table table-striped">
               <thead>
@@ -136,8 +136,12 @@
 
               </tbody>
             </table>
+
+
           </div>
 
+          <div id="netstats" style="width: 100%; height: 300px;"></div>
+          
           <h2 class="sub-header">Archived threads</h2>
           <div class="table-responsive">
             <table class="table table-striped">
@@ -179,7 +183,25 @@
     <script src="/res/jquery.js"></script>
     <script src="/res/bootstrap.js"></script>
     <script src="/res/docs.js"></script>
-
-
+    <script src="/res/jquery.flot.min.js"></script>
+    <script src="/res/jquery.flot.categories.min.js"></script>
+    <script>
+	$(function() {
+		var data =  {network-stats-data};
+		$.plot("#netstats", [ data ], {
+			series: {
+				bars: {
+					show: true,
+					barWidth: 0.6,
+					align: "center"
+				}
+			},
+			xaxis: {
+				mode: "categories",
+				tickLength: 0
+			}
+		});
+	});
+    </script>
   </body>
 </html>

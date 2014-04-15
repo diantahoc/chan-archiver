@@ -8,11 +8,11 @@ namespace AniWrap.DataTypes
 {
     public class ThreadContainer
     {
-        private Dictionary<int, Reply> _childs;
+        private Dictionary<int, GenericPost> _childs;
 
         public ThreadContainer(Thread instance)
         {
-            _childs = new Dictionary<int, Reply>();
+            _childs = new Dictionary<int, GenericPost>();
             this.Instance = instance;
             this.Title = ThreadHelper.Guess_Post_Title(instance);
         }
@@ -30,33 +30,12 @@ namespace AniWrap.DataTypes
             }
             else
             {
-                Reply r = new Reply(this.Instance, reply);
-
-                this._childs.Add(reply.ID, r);
+                reply.OwnerThread = this.Instance;
+                this._childs.Add(reply.ID, reply);
             }
         }
 
-        //public Reply GetPost(int id)
-        //{
-        //    if (_childs.ContainsKey(id))
-        //    {
-        //        return _childs[id];
-        //    }
-        //    else
-        //    {
-        //        return null;
-        //    }
-        //}
-
-        //public void RemovePost(int id)
-        //{
-        //    if (_childs.ContainsKey(id))
-        //    {
-        //        _childs.Remove(id);
-        //    }
-        //}
-
-        public Reply[] Replies { get { return _childs.Values.ToArray(); } }
+        public GenericPost[] Replies { get { return _childs.Values.ToArray(); } }
 
         public string Title { get; private set; }
 

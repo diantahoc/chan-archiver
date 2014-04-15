@@ -11,7 +11,7 @@ namespace ChanArchiver.HttpServerHandlers
         {
             string command = request.UriPath.ToString();
 
-            if (command == "/favicon.ico") 
+            if (command == "/favicon.ico")
             {
                 response.Status = System.Net.HttpStatusCode.OK;
                 response.ContentLength = Properties.Resources.favicon_ico.Length;
@@ -63,12 +63,20 @@ namespace ChanArchiver.HttpServerHandlers
                         response.ContentType = "application/javascript";
                         break;
                     case "css.css":
-                        data = Encoding.UTF8.GetBytes(ChanArchiver.Properties.Resources.layout);  
+                        data = Encoding.UTF8.GetBytes(ChanArchiver.Properties.Resources.layout);
                         response.ContentType = "text/css";
                         break;
                     case "favicon.ico":
                         data = Properties.Resources.favicon_ico;
                         response.ContentType = "image/x-icon";
+                        break;
+                    case "jquery.flot.min.js":
+                        data = Encoding.UTF8.GetBytes(Properties.Resources.jquery_flot_min);
+                        response.ContentType = "application/javascript";
+                        break;
+                    case "jquery.flot.categories.min.js":
+                        data = Encoding.UTF8.GetBytes(Properties.Resources.jquery_flot_categories_min);
+                        response.ContentType = "application/javascript";
                         break;
                     default:
                         break;

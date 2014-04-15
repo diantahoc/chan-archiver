@@ -11,7 +11,7 @@ namespace ChanArchiver
     {
         public string Board { get; private set; }
 
-        private RSSWatcher rss_w;
+        private LightWatcher lw_w;
         private List<LogEntry> mylogs = new List<LogEntry>();
 
         private bool board_404 = false;
@@ -36,6 +36,7 @@ namespace ChanArchiver
 
         public BoardMode Mode { get; private set; }
 
+        List<int> rejected_threads_because_of_filters = new List<int>();
 
         public BoardWatcher(string board)
         {
@@ -135,7 +136,7 @@ namespace ChanArchiver
 
                 List<object> t = Newtonsoft.Json.JsonConvert.DeserializeObject<List<object>>(data);
 
-                foreach (object id in t) 
+                foreach (object id in t)
                 {
                     try
                     {
@@ -226,19 +227,27 @@ namespace ChanArchiver
                     {
                         foreach (CatalogItem thread in page)
                         {
+                            if (Mode == BoardMode.None)
+                            {
+                                //board watcher have been stopped, return
+                                return;
+                            }
+
                             if (this.Mode == BoardMode.Monitor)
                             {
                                 if (!this.MatchFilters(thread))
                                 {
                                     //in monitor mode, don't add unacceptable threads
+                                    this.MarkThreadAsFilterTestFailed(thread.ID);
+                                    this.Log(new LogEntry() 
+                                    {
+                                        Level = LogEntry.LogLevel.Info,
+                                        Message = "Thread " + thread.ID.ToString() + " has no matching filter, not starting it.",
+                                        Sender = "BoardWatcher",
+                                        Title = ""
+                                    });
                                     continue;
                                 }
-                            }
-
-                            if (Mode == BoardMode.None)
-                            {
-                                //board watcher have been stopped, return
-                                return;
                             }
 
                             if (!watched_threads.ContainsKey(thread.ID))
@@ -320,9 +329,7 @@ namespace ChanArchiver
                     if (ex.Message.Contains("404"))
                     {
                         //board does not exist!
-
                     }
-
                     Log(new LogEntry()
                     {
                         Level = LogEntry.LogLevel.Fail,
@@ -340,12 +347,12 @@ namespace ChanArchiver
         public void StopMonitoring()
         {
             this.Mode = BoardMode.None;
-            
-            if (this.rss_w != null) 
+
+            if (this.lw_w != null)
             {
-                this.rss_w.Stop();
+                this.lw_w.Stop();
             }
-            
+
             int[] keys = this.watched_threads.Keys.ToArray();
 
             foreach (int id in keys)
@@ -365,8 +372,6 @@ namespace ChanArchiver
                 }
                 catch (Exception) { }
             }
-
-         
         }
 
         private void catalog_loaded_callback()
@@ -418,43 +423,41 @@ namespace ChanArchiver
 
         private void start_rss_watcher()
         {
-            rss_w = new RSSWatcher(this);
-            rss_w.DataRefreshed += this.handle_rss_watcher_newdata;
-            rss_w.Start();
+            lw_w = new LightWatcher(this.Board);
+            lw_w.DataRefreshed += this.handle_rss_watcher_newdata;
+            lw_w.Start();
 
             Log(new LogEntry()
             {
                 Level = LogEntry.LogLevel.Success,
-                Message = "RSS Watcher has started",
-                Sender = "RSSWatcher",
+                Message = "Lightweight board watcher has started",
+                Sender = "LightWatcher",
                 Title = string.Format("/{0}/", this.Board)
             });
         }
 
         private void handle_rss_watcher_newdata(int[] data)
         {
-            if (this.Mode != BoardMode.None)
+            foreach (int id in data)
             {
-                foreach (int id in data)
+                if (this.Mode == BoardMode.None) { return; }
+                if (!this.watched_threads.ContainsKey(id))
                 {
-                    if (!this.watched_threads.ContainsKey(id))
+                    if (!this._404_threads.Contains(id))
                     {
-                        if (!this._404_threads.Contains(id))
-                        {
-                            ThreadWorker t = new ThreadWorker(this, id);
-                            t.AddedAutomatically = true;
-                            this.watched_threads.Add(id, t);
-                            t.Thread404 += this.handle_thread_404;
+                        ThreadWorker t = new ThreadWorker(this, id);
+                        t.AddedAutomatically = true;
+                        this.watched_threads.Add(id, t);
+                        t.Thread404 += this.handle_thread_404;
 
-                            t.Start();
-                            Log(new LogEntry()
-                            {
-                                Level = LogEntry.LogLevel.Info,
-                                Message = string.Format("Found new thread {0}", id),
-                                Sender = "RSSWatcher",
-                                Title = string.Format("/{0}/", this.Board)
-                            });
-                        }
+                        t.Start();
+                        Log(new LogEntry()
+                        {
+                            Level = LogEntry.LogLevel.Info,
+                            Message = string.Format("Found new thread {0}", id),
+                            Sender = "LightWatcher",
+                            Title = string.Format("/{0}/", this.Board)
+                        });
                     }
                 }
             }
@@ -472,6 +475,8 @@ namespace ChanArchiver
             if (filter != null)
             {
                 my_filters.Add(filter);
+                
+                ReCheckAllFailedThreads();
             }
         }
 
@@ -497,6 +502,48 @@ namespace ChanArchiver
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Runs when filters are changed (added or removed)
+        /// </summary>
+        private void ReCheckAllFailedThreads()
+        {
+            if (this.Mode == BoardMode.Monitor)
+            {
+                for (int index = 0; index < rejected_threads_because_of_filters.Count; index++)
+                {
+                    try
+                    {
+                        int tid = rejected_threads_because_of_filters[index];
+                        if (!this.watched_threads.ContainsKey(tid))
+                        {
+                            ThreadWorker tw = new ThreadWorker(this, tid);
+                            this.watched_threads.Add(tid, tw);
+                            tw.Thread404 += this.handle_thread_404;
+                            tw.AddedAutomatically = true;
+                            tw.Start();
+                        }
+                        else
+                        {
+                            ThreadWorker tw = watched_threads[tid];
+                            tw.Start();
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        if (index >= rejected_threads_because_of_filters.Count) { return; }
+                    }
+                }
+            }
+        }
+
+        public void MarkThreadAsFilterTestFailed(int id)
+        {
+            if (this.Mode == BoardMode.Monitor)
+            {
+                if (!this.rejected_threads_because_of_filters.Contains(id)) { this.rejected_threads_because_of_filters.Add(id); }
+            }
         }
 
         public void SaveFilters()
@@ -533,7 +580,7 @@ namespace ChanArchiver
         {
             if (System.IO.File.Exists(this.FilterSaveFilePath))
             {
-                List<object> s = (List<object>)Newtonsoft.Json.JsonConvert.DeserializeObject(System.IO.File.ReadAllText(this.FilterSaveFilePath), typeof(List<object>));
+                List<object> s = Newtonsoft.Json.JsonConvert.DeserializeObject<List<object>>(System.IO.File.ReadAllText(this.FilterSaveFilePath));
 
                 foreach (object filter in s)
                 {
@@ -550,7 +597,6 @@ namespace ChanArchiver
                 }
             }
         }
-
 
         private void Log(LogEntry lo)
         {

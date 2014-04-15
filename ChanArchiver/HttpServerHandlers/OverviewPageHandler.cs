@@ -17,7 +17,7 @@ namespace ChanArchiver.HttpServerHandlers
 
                 StringBuilder sb = new StringBuilder(Properties.Resources.dashboard_page);
 
-                sb.Replace("{thumbmode}",  Program .thumb_only ? "<label class='label label-warning'>Warning: Running in thumbnail only mode</label>" : "");
+                sb.Replace("{thumbmode}", Program.thumb_only ? "<label class='label label-warning'>Warning: Running in thumbnail only mode</label>" : "");
 
                 sb.Replace("{RunningTime}", (new RunningTimeInfo()).ToString());
 
@@ -27,6 +27,7 @@ namespace ChanArchiver.HttpServerHandlers
 
                 sb.Replace("{ArchivedThreads}", get_ArchivedThreadsStats());
 
+                sb.Replace("{network-stats-data}", get_network_history(DateTime.Now));
 
                 //write everything
                 response.Status = System.Net.HttpStatusCode.OK;
@@ -44,14 +45,13 @@ namespace ChanArchiver.HttpServerHandlers
             return false;
         }
 
-        private static string get_NetWorkStats()
+        private string get_NetWorkStats()
         {
             StringBuilder sb = new StringBuilder();
 
-
-            double percent_api = NetworkUsageCounter.Total == 0 ? 0 : (NetworkUsageCounter.ApiConsumed / NetworkUsageCounter.Total) * 100;
-            double percent_thumb = NetworkUsageCounter.Total == 0 ? 0 : (NetworkUsageCounter.ThumbConsumed / NetworkUsageCounter.Total) * 100;
-            double percent_file = NetworkUsageCounter.Total == 0 ? 0 : (NetworkUsageCounter.FileConsumed / NetworkUsageCounter.Total) * 100;
+            double percent_api = NetworkUsageCounter.TotalThisHour == 0 ? 0 : (NetworkUsageCounter.ApiConsumedThisHour / NetworkUsageCounter.TotalThisHour) * 100;
+            double percent_thumb = NetworkUsageCounter.TotalThisHour == 0 ? 0 : (NetworkUsageCounter.ThumbConsumedThisHour / NetworkUsageCounter.TotalThisHour) * 100;
+            double percent_file = NetworkUsageCounter.TotalThisHour == 0 ? 0 : (NetworkUsageCounter.FileConsumedThisHour / NetworkUsageCounter.TotalThisHour) * 100;
 
             sb.Append("<tr>");
 
@@ -62,16 +62,16 @@ namespace ChanArchiver.HttpServerHandlers
             sb.Append("</tr>");
 
             sb.Append("<tr>");
-            sb.AppendFormat("<td>{0}</td>", Program.format_size_string(NetworkUsageCounter.ApiConsumed));
-            sb.AppendFormat("<td>{0}</td>", Program.format_size_string(NetworkUsageCounter.ThumbConsumed));
-            sb.AppendFormat("<td>{0}</td>", Program.format_size_string(NetworkUsageCounter.FileConsumed));
-            sb.AppendFormat("<td>{0}</td>", Program.format_size_string(NetworkUsageCounter.Total));
+            sb.AppendFormat("<td>{0}</td>", Program.format_size_string(NetworkUsageCounter.ApiConsumedThisHour));
+            sb.AppendFormat("<td>{0}</td>", Program.format_size_string(NetworkUsageCounter.ThumbConsumedThisHour));
+            sb.AppendFormat("<td>{0}</td>", Program.format_size_string(NetworkUsageCounter.FileConsumedThisHour));
+            sb.AppendFormat("<td>{0}</td>", Program.format_size_string(NetworkUsageCounter.TotalThisHour));
             sb.Append("</tr>");
 
             return sb.ToString();
         }
 
-        private static string get_DiskUsageInfo()
+        private string get_DiskUsageInfo()
         {
             StringBuilder sb = new StringBuilder();
 
@@ -103,7 +103,7 @@ namespace ChanArchiver.HttpServerHandlers
             return sb.ToString();
         }
 
-        private static string get_ArchivedThreadsStats()
+        private string get_ArchivedThreadsStats()
         {
             StringBuilder sb = new StringBuilder();
 
@@ -119,7 +119,25 @@ namespace ChanArchiver.HttpServerHandlers
 
             return sb.ToString();
         }
+
+        private string get_network_history(DateTime day)
+        {
+            //[ ["January", 10], ["February", 8], ["March", 4], ["April", 13], ["May", 17], ["June", 9] ]
+            StringBuilder sb = new StringBuilder();
+            sb.Append("[");
+            var data = NetworkUsageCounter.GetDayStats(day);
+            for (int i = 0; i < data.Length; i++)
+            {
+                double t = data[i].Value / 1024 / 1024;
+                sb.AppendFormat(" [ {0}, {1} ] ", data[i].Key, Math.Round(t, 2, MidpointRounding.AwayFromZero));
+                if (i < data.Length - 1) { sb.Append(","); }
+            }
+            sb.Append("]");
+            return sb.ToString();
+        }
     }
+
+
 
     public class RunningTimeInfo
     {
@@ -141,7 +159,7 @@ namespace ChanArchiver.HttpServerHandlers
             }
 
             //nu
-            this.NetworkUsage = NetworkUsageCounter.Total;
+            this.NetworkUsage = NetworkUsageCounter.TotalConsumedAllTime;
 
 
             //ar
@@ -152,7 +170,6 @@ namespace ChanArchiver.HttpServerHandlers
             }
 
             this.ApplicationErrors = 0;
-
         }
 
         public TimeSpan RunningTime { get; private set; }

@@ -450,6 +450,24 @@ namespace ChanArchiver.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to (function($){var options={xaxis:{categories:null},yaxis:{categories:null}};function processRawData(plot,series,data,datapoints){var xCategories=series.xaxis.options.mode==&quot;categories&quot;,yCategories=series.yaxis.options.mode==&quot;categories&quot;;if(!(xCategories||yCategories))return;var format=datapoints.format;if(!format){var s=series;format=[];format.push({x:true,number:true,required:true});format.push({y:true,number:true,required:true});if(s.bars.show||s.lines.show&amp;&amp;s.lines.fill){var autoscale=!!(s.bars.show&amp;&amp;s.ba [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string jquery_flot_categories_min {
+            get {
+                return ResourceManager.GetString("jquery_flot_categories_min", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to (function($){$.color={};$.color.make=function(r,g,b,a){var o={};o.r=r||0;o.g=g||0;o.b=b||0;o.a=a!=null?a:1;o.add=function(c,d){for(var i=0;i&lt;c.length;++i)o[c.charAt(i)]+=d;return o.normalize()};o.scale=function(c,f){for(var i=0;i&lt;c.length;++i)o[c.charAt(i)]*=f;return o.normalize()};o.toString=function(){if(o.a&gt;=1){return&quot;rgb(&quot;+[o.r,o.g,o.b].join(&quot;,&quot;)+&quot;)&quot;}else{return&quot;rgba(&quot;+[o.r,o.g,o.b,o.a].join(&quot;,&quot;)+&quot;)&quot;}};o.normalize=function(){function clamp(min,value,max){return value&lt;min?min:value&gt;max?max:value}o.r=clam [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string jquery_flot_min {
+            get {
+                return ResourceManager.GetString("jquery_flot_min", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to /*! jQuery v1.11.0 | (c) 2005, 2014 jQuery Foundation, Inc. | jquery.org/license */
         ///!function(a,b){&quot;object&quot;==typeof module&amp;&amp;&quot;object&quot;==typeof module.exports?module.exports=a.document?b(a,!0):function(a){if(!a.document)throw new Error(&quot;jQuery requires a window with a document&quot;);return b(a)}:b(a)}(&quot;undefined&quot;!=typeof window?window:this,function(a,b){var c=[],d=c.slice,e=c.concat,f=c.push,g=c.indexOf,h={},i=h.toString,j=h.hasOwnProperty,k=&quot;&quot;.trim,l={},m=&quot;1.11.0&quot;,n=function(a,b){return new n.fn.init(a,b)},o=/^[\ [rest of string was truncated]&quot;;.
         /// </summary>

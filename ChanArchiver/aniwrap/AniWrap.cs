@@ -82,52 +82,6 @@ namespace AniWrap
 
         }
 
-        /*
-        public ThreadContainer[] GetPage(string board, int page)
-        {
-            APIResponse response = LoadAPI("http://api.4chan.org/%/$.json".Replace("%", board).Replace("$", page.ToString()));
-
-            switch (response.Error)
-            {
-                case APIResponse.ErrorType.NoError:
-                    List<ThreadContainer> il = new List<ThreadContainer>();
-
-                    Dictionary<string, object> list = (Dictionary<string, object>)Newtonsoft.Json.JsonConvert.DeserializeObject(response.Data, typeof(Dictionary<string, object>));
-
-                    //u is thread index
-
-                    Newtonsoft.Json.Linq.JArray threads = (Newtonsoft.Json.Linq.JArray)list["threads"];
-
-                    for (int u = 0; u < threads.Count; u++)
-                    {
-                        Newtonsoft.Json.Linq.JToken posts_object = threads[u]; // array of 'posts' objects. Each one is an array of {Main threads + last replies}.
-                        Newtonsoft.Json.Linq.JToken posts_property = posts_object["posts"];
-
-                        //first one is 0 -- > a thread
-                        //the rest is the last replies
-
-                        ThreadContainer tc = new ThreadContainer(ParseThread(posts_property[0], board));
-
-                        for (int post_index = 1; post_index < posts_property.Count(); post_index++)
-                        {
-                            Newtonsoft.Json.Linq.JToken single_post = posts_property[post_index];
-                            tc.AddReply(ParseReply(single_post, board));
-                        }
-                        il.Add(tc);
-                    }
-                    return il.ToArray();
-
-                case APIResponse.ErrorType.NotFound:
-                    throw new Exception("404");
-
-                case APIResponse.ErrorType.Other:
-                    throw new Exception(response.Data);
-
-                default:
-                    return null;
-            }
-        }*/
-
         public ThreadContainer GetThreadData(string board, int id)
         {
             APIResponse response = LoadAPI("http://a.4cdn.org/#/res/$.json".Replace("#", board).Replace("$", id.ToString()));
@@ -162,7 +116,7 @@ namespace AniWrap
             }
         }
 
-        private static Thread ParseThread(Newtonsoft.Json.Linq.JToken data, string board)
+        private Thread ParseThread(Newtonsoft.Json.Linq.JToken data, string board)
         {
             Thread t = new Thread();
 
@@ -228,22 +182,7 @@ namespace AniWrap
 
             if (data["capcode"] != null)
             {
-                switch (data["capcode"].ToString())
-                {
-                    /*none, mod, admin, admin_highlight, developer*/
-                    case "admin":
-                    case "admin_highlight":
-                        t.Capcode = GenericPost.CapcodeEnum.Admin;
-                        break;
-                    case "developer":
-                        t.Capcode = GenericPost.CapcodeEnum.Developer;
-                        break;
-                    case "mod":
-                        t.Capcode = GenericPost.CapcodeEnum.Mod;
-                        break;
-                    default:
-                        break;
-                }
+                t.Capcode = parse_capcode(Convert.ToString(data["capcode"]));
             }
 
             if (data["sticky"] != null)
@@ -276,6 +215,8 @@ namespace AniWrap
 
             t.File = ParseFile(data, board);
 
+            if (t.File != null) { t.File.owner = t; }
+
             t.image_replies = Convert.ToInt32(data["images"]); ;
 
             t.ID = Convert.ToInt32(data["no"]); ;
@@ -287,7 +228,7 @@ namespace AniWrap
             return t;
         }
 
-        private static PostFile ParseFile(Newtonsoft.Json.Linq.JToken data, string board)
+        private PostFile ParseFile(Newtonsoft.Json.Linq.JToken data, string board)
         {
             if (data["filename"] != null)
             {
@@ -298,7 +239,7 @@ namespace AniWrap
                 pf.width = Convert.ToInt32(data["w"]);
                 pf.thumbW = Convert.ToInt32(data["tn_w"]);
                 pf.thumbH = Convert.ToInt32(data["tn_h"]);
-                pf.owner = Convert.ToInt32(data["no"]);
+                // pf.owner = Convert.ToInt32(data["no"]);
                 pf.thumbnail_tim = data["tim"].ToString();
                 pf.board = board;
                 pf.hash = data["md5"].ToString();
@@ -315,7 +256,7 @@ namespace AniWrap
             }
         }
 
-        private static GenericPost ParseReply(Newtonsoft.Json.Linq.JToken data, string board)
+        private GenericPost ParseReply(Newtonsoft.Json.Linq.JToken data, string board)
         {
             GenericPost t = new GenericPost();
 
@@ -397,7 +338,14 @@ namespace AniWrap
                 t.country_name = "";
             }
 
+            if (data["capcode"] != null)
+            {
+                t.Capcode = parse_capcode(Convert.ToString(data["capcode"]));
+            }
+
             t.File = ParseFile(data, board);
+
+            if (t.File != null) { t.File.owner = t; }
 
             t.ID = Convert.ToInt32(data["no"]); ;
 
@@ -406,7 +354,24 @@ namespace AniWrap
             return t;
         }
 
-        private static CatalogItem ParseJToken_Catalog(Newtonsoft.Json.Linq.JToken thread, int pagenumber, string board)
+        private GenericPost.CapcodeEnum parse_capcode(string cap)
+        {
+            switch (cap.ToLower())
+            {
+                /*none, mod, admin, admin_highlight, developer*/
+                case "admin":
+                case "admin_highlight":
+                    return GenericPost.CapcodeEnum.Admin;
+                case "developer":
+                    return GenericPost.CapcodeEnum.Developer;
+                case "mod":
+                    return GenericPost.CapcodeEnum.Mod;
+                default:
+                    return GenericPost.CapcodeEnum.None;
+            }
+        }
+
+        private CatalogItem ParseJToken_Catalog(Newtonsoft.Json.Linq.JToken thread, int pagenumber, string board)
         {
             CatalogItem ci = new CatalogItem();
 
@@ -462,7 +427,7 @@ namespace AniWrap
                 pf.width = Convert.ToInt32(thread["w"]);
                 pf.thumbW = Convert.ToInt32(thread["tn_w"]);
                 pf.thumbH = Convert.ToInt32(thread["tn_h"]);
-                pf.owner = ci.ID;
+                pf.owner = ci;
                 pf.thumbnail_tim = thread["tim"].ToString();
                 pf.board = board;
 
@@ -519,13 +484,7 @@ namespace AniWrap
            "omitted_images": 0,*/
         }
 
-        public struct ThreadAndDate
-        {
-            public int ID;
-            public DateTime Time;
-        }
-
-        public ThreadAndDate[] GetBoardThreadsID(string board)
+        public Dictionary<int, DateTime> GetBoardThreadsID(string board)
         {
             APIResponse response = LoadAPI("http://a.4cdn.org/#/threads.json".Replace("#", board));
 
@@ -533,7 +492,7 @@ namespace AniWrap
             {
                 case APIResponse.ErrorType.NoError:
 
-                    List<ThreadAndDate> t = new List<ThreadAndDate>();
+                    Dictionary<int, DateTime> dic = new Dictionary<int, DateTime>();
 
                     List<object> pages = (List<object>)Newtonsoft.Json.JsonConvert.DeserializeObject(response.Data, typeof(List<object>));
 
@@ -545,16 +504,12 @@ namespace AniWrap
 
                         foreach (Newtonsoft.Json.Linq.JObject threadinfo in threads)
                         {
-                            t.Add(new ThreadAndDate()
-                            {
-                                ID = Convert.ToInt32(threadinfo["no"]),
-                                Time = Common.ParseUTC_Stamp(Convert.ToInt32(threadinfo["last_modified"]))
-                            });
+                            dic.Add(Convert.ToInt32(threadinfo["no"]), Common.ParseUTC_Stamp(Convert.ToInt32(threadinfo["last_modified"])));
                         }
                     }
 
 
-                    return t.ToArray();
+                    return dic;
 
                 case APIResponse.ErrorType.NotFound:
                     throw new Exception("404");
@@ -567,15 +522,33 @@ namespace AniWrap
             }
         }
 
+        private string LastTimeBoardsWereLoaded
+        {
+            get { return Path.Combine(this._cache_dir, "ltbwl"); }
+        }
+
         public KeyValuePair<string, string>[] GetAvailableBoards()
         {
-            APIResponse api_r = LoadAPI("http://a.4cdn.org/boards.json");
-
             string data = ChanArchiver.Properties.Resources.cached_boards;
 
-            if (api_r.Error == APIResponse.ErrorType.NoError)
+            string cached_catalog_data = Path.Combine(this._cache_dir, "f4b3dd04a377f1118a219154caa1e8e0_data");
+
+            if (File.Exists(cached_catalog_data)) { data = File.ReadAllText(cached_catalog_data); }
+
+            DateTime ll = Common.UnixEpoch;
+
+            if (File.Exists(LastTimeBoardsWereLoaded)) { ll = parse_datetime(File.ReadAllText(LastTimeBoardsWereLoaded)); }
+
+            if ((DateTime.Now - ll).Days > 6)
             {
-                data = api_r.Data;
+                APIResponse api_r = LoadAPI("http://a.4cdn.org/boards.json");
+
+                if (api_r.Error == APIResponse.ErrorType.NoError)
+                {
+                    data = api_r.Data;
+                }
+
+                File.WriteAllText(LastTimeBoardsWereLoaded, datetime_tostring(DateTime.Now));
             }
 
             JObject json = JsonConvert.DeserializeObject<JObject>(data);
@@ -642,7 +615,7 @@ namespace AniWrap
                         while ((iByteSize = s.Read(byteBuffer, 0, 2048)) > 0)
                         {
                             MemIo.Write(byteBuffer, 0, iByteSize);
-                            ChanArchiver.NetworkUsageCounter.ApiConsumed += iByteSize;
+                            ChanArchiver.NetworkUsageCounter.Add_ApiConsumed(iByteSize);
                         }
                         data = MemIo.ToArray();
                     }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Security.Cryptography;
-
+using HtmlAgilityPack;
 namespace AniWrap
 {
     public static class Common
@@ -11,7 +11,7 @@ namespace AniWrap
         public static string imageLink = @"http://i.4cdn.org/#/src/$";
         public static string thumbLink = @"http://t.4cdn.org/#/thumb/$s.jpg";
 
-        private static readonly DateTime UnixEpoch = new System.DateTime(1970, 1, 1, 0, 0, 0, 0);
+        public static readonly DateTime UnixEpoch = new System.DateTime(1970, 1, 1, 0, 0, 0, 0);
 
         public static DateTime ParseUTC_Stamp(int timestamp)
         {
@@ -34,6 +34,42 @@ namespace AniWrap
                 sb.Append(x.ToString("X2"));
             }
             return sb.ToString().ToLower();
+        }
+
+        public static string DecodeHTML(string text)
+        {
+            if (!(String.IsNullOrEmpty(text) || String.IsNullOrWhiteSpace(text)))
+            {
+                HtmlAgilityPack.HtmlDocument doc = new HtmlAgilityPack.HtmlDocument(); doc.LoadHtml(text);
+                return System.Web.HttpUtility.HtmlDecode(Common.GetNodeText(doc.DocumentNode));
+            }
+            else
+            {
+                return "";
+            }
+        }
+
+        private static string GetNodeText(HtmlNode node)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            if (node.Name == "br")
+            {
+                sb.AppendLine();
+            }
+            else if (node.ChildNodes.Count > 0)
+            {
+                foreach (HtmlNode a in node.ChildNodes)
+                {
+                    sb.Append(Common.GetNodeText(a));
+                }
+            }
+            else
+            {
+                return node.InnerText;
+            }
+
+            return sb.ToString();
         }
     }
 }

@@ -130,7 +130,7 @@ namespace ChanArchiver
             Console.Title = "ChanArchiver";
 
             print("ChanArchiver", ConsoleColor.Cyan);
-            Console.WriteLine(" v0.70 stable");
+            Console.WriteLine(" v0.80 stable");
 
             Console.Write("Downloading board data...");
             ValidBoards = aw.GetAvailableBoards();
@@ -165,14 +165,57 @@ namespace ChanArchiver
                 }
             }
 
-            Console.WriteLine("Enter 'Q' to exit safely, any other key to save settings");
-            while (Console.ReadLine().ToUpper() != "Q")
-            {
-                save_settings();
-            }
+            interactive_console();
 
             save_settings();
         }
+
+        private static void interactive_console()
+        {
+            print("Interactive Console", ConsoleColor.Yellow);
+            Console.Write(" has started.\nType (help) to view available commands or (exit) to quit\n");
+
+            string command = "";
+
+            while (command != "exit")
+            {
+                switch (command)
+                {
+                    case "save":
+                        save_settings();
+                        break;
+                    case "optimize-all":
+                        optimize_all_threads();
+                        break;
+                    case "help":
+                        Console.WriteLine("- help: view this text");
+                        Console.WriteLine("- save: save settings");
+                        Console.WriteLine("- optimize-all: optimize all non-active threads");
+                        Console.WriteLine("- exit: save settings and exit the program");
+                        break;
+                    default:
+                        break;
+                }
+                command = Console.ReadLine().Trim().ToLower();
+            }
+        }
+
+        private static void optimize_all_threads()
+        {
+            DirectoryInfo[] boards = new DirectoryInfo(post_files_dir).GetDirectories();
+            foreach (DirectoryInfo board in boards)
+            {
+                DirectoryInfo[] threads = board.GetDirectories();
+
+                foreach (DirectoryInfo thread in threads) 
+                {
+                    ThreadWorker.optimize_thread_file(thread.FullName);
+                    Console.WriteLine("Optimized thread {0} - {1}", board.Name, thread.Name);
+                }
+            }
+            Console.WriteLine("Done");
+        }
+
 
         private static void load_settings()
         {
@@ -180,7 +223,7 @@ namespace ChanArchiver
             load_banned_files_list();
 
             Console.WriteLine("Loading network statistics...");
-            load_stats();
+            NetworkUsageCounter.LoadStats();
 
             Console.WriteLine("Loading manually added threads...");
             load_boards();
@@ -189,7 +232,7 @@ namespace ChanArchiver
         private static void save_settings()
         {
             Console.WriteLine("Saving network statistics...");
-            save_stats();
+            NetworkUsageCounter.SaveStats();
 
             Console.WriteLine("Saving manually added threads...");
             save_boards();
@@ -229,35 +272,6 @@ namespace ChanArchiver
                     }
                 }
             }
-        }
-
-        private static void load_stats()
-        {
-            string stats_file = Path.Combine(program_dir, "stats.log");
-            if (File.Exists(stats_file))
-            {
-                string[] data = File.ReadAllLines(stats_file);
-
-                //0: api consumed
-                //1: file consumed
-                //2: thumb consumed
-
-                NetworkUsageCounter.ApiConsumed += Convert.ToDouble(data[0]);
-                NetworkUsageCounter.FileConsumed += Convert.ToDouble(data[1]);
-                NetworkUsageCounter.ThumbConsumed += Convert.ToDouble(data[2]);
-            }
-        }
-
-        private static void save_stats()
-        {
-            string stats_file = Path.Combine(program_dir, "stats.log");
-
-            File.WriteAllLines(stats_file, new string[] 
-            { 
-                NetworkUsageCounter.ApiConsumed.ToString(),
-                NetworkUsageCounter.FileConsumed.ToString(),
-                NetworkUsageCounter.ThumbConsumed.ToString()
-            });
         }
 
         private static void print(string text, ConsoleColor color)
@@ -443,6 +457,18 @@ namespace ChanArchiver
                     break;
                 }
 
+                if (f.ForceStop)
+                {
+                    f.Log(new LogEntry()
+                    {
+                        Level = LogEntry.LogLevel.Success,
+                        Message = "File download stopped by user",
+                        Sender = "FileDumper",
+                        Title = "-"
+                    });
+                    break;
+                }
+
                 int downloaded = 0;
 
                 if (File.Exists(temp_file_path))
@@ -518,9 +544,9 @@ namespace ChanArchiver
                                     f.Downloaded += Convert.ToDouble(b_s);
 
                                     if (f.Type == FileQueueStateInfo.FileType.Thumbnail)
-                                    { NetworkUsageCounter.ThumbConsumed += b_s; }
+                                    { NetworkUsageCounter.Add_ThumbConsumed(b_s); }
                                     else
-                                    { NetworkUsageCounter.FileConsumed += b_s; }
+                                    { NetworkUsageCounter.Add_FileConsumed(b_s); }
 
                                 }
                             }//web response stream block

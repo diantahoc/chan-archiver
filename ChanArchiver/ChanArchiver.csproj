@@ -62,10 +62,8 @@
     <Compile Include="aniwrap\AniWrap.cs" />
     <Compile Include="aniwrap\DataTypes\APIResponse.cs" />
     <Compile Include="aniwrap\DataTypes\CatalogItem.cs" />
-    <Compile Include="aniwrap\DataTypes\CommentToken.cs" />
     <Compile Include="aniwrap\DataTypes\GenericPost.cs" />
     <Compile Include="aniwrap\DataTypes\PostFile.cs" />
-    <Compile Include="aniwrap\DataTypes\Reply.cs" />
     <Compile Include="aniwrap\DataTypes\Thread.cs" />
     <Compile Include="aniwrap\DataTypes\ThreadContainer.cs" />
     <Compile Include="aniwrap\Helpers\Common.cs" />
@@ -124,37 +122,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="RSSWatcher.cs" />
-    <Compile Include="rss\Collections\ExceptionCollection.cs" />
-    <Compile Include="rss\Collections\RssCategoryCollection.cs" />
-    <Compile Include="rss\Collections\RssChannelCollection.cs" />
-    <Compile Include="rss\Collections\RssFeedCollection.cs" />
-    <Compile Include="rss\Collections\RssItemCollection.cs" />
-    <Compile Include="rss\Collections\RssModuleCollection.cs" />
-    <Compile Include="rss\Collections\RssModuleItemCollection.cs" />
-    <Compile Include="rss\Collections\RssModuleItemCollectionCollection.cs" />
-    <Compile Include="rss\RssChannel\RssChannel.cs" />
-    <Compile Include="rss\RssChannel\RssCloud.cs" />
-    <Compile Include="rss\RssChannel\RssImage.cs" />
-    <Compile Include="rss\RssChannel\RssTextInput.cs" />
-    <Compile Include="rss\RssFeed.cs" />
-    <Compile Include="rss\RssItem\RssEnclosure.cs" />
-    <Compile Include="rss\RssItem\RssGuid.cs" />
-    <Compile Include="rss\RssItem\RssItem.cs" />
-    <Compile Include="rss\RssItem\RssSource.cs" />
-    <Compile Include="rss\RssModule.cs" />
-    <Compile Include="rss\RssModuleItem.cs" />
-    <Compile Include="rss\RssModules\RssBlogChannel.cs" />
-    <Compile Include="rss\RssModules\RssCreativeCommon.cs" />
-    <Compile Include="rss\RssModules\RssPhotoAlbum.cs" />
-    <Compile Include="rss\RssReader.cs" />
-    <Compile Include="rss\RssWriter.cs" />
-    <Compile Include="rss\Shared\DBBool.cs" />
-    <Compile Include="rss\Shared\RssCategory.cs" />
-    <Compile Include="rss\Shared\RssCompact.cs" />
-    <Compile Include="rss\Shared\RssDefault.cs" />
-    <Compile Include="rss\Shared\RssElement.cs" />
-    <Compile Include="rss\Shared\RssEnumerators.cs" />
     <Compile Include="stp\CallerThreadContext.cs" />
     <Compile Include="stp\CanceledWorkItemsGroup.cs" />
     <Compile Include="stp\EventWaitHandle.cs" />
@@ -195,11 +162,15 @@
   <ItemGroup>
     <None Include="Resources\cached_boards.txt" />
     <None Include="html\4" />
-    <None Include="html\full_page.html" />
+    <None Include="html\full_page.html">
+      <SubType>Designer</SubType>
+    </None>
     <Content Include="html\bs\boards.htm">
       <SubType>Designer</SubType>
     </Content>
-    <Content Include="html\bs\board_index.htm" />
+    <Content Include="html\bs\board_index.htm">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="html\bs\board_list.htm" />
     <Content Include="html\bs\dashboard.htm">
       <SubType>Designer</SubType>
@@ -207,7 +178,9 @@
     <Content Include="html\bs\fileinfo.htm">
       <SubType>Designer</SubType>
     </Content>
-    <Content Include="html\bs\filequeue.htm" />
+    <Content Include="html\bs\filequeue.htm">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="html\bs\filters.htm" />
     <Content Include="html\bs\logs.htm" />
     <Content Include="html\bs\res\bootstrap.css" />
@@ -215,6 +188,8 @@
     <Content Include="html\bs\res\dashboard.css" />
     <Content Include="html\bs\res\docs.js" />
     <Content Include="html\bs\res\filequeue.js" />
+    <Content Include="html\bs\res\jquery.flot.categories.min.js" />
+    <Content Include="html\bs\res\jquery.flot.min.js" />
     <Content Include="html\bs\res\jquery.js" />
     <Content Include="html\bs\wjobs.htm">
       <SubType>Designer</SubType>

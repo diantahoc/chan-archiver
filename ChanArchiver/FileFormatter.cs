@@ -15,7 +15,21 @@ namespace ChanArchiver
         public int Width { get; set; }
         public int Size { get; set; }
 
-      
+        public string Extension
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(this.FileName))
+                {
+                    return "";
+                }
+                else
+                {
+                    return this.FileName.Split('.').Last();
+                }
+            }
+        }
+
         public override string ToString()
         {
 
@@ -23,20 +37,20 @@ namespace ChanArchiver
 
             image_template.Replace("{file:id}", this.PostID.ToString());
 
-            image_template.Replace("{file:link}", string.Format("/file/{0}", this.Hash + "." + this.FileName.Split('.').Last()));
+            image_template.Replace("{file:link}", string.Format("/file/{0}.{1}", this.Hash, this.Extension));
 
             image_template.Replace("{file:thumblink}", string.Format("/thumb/{0}", this.Hash + ".jpg"));
 
             image_template.Replace("{file:name}", this.FileName);
             image_template.Replace("{file:size}", Program.format_size_string(this.Size));
 
-            image_template.Replace("{file:dimensions}",string.Format("{0}x{1}", this.Width , this.Height));
+            image_template.Replace("{file:dimensions}", string.Format("{0}x{1}", this.Width, this.Height));
 
-         
+
 
             return image_template.ToString();
         }
-      
+
     }
 
 }

@@ -13,7 +13,7 @@ namespace AniWrap.DataTypes
         {
             this.Capcode = CapcodeEnum.None;
         }
-
+        
         public int ID { get; set; }
 
         public DateTime Time;
@@ -28,31 +28,17 @@ namespace AniWrap.DataTypes
             {
                 if (_comment_text == "")
                 {
-                    HtmlAgilityPack.HtmlDocument doc = new HtmlAgilityPack.HtmlDocument();
-                    doc.LoadHtml(this.Comment);
-
-                    StringBuilder sb = new StringBuilder();
-
-                    foreach (HtmlAgilityPack.HtmlNode node in doc.DocumentNode.ChildNodes)
-                    {
-                        if (node.Name == "br")
-                        {
-                            sb.AppendLine();
-                        }
-                        else
-                        {
-                            sb.Append(node.InnerText);
-                        }
-                    }
-                    _comment_text = HttpUtility.HtmlDecode(sb.ToString());
+                    _comment_text = Common.DecodeHTML(this.Comment);
                     return _comment_text;
                 }
-                else 
+                else
                 {
                     return _comment_text;
                 }
             }
         }
+
+        public GenericPost OwnerThread { get; set; }
 
         public string Subject { get; set; }
         public string Trip { get; set; }

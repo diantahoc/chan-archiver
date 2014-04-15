@@ -16,28 +16,39 @@ namespace ChanArchiver.HttpServerHandlers
 
                 StringBuilder sb = new StringBuilder();
 
-                for (int index = 0; index < Program.queued_files.Keys.Count; index++)
+                var ordered = Program.queued_files.OrderByDescending(x => x.Value.Percent());
+                int count = ordered.Count();
+
+                for (int index = 0; index < count; index++)
                 {
                     try
                     {
-                        KeyValuePair<string, FileQueueStateInfo> kvp = Program.queued_files.ElementAt(index);
+                        KeyValuePair<string, FileQueueStateInfo> kvp = ordered.ElementAt(index);
 
                         FileQueueStateInfo f = kvp.Value;
 
-                        sb.AppendFormat("<tr id='{0}'>", kvp.Key);
+                        //sb.AppendFormat("<tr id='{0}'>", kvp.Key);
+
+                        sb.Append("<tr>");
 
                         sb.AppendFormat("<td>{0}</td>", get_file_status(f.Status));
 
                         sb.AppendFormat("<td>{0}</td>", f.RetryCount);
 
-                        sb.AppendFormat("<td>{0}</td>", f.Type.ToString());
+                        sb.AppendFormat("<td>{0}</td>", get_type(f.Type));
                         sb.AppendFormat("<td>{0}</td>", f.Hash);
 
-                        sb.AppendFormat("<td>{0}</td>", f.Url);
+                        sb.AppendFormat("<td>{0}</td>", Program.format_size_string(f.Length));
+
+                        sb.AppendFormat("<td>/{0}/</td>", f.PostFile.board);
+
+                        sb.AppendFormat("<td><code><a href='/boards/{0}/{1}'>{1}</a></code></td>", f.PostFile.board, f.PostFile.owner.OwnerThread.ID);
+
+                        sb.AppendFormat("<td>{0}</td>", get_ext(f.PostFile.ext));
 
                         sb.AppendFormat("<td>{0} %</td>", Math.Round(f.Percent(), 2));
 
-                        sb.AppendFormat("<td> <a href=\"/fileinfo/{0}{1}\" class=\"label label-primary\">Info</a> </td>", f.Type == FileQueueStateInfo.FileType.FullFile ? "file" : "thumb", f.Hash);
+                        sb.AppendFormat("<td> <a href=\"/fileinfo/{0}\" class=\"label label-primary\">Info</a> </td>", kvp.Key);
 
                         sb.Append("</tr>");
 
@@ -47,7 +58,6 @@ namespace ChanArchiver.HttpServerHandlers
                         if (index >= Program.queued_files.Keys.Count) { break; }
                     }
                 }
-
 
 
                 //write everything
@@ -104,6 +114,37 @@ namespace ChanArchiver.HttpServerHandlers
             return false;
         }
 
+        private string get_ext(string ext)
+        {
+            switch (ext)
+            {
+                case "jpg":
+                    return "<span class=\"label label-info\">JPG</span>";
+                case "png":
+                    return ("<span class=\"label label-warning\">PNG</span>");
+                case "gif":
+                    return ("<span class=\"label label-danger\">GIF</span>");
+                case "pdf":
+                    return ("<span class=\"label label-success\">PDF</span>");
+                case "webm":
+                    return ("<span class=\"label label-default\">WebM</span>");
+                default:
+                    return string.Format("<span class=\"label label-default\">{0}</span>", ext.ToUpper());
+            }
+        }
+
+        private string get_type(FileQueueStateInfo.FileType ty)
+        {
+            if (ty == FileQueueStateInfo.FileType.FullFile)
+            {
+                return "<span class=\"label label-warning\">Full File</span>";
+            }
+            else
+            {
+                return "<span class=\"label label-danger\">Thumb</span>";
+            }
+        }
+
         private string get_file_status(FileQueueStateInfo.DownloadStatus s)
         {
             switch (s)
@@ -116,8 +157,8 @@ namespace ChanArchiver.HttpServerHandlers
                     return ("<span class=\"label label-danger\">Error</span>");
                 case FileQueueStateInfo.DownloadStatus.Complete:
                     return ("<span class=\"label label-success\">Complete</span>");
-                case FileQueueStateInfo.DownloadStatus.Unstarted:
-                    return ("<span class=\"label label-default\">Unstarted</span>");
+                case FileQueueStateInfo.DownloadStatus.Queued:
+                    return ("<span class=\"label label-default\">Queued</span>");
                 default:
                     return ("<span class=\"label label-default\">Unkown</span>");
             }

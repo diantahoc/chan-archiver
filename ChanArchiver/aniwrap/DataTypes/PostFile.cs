@@ -19,7 +19,8 @@ namespace AniWrap.DataTypes
         public bool IsSpoiler { get; set; }
         public string board { get; set; }
 
-        public int owner { get; set; }
+        public GenericPost owner { get; set; }
+       
 
         #region Properties
 

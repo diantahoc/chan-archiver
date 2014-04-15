@@ -8,7 +8,6 @@ namespace ChanArchiver
 {
     public class ThreadServerModule : HttpServer.HttpModules.HttpModule
     {
-
         private const int ThreadPerPage = 10;
 
         public override bool Process(HttpServer.IHttpRequest request, HttpServer.IHttpResponse response, HttpServer.Sessions.IHttpSession session)
@@ -42,15 +41,27 @@ namespace ChanArchiver
 
                             int thread_count = 0;
 
-                            List<FileInfo> threads = new List<FileInfo>();
+                            Dictionary<string, string> threads = new Dictionary<string, string>();
 
                             for (int i = 0; i < folders.Count(); i++)
                             {
                                 string op_file = Path.Combine(folders[i].FullName, "op.json");
+                                string optimized = Path.Combine(folders[i].FullName, folders[i].Name + "-opt.json");
+
                                 if (File.Exists(op_file))
                                 {
                                     thread_count++;
-                                    threads.Add(new FileInfo(op_file));
+                                    threads.Add(folders[i].Name, File.ReadAllText(op_file));
+
+                                }
+                                else if (File.Exists(optimized))
+                                {
+                                    Dictionary<string, object> t = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(File.ReadAllText(optimized));
+                                    if (t.ContainsKey("op"))
+                                    {
+                                        thread_count++;
+                                        threads.Add(folders[i].Name, t["op"].ToString());
+                                    }
                                 }
                                 else
                                 {
@@ -59,14 +70,14 @@ namespace ChanArchiver
                                         BoardWatcher bw = Program.active_dumpers[board_folder];
                                         int tid = -1;
                                         Int32.TryParse(folders[i].Name, out tid);
-                                        if (tid > 0) 
+                                        if (tid > 0)
                                         {
                                             if (!bw.watched_threads.ContainsKey(tid))
                                             {
                                                 Directory.Delete(folders[i].FullName);
                                             }
                                         }
-                                        
+
                                     }
                                 }
                             }
@@ -91,9 +102,9 @@ namespace ChanArchiver
                                 s.Append("<div class='row'>");
                                 s.Append
                                     (
-                                          load_post_data(threads[i], true)
+                                          load_post_data_str(threads.ElementAt(i).Value, true).ToString()
                                           .Replace("{op:replycount}", "")
-                                          .Replace("{postLink}", string.Format("/boards/{0}/{1}", board, threads[i].Directory.Name))
+                                          .Replace("{postLink}", string.Format("/boards/{0}/{1}", board, threads.ElementAt(i).Key))
                                     );
 
                                 s.Append("</div>");
@@ -154,27 +165,54 @@ namespace ChanArchiver
 
                             body.AppendFormat("<div class=\"thread\" id=\"t{0}\">", threadid);
 
-                            DirectoryInfo info = new DirectoryInfo(thread_folder_path);
+                            string opt_path = Path.Combine(thread_folder_path, threadid + "-opt.json");
 
-                            FileInfo[] files = info.GetFiles("*.json", SearchOption.TopDirectoryOnly);
-
-                            body.Append(load_post_data(new FileInfo(Path.Combine(thread_folder_path, "op.json")), true));
-
-                            body.Replace("{op:replycount}", Convert.ToString(files.Count() - 1));
-
-                            IOrderedEnumerable<FileInfo> sorted = files.OrderBy(x => x.Name);
-
-                            int cou = sorted.Count();
-
-                            for (int i = 0; i < cou - 1; i++)
+                            if (File.Exists(opt_path))
                             {
-                                body.Append(load_post_data(sorted.ElementAt(i), false));
+                                Dictionary<string, object> thread_data = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(File.ReadAllText(opt_path));
+
+                                body.Append(load_post_data_str(thread_data["op"].ToString(), true).ToString());
+
+                                body.Replace("{op:replycount}", Convert.ToString(thread_data.Count() - 1));
+
+                                thread_data.Remove("op");
+
+                                IOrderedEnumerable<string> sorted_keys = thread_data.Keys.OrderBy(x => Convert.ToInt32(x));
+
+                                foreach (string key in sorted_keys)
+                                {
+                                    body.Append(load_post_data_str(thread_data[key].ToString(), false).ToString());
+                                }
+
                             }
+                            else
+                            {
+                                DirectoryInfo info = new DirectoryInfo(thread_folder_path);
+
+                                FileInfo[] files = info.GetFiles("*.json", SearchOption.TopDirectoryOnly);
+
+                                body.Append(load_post_data(new FileInfo(Path.Combine(thread_folder_path, "op.json")), true).ToString());
+
+                                body.Replace("{op:replycount}", Convert.ToString(files.Count() - 1));
+
+                                IOrderedEnumerable<FileInfo> sorted = files.OrderBy(x => x.Name);
+
+                                int cou = sorted.Count();
+
+                                for (int i = 0; i < cou - 1; i++)
+                                {
+                                    body.Append(load_post_data(sorted.ElementAt(i), false));
+                                }
+                            }
+
 
                             body.Append("</div>");
 
-
-                            byte[] respon = System.Text.Encoding.UTF8.GetBytes(Properties.Resources.full_page.Replace("{board}", board).Replace("{DocumentBody}", body.ToString()));
+                            byte[] respon = System.Text.Encoding.UTF8.GetBytes
+                                (Properties.Resources.full_page
+                                .Replace("{board}", board)
+                                .Replace("{tid}", threadid)
+                                .Replace("{DocumentBody}", body.ToString()));
 
                             response.ContentLength = respon.Length;
 
@@ -189,19 +227,85 @@ namespace ChanArchiver
                         return true;
                     }
                 }
-                else if (parame.Length == 5)
-                {
-                    _404(response);
-                    return true;
-                    //thread files view mode
-                }
                 else
                 {
                     _404(response);
                 }
             }
 
-            if (command == "/boards")
+            if (command.StartsWith("/getfilelist?"))
+            {
+                int tid = -1;
+                Int32.TryParse(request.QueryString["thread"].Value, out tid);
+
+                string board = request.QueryString["board"].Value;
+
+                if (tid > 0 && !string.IsNullOrEmpty(board))
+                {
+                    string board_folder = Path.Combine(Program.post_files_dir, board);
+
+                    if (Directory.Exists(board_folder))
+                    {
+                        string thread_folder = Path.Combine(board_folder, tid.ToString());
+
+                        if (Directory.Exists(thread_folder))
+                        {
+
+                            DirectoryInfo thread_folder_info = new DirectoryInfo(thread_folder);
+
+                            string opt_path = Path.Combine(thread_folder, thread_folder_info.Name + "-opt.json");
+
+                            StringBuilder sb = new StringBuilder();
+
+                            if (File.Exists(opt_path))
+                            {
+                                Dictionary<string, object> thread_data = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(File.ReadAllText(opt_path));
+                                foreach (object s in thread_data.Values)
+                                {
+                                    PostFormatter pf = load_post_data_str(s.ToString(), false);
+                                    if (pf.MyFile != null)
+                                    {
+                                        string url_name = System.Web.HttpUtility.UrlEncodeUnicode(pf.MyFile.FileName);
+                                        string url = string.Format("/filecn/{0}.{1}?cn={2}", pf.MyFile.Hash, pf.MyFile.Extension, url_name);
+                                        sb.AppendFormat("<a href='{0}'>{1}</a><br/>", url, pf.MyFile.FileName);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                foreach (FileInfo f in thread_folder_info.GetFiles("*.json", SearchOption.TopDirectoryOnly))
+                                {
+                                    PostFormatter pf = load_post_data(f, false);
+                                    if (pf.MyFile != null)
+                                    {
+                                        string url_name = System.Web.HttpUtility.UrlEncodeUnicode(pf.MyFile.FileName);
+                                        string url = string.Format("/filecn/{0}.{1}?cn={2}", pf.MyFile.Hash, pf.MyFile.Extension, url_name);
+                                        sb.AppendFormat("<a href='{0}'>{1}</a><br/>", url, pf.MyFile.FileName);
+                                    }
+                                }
+                            }
+
+                            response.Encoding = Encoding.UTF8;
+
+                            byte[] data = Encoding.UTF8.GetBytes(sb.ToString());
+                            response.ContentType = "text/html";
+                            response.ContentLength = data.Length;
+                            response.SendHeaders();
+                            response.SendBody(data);
+                            return true;
+                        }
+                    }
+
+                    return false;
+                }
+                else
+                {
+                    _404(response);
+                    return true;
+                }
+            }
+
+            if (command == "/boards" || command == "/boards/")
             {
                 response.Encoding = System.Text.Encoding.UTF8;
 
@@ -639,16 +743,22 @@ namespace ChanArchiver
 
             foreach (KeyValuePair<string, string> bb in Program.ValidBoards)
             {
-                sb.AppendFormat("<option value='{0}'>/{0}/ - {1}</option>", bb.Key, bb.Value);
+                sb.AppendFormat("<option value='{0}'>{0} - {1}</option>", bb.Key, bb.Value);
             }
 
             sb.Append("</select>");
             return sb.ToString();
         }
 
-        private string load_post_data(FileInfo fi, bool isop)
+
+        private PostFormatter load_post_data(FileInfo fi, bool isop)
         {
-            Dictionary<string, object> post_data = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(File.ReadAllText(fi.FullName));
+            return load_post_data_str(File.ReadAllText(fi.FullName), isop);
+        }
+
+        private PostFormatter load_post_data_str(string data, bool isop)
+        {
+            Dictionary<string, object> post_data = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(data);
 
             PostFormatter pf = new PostFormatter();
 
@@ -747,7 +857,7 @@ namespace ChanArchiver
                 pf.Type = PostFormatter.PostType.Reply;
             }
 
-            return pf.ToString();
+            return pf;
         }
 
     }
