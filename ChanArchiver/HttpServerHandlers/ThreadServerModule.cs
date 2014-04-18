@@ -677,6 +677,13 @@ namespace ChanArchiver
                 return true;
             }
 
+            if (command.StartsWith("/action/enablefullfile"))
+            {
+                Program.thumb_only = false;
+                response.Redirect("/");
+                return true;
+            }
+
             if (command.StartsWith("/action/resetfileretrycount/"))
             {
                 string workid = command.Split('/').Last();

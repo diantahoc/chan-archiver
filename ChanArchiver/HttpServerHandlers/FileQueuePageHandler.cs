@@ -159,8 +159,13 @@ namespace ChanArchiver.HttpServerHandlers
                     return ("<span class=\"label label-success\">Complete</span>");
                 case FileQueueStateInfo.DownloadStatus.Queued:
                     return ("<span class=\"label label-default\">Queued</span>");
+                case FileQueueStateInfo.DownloadStatus.NotFound:
+                    return ("<span class=\"label label-danger\">404</span>");
+                case FileQueueStateInfo.DownloadStatus.Stopped:
+                    return ("<span class=\"label label-primary\">Stopped</span>");
+
                 default:
-                    return ("<span class=\"label label-default\">Unkown</span>");
+                    return string.Format("<span class=\"label label-default\">{0}</span>", s);
             }
         }
 

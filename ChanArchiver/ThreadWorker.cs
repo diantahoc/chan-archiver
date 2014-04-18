@@ -151,26 +151,7 @@ namespace ChanArchiver
                         }
                     }
 
-                    if (tc.Instance.IsClosed) { this.UpdateInterval = 5; }
-
-                    //System.Threading.Tasks.Task wait = new System.Threading.Tasks.Task((Action)delegate 
-                    //    {
-                    //        int seconds_to_wait = (int)this.UpdateInterval * 60;
-                    //        for (int i = 0; i < seconds_to_wait; i++) 
-                    //        {
-                    //            if (running)
-                    //            {
-                    //                System.Threading.Thread.Sleep(1000); //1 sec
-                    //            }
-                    //            else 
-                    //            {
-                    //                return;
-                    //            }
-                    //        }
-                    //    });
-
-                    //wait.Start();
-                    //wait.Wait();
+                    if (tc.Instance.IsSticky) { this.UpdateInterval = 5; }
 
                     System.Threading.Thread.Sleep(Convert.ToInt32(this.UpdateInterval * 60 * 1000));
                 }
@@ -220,6 +201,8 @@ namespace ChanArchiver
             if (Directory.Exists(thread_folder))
             {
                 DirectoryInfo t = new DirectoryInfo(thread_folder);
+
+                if (File.Exists(Path.Combine(t.FullName, t.Name + "-opt.json"))) { return; }
 
                 FileInfo[] files = t.GetFiles("*.json");
 

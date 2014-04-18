@@ -17,7 +17,7 @@ namespace ChanArchiver.HttpServerHandlers
 
                 StringBuilder sb = new StringBuilder(Properties.Resources.dashboard_page);
 
-                sb.Replace("{thumbmode}", Program.thumb_only ? "<label class='label label-warning'>Warning: Running in thumbnail only mode</label>" : "");
+                sb.Replace("{thumbmode}", Program.thumb_only ? "<div class=\"bs-callout bs-callout-warning\"><h4>ChanArchiver is running in thumbnail mode</h4><p>Only thumbnails will be saved. To disable it, restart ChanArchiver without the <code>--thumbonly</code> switch, or click <a href='/action/enablefullfile'>here</a></p></div>" : "");
 
                 sb.Replace("{RunningTime}", (new RunningTimeInfo()).ToString());
 

@@ -175,7 +175,7 @@ namespace ChanArchiver
             print("Interactive Console", ConsoleColor.Yellow);
             Console.Write(" has started.\nType (help) to view available commands or (exit) to quit\n");
 
-            string command = "";
+            string command = Console.ReadLine().Trim().ToLower();
 
             while (command != "exit")
             {
@@ -187,13 +187,19 @@ namespace ChanArchiver
                     case "optimize-all":
                         optimize_all_threads();
                         break;
+                    case "toggle-ff":
+                        thumb_only = !thumb_only;
+                        Console.WriteLine("Full files saving is {0}", thumb_only ? "disabled" : "enabled"); 
+                        break;
                     case "help":
                         Console.WriteLine("- help: view this text");
                         Console.WriteLine("- save: save settings");
                         Console.WriteLine("- optimize-all: optimize all non-active threads");
                         Console.WriteLine("- exit: save settings and exit the program");
+                        Console.WriteLine("- toggle-ff: Enable or disable full file saving.");
                         break;
                     default:
+                        Console.WriteLine("Unkown command '{0}'", command);
                         break;
                 }
                 command = Console.ReadLine().Trim().ToLower();
@@ -466,7 +472,9 @@ namespace ChanArchiver
                         Sender = "FileDumper",
                         Title = "-"
                     });
-                    break;
+                    if (File.Exists(temp_file_path)) { File.Delete(temp_file_path); }
+                    f.Status = FileQueueStateInfo.DownloadStatus.Stopped;
+                    return;
                 }
 
                 int downloaded = 0;
@@ -535,7 +543,7 @@ namespace ChanArchiver
 
                                         fs.Close();
                                         File.Delete(temp_file_path);
-                                        f.Status = FileQueueStateInfo.DownloadStatus.Error;
+                                        f.Status = FileQueueStateInfo.DownloadStatus.Stopped;
                                         return;
                                     }
 
@@ -609,8 +617,8 @@ namespace ChanArchiver
                             Sender = "FileDumper",
                             Title = "-"
                         });
-                        f.Status = FileQueueStateInfo.DownloadStatus.Error;
-                        break;
+                        f.Status = FileQueueStateInfo.DownloadStatus.NotFound;
+                        return;
                     }
                     else
                     {
