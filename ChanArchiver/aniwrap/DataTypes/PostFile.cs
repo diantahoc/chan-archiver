@@ -20,7 +20,7 @@ namespace AniWrap.DataTypes
         public string board { get; set; }
 
         public GenericPost owner { get; set; }
-       
+
 
         #region Properties
 
@@ -28,7 +28,7 @@ namespace AniWrap.DataTypes
         {
             get
             {
-                return Common.thumbLink.Replace("#", this.board).Replace("$", this.thumbnail_tim);
+                return string.Format(Common.thumbLink, this.board, this.thumbnail_tim);
             }
         }
 
@@ -36,7 +36,7 @@ namespace AniWrap.DataTypes
         {
             get
             {
-                return Common.imageLink.Replace("#", this.board).Replace("$", this.thumbnail_tim + "." + this.ext);
+                return string.Format(Common.imageLink, this.board, this.thumbnail_tim, this.ext);
             }
         }
         #endregion

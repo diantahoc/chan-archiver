@@ -84,7 +84,7 @@ namespace AniWrap
 
         public ThreadContainer GetThreadData(string board, int id)
         {
-            APIResponse response = LoadAPI("http://a.4cdn.org/#/res/$.json".Replace("#", board).Replace("$", id.ToString()));
+            APIResponse response = LoadAPI(string.Format("http://a.4cdn.org/{0}/thread/{1}.json", board, id));
 
             switch (response.Error)
             {
@@ -494,7 +494,7 @@ namespace AniWrap
 
                     Dictionary<int, DateTime> dic = new Dictionary<int, DateTime>();
 
-                    List<object> pages = (List<object>)Newtonsoft.Json.JsonConvert.DeserializeObject(response.Data, typeof(List<object>));
+                    List<object> pages = Newtonsoft.Json.JsonConvert.DeserializeObject<List<object>>(response.Data);
 
 
                     for (int i = 0; i < pages.Count; i++)

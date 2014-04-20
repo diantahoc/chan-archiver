@@ -8,8 +8,14 @@ namespace AniWrap
 {
     public static class Common
     {
-        public static string imageLink = @"http://i.4cdn.org/#/src/$";
-        public static string thumbLink = @"http://t.4cdn.org/#/thumb/$s.jpg";
+        /// <summary>
+        /// {0}: board, {1}: tim, {2}: ext
+        /// </summary>
+        public const string imageLink = @"http://i.4cdn.org/{0}/{1}.{2}";
+        /// <summary>
+        /// {0}:board, {1}: tim
+        /// </summary>
+        public const string thumbLink = @"http://t.4cdn.org/{0}/{1}s.jpg";
 
         public static readonly DateTime UnixEpoch = new System.DateTime(1970, 1, 1, 0, 0, 0, 0);
 
