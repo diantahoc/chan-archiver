@@ -8,7 +8,7 @@ namespace ChanArchiver
 {
     public class ThreadServerModule : HttpServer.HttpModules.HttpModule
     {
-        private const int ThreadPerPage = 10;
+        private const double ThreadPerPage = 15.0;
 
         public override bool Process(HttpServer.IHttpRequest request, HttpServer.IHttpResponse response, HttpServer.Sessions.IHttpSession session)
         {
@@ -23,286 +23,138 @@ namespace ChanArchiver
                 if (parame.Length == 3)
                 {
                     //board index view mode
-                    string board = parame[2];
-                    if (string.IsNullOrEmpty(board))
+                    string board = parame[2]; if (string.IsNullOrEmpty(board)) { _404(response); return true; }
+
+                    PostFormatter[] board_index = ThreadStore.GetIndex(board); if (board_index.Length == 0) { _404(response); return true; }
+
+                    int page_count = Convert.ToInt32(Math.Round(Convert.ToDouble(board_index.Length) / ThreadPerPage, MidpointRounding.AwayFromZero));
+
+                    if (page_count <= 0) { page_count = 1; }
+
+                    int page_offset = 0;
+
+                    Int32.TryParse(request.QueryString["pn"].Value, out page_offset);
+
+                    page_offset = Math.Abs(page_offset);
+
+                    StringBuilder s = new StringBuilder();
+
+                    int start = Convert.ToInt32(page_offset * (ThreadPerPage - 1));
+                    int end = Convert.ToInt32(start + ThreadPerPage);
+
+                    for (int i = start; i < end && i < board_index.Length; i++)
                     {
-                        _404(response);
-                        return true;
+                        PostFormatter pf = board_index[i];
+                        s.Append("<div class='row'>");
+                        s.Append
+                            (
+                                   pf.ToString()
+                                  .Replace("{op:replycount}", "")
+                                  .Replace("{postLink}", string.Format("/boards/{0}/{1}", board, pf.PostID))
+                            );
+
+                        s.Append("</div>");
                     }
-                    else
+
+                    StringBuilder page_numbers = new StringBuilder();
+
+                    for (int i = 0; i < page_count + 3; i++)
                     {
-                        string board_folder = Path.Combine(Program.post_files_dir, board);
-
-                        if (Directory.Exists(board_folder))
+                        if (i == page_offset)
                         {
-                            DirectoryInfo info = new DirectoryInfo(board_folder);
-
-                            DirectoryInfo[] folders = info.GetDirectories();
-
-                            int thread_count = 0;
-
-                            Dictionary<string, string> threads = new Dictionary<string, string>();
-
-                            for (int i = 0; i < folders.Count(); i++)
-                            {
-                                string op_file = Path.Combine(folders[i].FullName, "op.json");
-                                string optimized = Path.Combine(folders[i].FullName, folders[i].Name + "-opt.json");
-
-                                if (File.Exists(op_file))
-                                {
-                                    thread_count++;
-                                    threads.Add(folders[i].Name, File.ReadAllText(op_file));
-
-                                }
-                                else if (File.Exists(optimized))
-                                {
-                                    Dictionary<string, object> t = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(File.ReadAllText(optimized));
-                                    if (t.ContainsKey("op"))
-                                    {
-                                        thread_count++;
-                                        threads.Add(folders[i].Name, t["op"].ToString());
-                                    }
-                                }
-                                else
-                                {
-                                    if (Program.active_dumpers.ContainsKey(board_folder))
-                                    {
-                                        BoardWatcher bw = Program.active_dumpers[board_folder];
-                                        int tid = -1;
-                                        Int32.TryParse(folders[i].Name, out tid);
-                                        if (tid > 0)
-                                        {
-                                            if (!bw.watched_threads.ContainsKey(tid))
-                                            {
-                                                Directory.Delete(folders[i].FullName);
-                                            }
-                                        }
-
-                                    }
-                                }
-                            }
-
-                            int page_count = (int)Math.Round(Convert.ToDouble(thread_count / ThreadPerPage), MidpointRounding.AwayFromZero);
-
-                            if (page_count <= 0) { page_count = 1; }
-
-                            int page_offset = 0;
-
-                            Int32.TryParse(request.QueryString["pn"].Value, out page_offset);
-
-                            page_offset = Math.Abs(page_offset);
-
-                            StringBuilder s = new StringBuilder();
-
-                            int start = page_offset * (ThreadPerPage - 1);
-                            int end = start + ThreadPerPage;
-
-                            for (int i = start; i < end && i < thread_count; i++)
-                            {
-                                s.Append("<div class='row'>");
-                                s.Append
-                                    (
-                                          load_post_data_str(threads.ElementAt(i).Value, true).ToString()
-                                          .Replace("{op:replycount}", "")
-                                          .Replace("{postLink}", string.Format("/boards/{0}/{1}", board, threads.ElementAt(i).Key))
-                                    );
-
-                                s.Append("</div>");
-                            }
-
-                            StringBuilder page_numbers = new StringBuilder();
-
-                            for (int i = 0; i < page_count + 3; i++)
-                            {
-                                if (i == page_offset)
-                                {
-                                    page_numbers.AppendFormat("<li class=\"active\"><a href=\"?pn={0}\">{1}</a></li>", i, i + 1);
-                                }
-                                else
-                                {
-                                    page_numbers.AppendFormat("<li><a href=\"?pn={0}\">{1}</a></li>", i, i + 1);
-                                }
-                            }
-
-                            byte[] data = System.Text.Encoding.UTF8.GetBytes(
-                                Properties.Resources.board_index_page
-                                .Replace("{po}", Convert.ToString(page_offset - 1))
-                                .Replace("{no}", Convert.ToString(page_offset + 1))
-                                .Replace("{pagen}", page_numbers.ToString())
-                                .Replace("{Items}", s.ToString()));
-
-                            response.ContentType = "text/html";
-                            response.Status = System.Net.HttpStatusCode.OK;
-                            response.ContentLength = data.Length;
-                            response.SendHeaders();
-                            response.SendBody(data);
+                            page_numbers.AppendFormat("<li class=\"active\"><a href=\"?pn={0}\">{1}</a></li>", i, i + 1);
                         }
                         else
                         {
-                            _404(response);
+                            page_numbers.AppendFormat("<li><a href=\"?pn={0}\">{1}</a></li>", i, i + 1);
                         }
-
-                        return true;
                     }
+
+                    byte[] data = Encoding.UTF8.GetBytes(
+                        Properties.Resources.board_index_page
+                        .Replace("{po}", Convert.ToString(page_offset - 1))
+                        .Replace("{no}", Convert.ToString(page_offset + 1))
+                        .Replace("{pagen}", page_numbers.ToString())
+                        .Replace("{Items}", s.ToString()));
+
+                    response.ContentType = "text/html";
+                    response.Status = System.Net.HttpStatusCode.OK;
+                    response.ContentLength = data.Length;
+                    response.SendHeaders();
+                    response.SendBody(data);
+
+                    return true;
                 }
-                else if (parame.Length == 4)
+                else if (parame.Length >= 4)
                 {
                     //thread view mode
                     string board = parame[2];
                     string threadid = parame[3];
 
-                    if (string.IsNullOrEmpty(board) || string.IsNullOrEmpty(threadid))
+                    if (string.IsNullOrEmpty(board) || string.IsNullOrEmpty(threadid)) { _404(response); }
+
+                    PostFormatter[] thread_data = ThreadStore.GetThread(board, threadid); if (thread_data.Length == 0) { _404(response); return true; }
+
+                    StringBuilder body = new StringBuilder();
+
+                    body.AppendFormat("<div class=\"thread\" id=\"t{0}\">", threadid);
+
+                    body.Append(thread_data[0]);
+
+                    body.Replace("{op:replycount}", Convert.ToString(thread_data.Length - 1));
+
+                    for (int i = 1; i < thread_data.Length; i++)
                     {
-                        _404(response);
+                        body.Append(thread_data[i]);
                     }
-                    else
-                    {
-                        string thread_folder_path = Path.Combine(Program.post_files_dir, board, threadid);
 
-                        if (Directory.Exists(thread_folder_path))
-                        {
-                            StringBuilder body = new StringBuilder();
+                    body.Append("</div>");
 
-                            body.AppendFormat("<div class=\"thread\" id=\"t{0}\">", threadid);
+                    byte[] respon = Encoding.UTF8.GetBytes
+                        (Properties.Resources.full_page
+                        .Replace("{board}", board)
+                        .Replace("{tid}", threadid)
+                        .Replace("{DocumentBody}", body.ToString()));
 
-                            string opt_path = Path.Combine(thread_folder_path, threadid + "-opt.json");
+                    response.ContentLength = respon.Length;
 
-                            if (File.Exists(opt_path))
-                            {
-                                Dictionary<string, object> thread_data = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(File.ReadAllText(opt_path));
+                    response.SendHeaders();
+                    response.SendBody(respon);
 
-                                body.Append(load_post_data_str(thread_data["op"].ToString(), true).ToString());
-
-                                body.Replace("{op:replycount}", Convert.ToString(thread_data.Count() - 1));
-
-                                thread_data.Remove("op");
-
-                                IOrderedEnumerable<string> sorted_keys = thread_data.Keys.OrderBy(x => Convert.ToInt32(x));
-
-                                foreach (string key in sorted_keys)
-                                {
-                                    body.Append(load_post_data_str(thread_data[key].ToString(), false).ToString());
-                                }
-
-                            }
-                            else
-                            {
-                                DirectoryInfo info = new DirectoryInfo(thread_folder_path);
-
-                                FileInfo[] files = info.GetFiles("*.json", SearchOption.TopDirectoryOnly);
-
-                                body.Append(load_post_data(new FileInfo(Path.Combine(thread_folder_path, "op.json")), true).ToString());
-
-                                body.Replace("{op:replycount}", Convert.ToString(files.Count() - 1));
-
-                                IOrderedEnumerable<FileInfo> sorted = files.OrderBy(x => x.Name);
-
-                                int cou = sorted.Count();
-
-                                for (int i = 0; i < cou - 1; i++)
-                                {
-                                    body.Append(load_post_data(sorted.ElementAt(i), false));
-                                }
-                            }
-
-
-                            body.Append("</div>");
-
-                            byte[] respon = System.Text.Encoding.UTF8.GetBytes
-                                (Properties.Resources.full_page
-                                .Replace("{board}", board)
-                                .Replace("{tid}", threadid)
-                                .Replace("{DocumentBody}", body.ToString()));
-
-                            response.ContentLength = respon.Length;
-
-                            response.SendHeaders();
-                            response.SendBody(respon);
-                        }
-                        else
-                        {
-                            _404(response);
-                        }
-
-                        return true;
-                    }
-                }
-                else
-                {
-                    _404(response);
+                    return true;
                 }
             }
 
             if (command.StartsWith("/getfilelist?"))
             {
-                int tid = -1;
-                Int32.TryParse(request.QueryString["thread"].Value, out tid);
-
                 string board = request.QueryString["board"].Value;
 
-                if (tid > 0 && !string.IsNullOrEmpty(board))
-                {
-                    string board_folder = Path.Combine(Program.post_files_dir, board);
+                string threadid = request.QueryString["thread"].Value;
 
-                    if (Directory.Exists(board_folder))
+                if (string.IsNullOrEmpty(board) || string.IsNullOrEmpty(threadid)) { _404(response); }
+
+                PostFormatter[] thread_data = ThreadStore.GetThread(board, threadid); if (thread_data.Length == 0) { _404(response); return true; }
+
+                StringBuilder sb = new StringBuilder();
+
+                for (int i = 0; i < thread_data.Length; i++)
+                {
+                    PostFormatter pf = thread_data[i];
+                    if (pf.MyFile != null)
                     {
-                        string thread_folder = Path.Combine(board_folder, tid.ToString());
-
-                        if (Directory.Exists(thread_folder))
-                        {
-
-                            DirectoryInfo thread_folder_info = new DirectoryInfo(thread_folder);
-
-                            string opt_path = Path.Combine(thread_folder, thread_folder_info.Name + "-opt.json");
-
-                            StringBuilder sb = new StringBuilder();
-
-                            if (File.Exists(opt_path))
-                            {
-                                Dictionary<string, object> thread_data = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(File.ReadAllText(opt_path));
-                                foreach (object s in thread_data.Values)
-                                {
-                                    PostFormatter pf = load_post_data_str(s.ToString(), false);
-                                    if (pf.MyFile != null)
-                                    {
-                                        string url_name = System.Web.HttpUtility.UrlEncodeUnicode(pf.MyFile.FileName);
-                                        string url = string.Format("/filecn/{0}.{1}?cn={2}", pf.MyFile.Hash, pf.MyFile.Extension, url_name);
-                                        sb.AppendFormat("<a href='{0}'>{1}</a><br/>", url, pf.MyFile.FileName);
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                foreach (FileInfo f in thread_folder_info.GetFiles("*.json", SearchOption.TopDirectoryOnly))
-                                {
-                                    PostFormatter pf = load_post_data(f, false);
-                                    if (pf.MyFile != null)
-                                    {
-                                        string url_name = System.Web.HttpUtility.UrlEncodeUnicode(pf.MyFile.FileName);
-                                        string url = string.Format("/filecn/{0}.{1}?cn={2}", pf.MyFile.Hash, pf.MyFile.Extension, url_name);
-                                        sb.AppendFormat("<a href='{0}'>{1}</a><br/>", url, pf.MyFile.FileName);
-                                    }
-                                }
-                            }
-
-                            response.Encoding = Encoding.UTF8;
-
-                            byte[] data = Encoding.UTF8.GetBytes(sb.ToString());
-                            response.ContentType = "text/html";
-                            response.ContentLength = data.Length;
-                            response.SendHeaders();
-                            response.SendBody(data);
-                            return true;
-                        }
+                        string url_name = System.Web.HttpUtility.UrlEncodeUnicode(pf.MyFile.FileName);
+                        string url = string.Format("/filecn/{0}.{1}?cn={2}", pf.MyFile.Hash, pf.MyFile.Extension, url_name);
+                        sb.AppendFormat("<a href='{0}'>{1}</a><br/>", url, pf.MyFile.FileName);
                     }
+                }
 
-                    return false;
-                }
-                else
-                {
-                    _404(response);
-                    return true;
-                }
+                byte[] data = Encoding.UTF8.GetBytes(sb.ToString());
+                response.ContentType = "text/html";
+                response.ContentLength = data.Length;
+                response.Encoding = Encoding.UTF8;
+                response.SendHeaders();
+                response.SendBody(data);
+                return true;
             }
 
             if (command == "/boards" || command == "/boards/")
@@ -756,116 +608,5 @@ namespace ChanArchiver
             sb.Append("</select>");
             return sb.ToString();
         }
-
-
-        private PostFormatter load_post_data(FileInfo fi, bool isop)
-        {
-            return load_post_data_str(File.ReadAllText(fi.FullName), isop);
-        }
-
-        private PostFormatter load_post_data_str(string data, bool isop)
-        {
-            Dictionary<string, object> post_data = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(data);
-
-            PostFormatter pf = new PostFormatter();
-
-            if (post_data.ContainsKey("RawComment"))
-            {
-                pf.Comment = Convert.ToString(post_data["RawComment"]);
-            }
-
-            if (post_data.ContainsKey("Email"))
-            {
-                pf.Email = Convert.ToString(post_data["Email"]);
-            }
-            if (post_data.ContainsKey("Name"))
-            {
-                pf.Name = Convert.ToString(post_data["Name"]);
-            }
-
-            if (post_data.ContainsKey("PosterID"))
-            {
-                pf.PosterID = Convert.ToString(post_data["PosterID"]);
-            }
-
-            if (post_data.ContainsKey("Subject"))
-            {
-                pf.Subject = Convert.ToString(post_data["Subject"]);
-            }
-            if (post_data.ContainsKey("Trip"))
-            {
-                pf.Trip = Convert.ToString(post_data["Trip"]);
-            }
-
-            if (post_data.ContainsKey("ID"))
-            {
-                pf.PostID = Convert.ToInt32(post_data["ID"]);
-            }
-
-            if (post_data.ContainsKey("Time"))
-            {
-                pf.Time = Convert.ToDateTime(post_data["Time"]);
-            }
-
-            if (post_data.ContainsKey("FileHash"))
-            {
-                FileFormatter f = new FileFormatter();
-
-                f.PostID = pf.PostID;
-
-                if (post_data.ContainsKey("FileName"))
-                {
-                    f.FileName = Convert.ToString(post_data["FileName"]);
-                }
-
-                if (post_data.ContainsKey("FileHash"))
-                {
-                    f.Hash = Convert.ToString(post_data["FileHash"]);
-                }
-                if (post_data.ContainsKey("ThumbTime"))
-                {
-                    f.ThumbName = Convert.ToString(post_data["ThumbTime"]);
-                }
-
-                if (post_data.ContainsKey("FileHeight"))
-                {
-                    f.Height = Convert.ToInt32(post_data["FileHeight"]);
-                }
-
-                if (post_data.ContainsKey("FileWidth"))
-                {
-                    f.Width = Convert.ToInt32(post_data["FileWidth"]);
-                }
-
-                if (post_data.ContainsKey("FileSize"))
-                {
-                    f.Size = Convert.ToInt32(post_data["FileSize"]);
-                }
-
-                pf.MyFile = f;
-            }
-
-            if (isop)
-            {
-                if (post_data.ContainsKey("Closed"))
-                {
-                    pf.IsLocked = Convert.ToBoolean(post_data["Closed"]);
-                }
-
-                if (post_data.ContainsKey("Sticky"))
-                {
-                    pf.IsSticky = Convert.ToBoolean(post_data["Sticky"]);
-                }
-
-                pf.Type = PostFormatter.PostType.OP;
-            }
-            else
-            {
-                pf.Type = PostFormatter.PostType.Reply;
-            }
-
-            return pf;
-        }
-
     }
 }

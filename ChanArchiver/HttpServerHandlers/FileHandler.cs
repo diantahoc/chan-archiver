@@ -125,6 +125,8 @@ namespace ChanArchiver.HttpServerHandlers
                     return "video/webm";
                 case "pdf":
                     return "application/pdf";
+                case "swf":
+                    return "application/x-shockwave-flash";
                 default:
                     return "application/octect-stream";
             }

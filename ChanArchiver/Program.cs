@@ -361,16 +361,19 @@ namespace ChanArchiver
 
             string reff = string.Format("http://boards.4chan.org/{0}/res/{1}", pf.board, pf.owner);
 
-            if (!File.Exists(thumb_path))
+            if (pf.ThumbLink != PostFile.NoFile)
             {
-                if (!queued_files.ContainsKey("thumb" + md5))
+                if (!File.Exists(thumb_path))
                 {
-                    queued_files.Add("thumb" + md5, new FileQueueStateInfo(md5, pf) { Type = FileQueueStateInfo.FileType.Thumbnail, Url = pf.ThumbLink });
-
-                    thumb_stp.QueueWorkItem(new Amib.Threading.Action((Action)delegate
+                    if (!queued_files.ContainsKey("thumb" + md5))
                     {
-                        download_file(new string[] { thumb_path, pf.ThumbLink, reff, "thumb" + md5 });
-                    }));
+                        queued_files.Add("thumb" + md5, new FileQueueStateInfo(md5, pf) { Type = FileQueueStateInfo.FileType.Thumbnail, Url = pf.ThumbLink });
+
+                        thumb_stp.QueueWorkItem(new Amib.Threading.Action((Action)delegate
+                        {
+                            download_file(new string[] { thumb_path, pf.ThumbLink, reff, "thumb" + md5 });
+                        }));
+                    }
                 }
             }
 

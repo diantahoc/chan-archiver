@@ -22,12 +22,15 @@ namespace AniWrap.DataTypes
         public GenericPost owner { get; set; }
 
 
+        public static string NoFile = "NOFILE";
+
         #region Properties
 
         public string ThumbLink
         {
             get
             {
+                if (board == "f") { return NoFile; }
                 return string.Format(Common.thumbLink, this.board, this.thumbnail_tim);
             }
         }
@@ -36,7 +39,14 @@ namespace AniWrap.DataTypes
         {
             get
             {
-                return string.Format(Common.imageLink, this.board, this.thumbnail_tim, this.ext);
+                if (board == "f")
+                {
+                    return string.Format(Common.imageLink, this.board, this.filename, this.ext);
+                }
+                else 
+                {
+                    return string.Format(Common.imageLink, this.board, this.thumbnail_tim, this.ext);
+                }
             }
         }
         #endregion

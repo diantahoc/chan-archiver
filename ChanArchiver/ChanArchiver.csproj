@@ -148,6 +148,7 @@
     <Compile Include="stp\WorkItemsGroupBase.cs" />
     <Compile Include="stp\WorkItemsQueue.cs" />
     <Compile Include="HttpServerHandlers\ThreadServerModule.cs" />
+    <Compile Include="ThreadStore.cs" />
     <Compile Include="ThreadWorker.cs" />
   </ItemGroup>
   <ItemGroup>
