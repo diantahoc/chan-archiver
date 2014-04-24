@@ -83,6 +83,7 @@ namespace ChanArchiver
                 t[1] = 0;
                 t[2] = 0;
                 data_history.Add(k, t);
+                SaveStats();
                 return t;
             }
         }

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Threading;
 using System.IO;
 using System.Net;
+using System.Diagnostics;
 
 namespace ChanArchiver
 {
@@ -19,7 +20,9 @@ namespace ChanArchiver
         public static string temp_files_dir = "";
         public static string board_settings_dir = "";
 
+
         public static string program_dir;
+        private static string ffmpeg_path;
 
         static string board = "";
 
@@ -41,6 +44,8 @@ namespace ChanArchiver
         private static int port = 8787;
 
         public static KeyValuePair<string, string>[] ValidBoards { get; private set; }
+
+        private static FileSystemWatcher swf_watch;
 
         static void Main(string[] args)
         {
@@ -132,6 +137,34 @@ namespace ChanArchiver
             print("ChanArchiver", ConsoleColor.Cyan);
             Console.WriteLine(" v0.80 stable");
 
+
+            if (Environment.OSVersion.Platform == PlatformID.Unix)
+            {
+                string[] ffmpegs_paths = { get_ffmpeg_path_unix(), "/bin/ffmpeg", "/usr/bin/ffmpeg", };
+
+                foreach (string s in ffmpegs_paths)
+                {
+                    if (File.Exists(s))
+                    {
+                        ffmpeg_path = s;
+                        Console.Write("Detected ffmpeg path:");
+                        print(string.Format("'{0}'\n", s), ConsoleColor.Yellow);
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                ffmpeg_path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "ffmpeg.exe");
+                Console.WriteLine("Make sure you place ffmpeg.exe in your home folder");
+            }
+
+            swf_watch = new FileSystemWatcher(file_save_dir);
+            swf_watch.EnableRaisingEvents = true;
+            swf_watch.Filter = "*.swf";
+            swf_watch.IncludeSubdirectories = false;
+            swf_watch.Created += new FileSystemEventHandler(handle_new_swf_file);
+
             Console.Write("Downloading board data...");
             ValidBoards = aw.GetAvailableBoards();
             Console.Write("loaded {0} board.\n", ValidBoards.Length);
@@ -170,6 +203,20 @@ namespace ChanArchiver
             save_settings();
         }
 
+        private static string get_ffmpeg_path_unix()
+        {
+            ProcessStartInfo p = new ProcessStartInfo("which");
+            p.Arguments = "ffmpeg";
+            p.RedirectStandardOutput = true;
+            p.UseShellExecute = false;
+            p.CreateNoWindow = true;
+            using (Process proc = Process.Start(p))
+            {
+                proc.WaitForExit();
+                return proc.StandardOutput.ReadToEnd().Trim();
+            }
+        }
+
         private static void interactive_console()
         {
             print("Interactive Console", ConsoleColor.Yellow);
@@ -189,14 +236,28 @@ namespace ChanArchiver
                         break;
                     case "toggle-ff":
                         thumb_only = !thumb_only;
-                        Console.WriteLine("Full files saving is {0}", thumb_only ? "disabled" : "enabled"); 
+                        Console.WriteLine("Full files saving is {0}", thumb_only ? "disabled" : "enabled");
+                        break;
+                    case "swf-gen":
+                        {
+                            FileInfo[] swfs = (new DirectoryInfo(file_save_dir)).GetFiles("*.swf");
+
+                            foreach (FileInfo swf in swfs)
+                            {
+                                make_swf_thumb(swf.FullName);
+                            }
+                        }
                         break;
                     case "help":
                         Console.WriteLine("- help: view this text");
                         Console.WriteLine("- save: save settings");
                         Console.WriteLine("- optimize-all: optimize all non-active threads");
+                        Console.WriteLine("- swf-gen: generate thumbnails for .swf files using ffmpeg");
                         Console.WriteLine("- exit: save settings and exit the program");
                         Console.WriteLine("- toggle-ff: Enable or disable full file saving.");
+                        break;
+                    case "":
+                        //Console.WriteLine(":^)");
                         break;
                     default:
                         Console.WriteLine("Unkown command '{0}'", command);
@@ -213,7 +274,7 @@ namespace ChanArchiver
             {
                 DirectoryInfo[] threads = board.GetDirectories();
 
-                foreach (DirectoryInfo thread in threads) 
+                foreach (DirectoryInfo thread in threads)
                 {
                     ThreadWorker.optimize_thread_file(thread.FullName);
                     Console.WriteLine("Optimized thread {0} - {1}", board.Name, thread.Name);
@@ -221,7 +282,6 @@ namespace ChanArchiver
             }
             Console.WriteLine("Done");
         }
-
 
         private static void load_settings()
         {
@@ -278,6 +338,40 @@ namespace ChanArchiver
                     }
                 }
             }
+        }
+
+        static void handle_new_swf_file(object sender, FileSystemEventArgs e)
+        {
+            //using ffmpeg, I try to generate a thumbnail for .swf files
+            make_swf_thumb(e.FullPath);
+        }
+
+        private static void make_swf_thumb(string swf_path)
+        {
+            try
+            {
+                if (File.Exists(ffmpeg_path))
+                {
+                    FileInfo swf_file = new FileInfo(swf_path);
+                    if (swf_file.Exists)
+                    {
+                        string output_file = Path.Combine(thumb_save_dir, swf_file.Name.Split('.')[0] + ".jpg");
+                        if (!File.Exists(output_file))
+                        {
+                            System.Diagnostics.ProcessStartInfo psr = new System.Diagnostics.ProcessStartInfo(ffmpeg_path);
+                            psr.CreateNoWindow = true;
+                            psr.UseShellExecute = false;
+                            psr.Arguments = string.Format("-i \"{0}\" -r 1 -t 2 -vframes 1 \"{1}\"", swf_file.FullName, output_file);
+                            using (System.Diagnostics.Process p = System.Diagnostics.Process.Start(psr))
+                            {
+                                p.WaitForExit();
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception) { }
         }
 
         private static void print(string text, ConsoleColor color)

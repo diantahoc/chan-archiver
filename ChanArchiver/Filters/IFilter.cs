@@ -9,5 +9,6 @@ namespace ChanArchiver.Filters
     {
         bool Detect(AniWrap.DataTypes.GenericPost post);
         string FilterText { get; }
+        string Notes { get; set; }
     }
 }

@@ -26,6 +26,7 @@ namespace ChanArchiver.Filters
             return matcher.IsMatch(post.CommentText);
         }
 
+        public string Notes { get; set; }
     }
 
     public class SubjectFilter : IFilter
@@ -47,6 +48,8 @@ namespace ChanArchiver.Filters
         {
             return matcher.IsMatch(post.Subject);
         }
+
+        public string Notes { get; set; }
     }
 
     public class TripFilter : IFilter
@@ -68,6 +71,7 @@ namespace ChanArchiver.Filters
         {
             return matcher.IsMatch(post.Trip);
         }
+        public string Notes { get; set; }
     }
 
     public class NameFilter : IFilter
@@ -89,6 +93,7 @@ namespace ChanArchiver.Filters
         {
             return matcher.IsMatch(post.Name);
         }
+        public string Notes { get; set; }
     }
 
     public class EmailFilter : IFilter
@@ -110,6 +115,7 @@ namespace ChanArchiver.Filters
         {
             return matcher.IsMatch(post.Email);
         }
+        public string Notes { get; set; }
     }
 
     public class FileNameFilter : IFilter
@@ -133,12 +139,12 @@ namespace ChanArchiver.Filters
             {
                 return matcher.IsMatch(post.File.filename);
             }
-            else 
+            else
             {
                 return false;
             }
-           
         }
+        public string Notes { get; set; }
     }
 
     public class FileHashFilter : IFilter
@@ -163,8 +169,8 @@ namespace ChanArchiver.Filters
             {
                 return false;
             }
-
         }
+        public string Notes { get; set; }
     }
 
 }

@@ -182,7 +182,9 @@
     <Content Include="html\bs\filequeue.htm">
       <SubType>Designer</SubType>
     </Content>
-    <Content Include="html\bs\filters.htm" />
+    <Content Include="html\bs\filters.htm">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="html\bs\logs.htm" />
     <Content Include="html\bs\res\bootstrap.css" />
     <Content Include="html\bs\res\bootstrap.js" />

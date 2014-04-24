@@ -239,7 +239,7 @@ namespace ChanArchiver
                                 {
                                     //in monitor mode, don't add unacceptable threads
                                     this.MarkThreadAsFilterTestFailed(thread.ID);
-                                    this.Log(new LogEntry() 
+                                    this.Log(new LogEntry()
                                     {
                                         Level = LogEntry.LogLevel.Info,
                                         Message = "Thread " + thread.ID.ToString() + " has no matching filter, not starting it.",
@@ -475,7 +475,7 @@ namespace ChanArchiver
             if (filter != null)
             {
                 my_filters.Add(filter);
-                
+
                 ReCheckAllFailedThreads();
             }
         }
@@ -554,7 +554,7 @@ namespace ChanArchiver
 
             foreach (ChanArchiver.Filters.IFilter filter in filters)
             {
-                s.Add(new string[] { filter.GetType().FullName, filter.FilterText });
+                s.Add(new string[] { filter.GetType().FullName, filter.FilterText, filter.Notes });
             }
 
             System.IO.File.WriteAllText(this.FilterSaveFilePath, Newtonsoft.Json.JsonConvert.SerializeObject(s));
@@ -592,6 +592,12 @@ namespace ChanArchiver
                     {
                         System.Reflection.ConstructorInfo ci = t.GetConstructor(new Type[] { typeof(string) });
                         ChanArchiver.Filters.IFilter fil = (ChanArchiver.Filters.IFilter)ci.Invoke(new object[] { Convert.ToString(FilterData[1]) });
+
+                        if (FilterData.Count > 2)
+                        {
+                            fil.Notes = Convert.ToString(FilterData[2]);
+                        }
+
                         this.my_filters.Add(fil);
                     }
                 }
