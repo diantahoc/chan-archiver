@@ -1,0 +1,26 @@
+<div class="postContainer opContainer" id="pc{post:id}">
+  <div id="p{post:id}" class="post op">
+
+    {post:file}
+
+    <div class="postInfo desktop" id="pi{post:id}">
+      <input type="checkbox" name="{post:id}" value="delete"/>
+      <span class="subject">{post:subject}</span>
+      <span class="nameBlock">
+        {post:nameblock}
+        {post:trip}
+      </span>
+
+      {post:posterid}
+
+      <span class="dateTime" data-utc="{post:unixepoch}">{post:datetime}</span>
+      <span class="postNum desktop">
+        <a href="{post:link}" title="Highlight this post">No. {post:id}</a>
+      </span>
+      {op:sticky}
+      {op:locked}
+    </div>
+
+    <blockquote class="postMessage" id="m{post:id}">{post:comment}</blockquote>
+  </div>
+</div>

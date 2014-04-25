@@ -66,6 +66,10 @@ namespace ChanArchiver.HttpServerHandlers
                         data = Encoding.UTF8.GetBytes(ChanArchiver.Properties.Resources.layout);
                         response.ContentType = "text/css";
                         break;
+                    case "blue.css":
+                        data = Encoding.UTF8.GetBytes(ChanArchiver.Properties.Resources.css_blue);
+                        response.ContentType = "text/css";
+                        break;
                     case "favicon.ico":
                         data = Properties.Resources.favicon_ico;
                         response.ContentType = "image/x-icon";

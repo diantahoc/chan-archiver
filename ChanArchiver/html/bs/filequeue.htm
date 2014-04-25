@@ -17,7 +17,6 @@
     <!-- Custom styles for this template -->
     <link href="/res/dashboard.css" rel="stylesheet"/>
 
-    <style type="text/css" id="holderjs-style"></style>
   </head>
 
   <body>
@@ -54,7 +53,7 @@
             <li>
               <a href="/">Overview</a>
             </li>
-                        
+
             <li class="active">
               <a href="/fq">File Queue</a>
             </li>
@@ -85,19 +84,23 @@
               <a href="/action/restartfailedfiles" class="btn btn-default">Restart failed files</a>
               <a href="/action/removecompletefiles" class="btn btn-default">Remove complete files</a>
               <a href="/action/removefailedfiles" class="btn btn-default">Remove failed files</a>
+
+              <div class="input-group">
+                <form action="/set/maxfilequeue/">
+                  <label for="countff">Max # FullFile</label>
+                  <input id="countff" class="form-control" type="text" name="count" placeholder="{mff}" autocomplete="off" />
+                  <br/>
+                  <button class="btn btn-default" type="submit">Set</button>
+                </form>
+              </div>
               
-              <form action="/set/maxfilequeue/">
-                <label for="countff">Max # FullFile</label>
-                <input id="countff" class="form-control" type="text" name="count" placeholder="{mff}" autocomplete="off" />
-                <button class="btn btn-default" type="submit">Set</button>
-              </form>
             </div>
           </div>
-          
+
           <div class="table-responsive">
             <table id="filequeue" class="table table-striped">
               <thead>
-                
+
                 <tr>
                   <th>Status</th>
                   <th># of retries</th>
@@ -106,11 +109,12 @@
                   <th>Size</th>
                   <th>Board</th>
                   <th>Thread</th>
+                  <th>Post</th>
                   <th>Ext</th>
                   <th>%</th>
                   <th>Info</th>
                 </tr>
-                
+
               </thead>
               <tbody>
 

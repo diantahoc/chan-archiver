@@ -103,7 +103,7 @@ namespace ChanArchiver
                     }
                 }
 
-                return threads_pf.ToArray();
+                return threads_pf.OrderByDescending(x => x.PostID).ToArray();
             }
             else
             {

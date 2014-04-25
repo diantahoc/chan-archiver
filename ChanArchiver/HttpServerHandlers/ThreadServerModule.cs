@@ -14,6 +14,8 @@ namespace ChanArchiver
         {
             string command = request.UriPath.ToString();
 
+            #region Thread & Index View
+
             if (command.StartsWith("/boards/"))
             {
                 response.Encoding = System.Text.Encoding.UTF8;
@@ -49,10 +51,8 @@ namespace ChanArchiver
                         s.Append
                             (
                                    pf.ToString()
-                                  .Replace("{op:replycount}", "")
-                                  .Replace("{postLink}", string.Format("/boards/{0}/{1}", board, pf.PostID))
+                                  .Replace("{post:link}", string.Format("/boards/{0}/{1}", board, pf.PostID))
                             );
-
                         s.Append("</div>");
                     }
 
@@ -97,24 +97,23 @@ namespace ChanArchiver
 
                     StringBuilder body = new StringBuilder();
 
-                    body.AppendFormat("<div class=\"thread\" id=\"t{0}\">", threadid);
-
                     body.Append(thread_data[0]);
 
-                    body.Replace("{op:replycount}", Convert.ToString(thread_data.Length - 1));
+                    body.Replace("{post:link}", string.Format("#p{0}", thread_data[0].PostID));
 
                     for (int i = 1; i < thread_data.Length; i++)
                     {
                         body.Append(thread_data[i]);
                     }
 
-                    body.Append("</div>");
+                    //body.Append("</div>");
 
                     byte[] respon = Encoding.UTF8.GetBytes
-                        (Properties.Resources.full_page
-                        .Replace("{board}", board)
-                        .Replace("{tid}", threadid)
-                        .Replace("{DocumentBody}", body.ToString()));
+                        (Properties.Resources.page_template
+                        .Replace("{board-title}", string.Format("/{0}/ - ChanArchiver", board))
+                        .Replace("{board-letter}", board)
+                        .Replace("{thread-id}", threadid)
+                        .Replace("{thread-posts}", body.ToString()));
 
                     response.ContentLength = respon.Length;
 
@@ -201,11 +200,15 @@ namespace ChanArchiver
                 return true;
             }
 
+            #endregion
+
+            #region File Queue Actions
+
             if (command.StartsWith("/set/maxfilequeue/"))
             {
                 if (string.IsNullOrEmpty(request.QueryString["count"].Value))
                 {
-                    _404(response);
+                    response.Redirect("/fq");
                 }
                 else
                 {
@@ -224,6 +227,99 @@ namespace ChanArchiver
                 }
                 return true;
             }
+
+
+            if (command == "/action/removecompletefiles")
+            {
+                List<string> hashes_to_remove = new List<string>();
+                for (int index = 0; index < Program.queued_files.Count(); index++)
+                {
+                    try
+                    {
+                        FileQueueStateInfo f = Program.queued_files.ElementAt(index).Value;
+                        if (f.Status == FileQueueStateInfo.DownloadStatus.Complete)
+                        {
+                            hashes_to_remove.Add(Program.queued_files.ElementAt(index).Key);
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        if (index > Program.queued_files.Count()) { break; }
+                    }
+                }
+
+                foreach (string s in hashes_to_remove)
+                {
+                    Program.queued_files.Remove(s);
+                }
+
+                response.Redirect("/fq");
+
+                return true;
+            }
+
+            if (command == "/action/removefailedfiles")
+            {
+                List<string> hashes_to_remove = new List<string>();
+                for (int index = 0; index < Program.queued_files.Count(); index++)
+                {
+                    try
+                    {
+                        FileQueueStateInfo f = Program.queued_files.ElementAt(index).Value;
+                        if (f.Status == FileQueueStateInfo.DownloadStatus.Error || f.Status == FileQueueStateInfo.DownloadStatus.NotFound)
+                        {
+                            hashes_to_remove.Add(Program.queued_files.ElementAt(index).Key);
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        if (index > Program.queued_files.Count()) { break; }
+                    }
+                }
+
+                foreach (string s in hashes_to_remove)
+                {
+                    Program.queued_files.Remove(s);
+                }
+
+                response.Redirect("/fq");
+
+                return true;
+            }
+
+            if (command == "/action/restartfailedfiles")
+            {
+                List<KeyValuePair<string, FileQueueStateInfo>> files_to_restart = new List<KeyValuePair<string, FileQueueStateInfo>>();
+
+                for (int index = 0; index < Program.queued_files.Count(); index++)
+                {
+                    try
+                    {
+                        FileQueueStateInfo f = Program.queued_files.ElementAt(index).Value;
+                        if (f.Status == FileQueueStateInfo.DownloadStatus.Error)
+                        {
+                            files_to_restart.Add(Program.queued_files.ElementAt(index));
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        if (index > Program.queued_files.Count()) { break; }
+                    }
+                }
+
+                foreach (KeyValuePair<string, FileQueueStateInfo> s in files_to_restart)
+                {
+                    Program.queued_files.Remove(s.Key);
+                    Program.dump_files(s.Value.PostFile);
+                }
+                response.Redirect("/fq");
+
+                return true;
+            }
+
+            #endregion
+
+            #region Watch Jobs Actions
 
             if (command.StartsWith("/add/"))
             {
@@ -379,93 +475,9 @@ namespace ChanArchiver
                 return true;
             }
 
-            if (command == "/action/removecompletefiles")
-            {
-                List<string> hashes_to_remove = new List<string>();
-                for (int index = 0; index < Program.queued_files.Count(); index++)
-                {
-                    try
-                    {
-                        FileQueueStateInfo f = Program.queued_files.ElementAt(index).Value;
-                        if (f.Status == FileQueueStateInfo.DownloadStatus.Complete)
-                        {
-                            hashes_to_remove.Add(Program.queued_files.ElementAt(index).Key);
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        if (index > Program.queued_files.Count()) { break; }
-                    }
-                }
+            #endregion
 
-                foreach (string s in hashes_to_remove)
-                {
-                    Program.queued_files.Remove(s);
-                }
-
-                response.Redirect("/fq");
-
-                return true;
-            }
-
-            if (command == "/action/removefailedfiles")
-            {
-                List<string> hashes_to_remove = new List<string>();
-                for (int index = 0; index < Program.queued_files.Count(); index++)
-                {
-                    try
-                    {
-                        FileQueueStateInfo f = Program.queued_files.ElementAt(index).Value;
-                        if (f.Status == FileQueueStateInfo.DownloadStatus.Error)
-                        {
-                            hashes_to_remove.Add(Program.queued_files.ElementAt(index).Key);
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        if (index > Program.queued_files.Count()) { break; }
-                    }
-                }
-
-                foreach (string s in hashes_to_remove)
-                {
-                    Program.queued_files.Remove(s);
-                }
-
-                response.Redirect("/fq");
-
-                return true;
-            }
-
-            if (command == "/action/restartfailedfiles")
-            {
-                List<KeyValuePair<string, FileQueueStateInfo>> files_to_restart = new List<KeyValuePair<string, FileQueueStateInfo>>();
-
-                for (int index = 0; index < Program.queued_files.Count(); index++)
-                {
-                    try
-                    {
-                        FileQueueStateInfo f = Program.queued_files.ElementAt(index).Value;
-                        if (f.Status == FileQueueStateInfo.DownloadStatus.Error)
-                        {
-                            files_to_restart.Add(Program.queued_files.ElementAt(index));
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        if (index > Program.queued_files.Count()) { break; }
-                    }
-                }
-
-                foreach (KeyValuePair<string, FileQueueStateInfo> s in files_to_restart)
-                {
-                    Program.queued_files.Remove(s.Key);
-                    Program.dump_files(s.Value.PostFile);
-                }
-                response.Redirect("/fq");
-
-                return true;
-            }
+            #region File Actions
 
             if (command.StartsWith("/action/restartfile/"))
             {
@@ -529,12 +541,7 @@ namespace ChanArchiver
                 return true;
             }
 
-            if (command.StartsWith("/action/enablefullfile"))
-            {
-                Program.thumb_only = false;
-                response.Redirect("/");
-                return true;
-            }
+           
 
             if (command.StartsWith("/action/resetfileretrycount/"))
             {
@@ -571,6 +578,15 @@ namespace ChanArchiver
                     response.Redirect("/fq");
                 }
 
+                return true;
+            }
+
+            #endregion
+
+            if (command.StartsWith("/action/enablefullfile"))
+            {
+                Program.thumb_only = false;
+                response.Redirect("/");
                 return true;
             }
 

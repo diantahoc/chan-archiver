@@ -208,4 +208,19 @@
   <data name="jquery_flot_min" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\html\bs\res\jquery.flot.min.js;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
+  <data name="css_blue" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\html\chan-templates\blue.css;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
+  </data>
+  <data name="file_template" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\html\chan-templates\file_template.htm;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
+  </data>
+  <data name="op_template" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\html\chan-templates\op_template.htm;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
+  </data>
+  <data name="page_template" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\html\chan-templates\page_template.htm;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
+  </data>
+  <data name="reply_template" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\html\chan-templates\reply_template.htm;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
+  </data>
 </root>

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="robots" content="noarchive"/>
+    <meta name="referrer" content="origin"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <link rel="shortcut icon" href="/favicon.ico"/>
+    <link rel="stylesheet" href="/res/blue.css"/>
+
+    <title>{board-title}</title>
+  </head>
+
+  <body class="board_{board-letter}">
+    <span id="id_css"></span>
+
+    <hr class="desktop"/>
+    <div class="navLinks desktop">
+      [<a href="/boards/{board-letter}" accesskey="a">Return</a>] [<a href="#bottom">Bottom</a>]
+    </div>
+    <hr/>
+    <form name="delform" id="delform" action="" method="post">
+      <div class="board">
+        <div class="thread" id="t{thread-id}">
+          {thread-posts}
+        </div>
+        <hr/>
+        <div class="navLinks navLinksBot desktop">
+          [<a href="/boards/{board-letter}" accesskey="a">Return</a>] [<a href="#top">Top</a>]
+        </div>
+        <hr class="desktop"/>
+      </div>
+      <hr/>
+
+    </form>
+
+    <div id="bottom">
+    </div>
+  </body>
+</html>

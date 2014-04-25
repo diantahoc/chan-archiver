@@ -222,6 +222,15 @@ namespace ChanArchiver.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to html{-moz-text-size-adjust:100%;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;}body{background:#EEF2FF url(/image/fade-blue.png) top center repeat-x;color:#000000;font-family:arial,helvetica,sans-serif;font-size:10pt;margin-left:0;margin-right:0;margin-top:5px;padding-left:5px;padding-right:5px;}.isMobileDevice blockquote.postMessage{font-size:11pt;}.belowLeaderboard{width:728px;max-width:100%;}.aboveMidAd{width:468px;max-width:100%;}#recaptcha_table{background-color:transparent!important;border:n [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string css_blue {
+            get {
+                return ResourceManager.GetString("css_blue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to /*
         /// * Base structure
         /// */
@@ -316,6 +325,24 @@ namespace ChanArchiver.Properties {
             get {
                 object obj = ResourceManager.GetObject("favicon_ico", resourceCulture);
                 return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;div class=&quot;file&quot; id=&quot;f{post:id}&quot;&gt;
+        ///    &lt;div class=&quot;fileText&quot; id=&quot;fT{post:id}&quot;&gt;
+        ///        File: &lt;a href=&quot;{file:fulllink}&quot; target=&quot;_blank&quot;&gt;{file:name}&lt;/a&gt;
+        ///        ({file:size}, {file:dimensions})&lt;/div&gt;
+        ///    &lt;a class=&quot;fileThumb&quot; href=&quot;{file:fulllink}&quot; target=&quot;_blank&quot;&gt;
+        ///        &lt;img src=&quot;{file:thumbsrc}&quot; alt=&quot;{file:size}&quot; data-md5=&quot;{file:4chan-md5}&quot;
+        ///            style=&quot;max-height: 250px; max-width: 250px;&quot;/&gt;
+        ///            &lt;div class=&quot;mFileInfo mobile&quot;&gt;{file:size} {file:ext}&lt;/div&gt;
+        ///    &lt;/a&gt;
+        ///&lt;/div&gt;.
+        /// </summary>
+        internal static string file_template {
+            get {
+                return ResourceManager.GetString("file_template", resourceCulture);
             }
         }
         
@@ -580,6 +607,56 @@ namespace ChanArchiver.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &lt;div class=&quot;postContainer opContainer&quot; id=&quot;pc{post:id}&quot;&gt;
+        ///  &lt;div id=&quot;p{post:id}&quot; class=&quot;post op&quot;&gt;
+        ///
+        ///    {post:file}
+        ///
+        ///    &lt;div class=&quot;postInfo desktop&quot; id=&quot;pi{post:id}&quot;&gt;
+        ///      &lt;input type=&quot;checkbox&quot; name=&quot;{post:id}&quot; value=&quot;delete&quot;/&gt;
+        ///      &lt;span class=&quot;subject&quot;&gt;{post:subject}&lt;/span&gt;
+        ///      &lt;span class=&quot;nameBlock&quot;&gt;
+        ///        {post:nameblock}
+        ///        {post:trip}
+        ///      &lt;/span&gt;
+        ///
+        ///      {post:posterid}
+        ///
+        ///      &lt;span class=&quot;dateTime&quot; data-utc=&quot;{post:unixepoch}&quot;&gt;{post:datetime}&lt;/span&gt;
+        ///      &lt;span class=&quot;pos [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string op_template {
+            get {
+                return ResourceManager.GetString("op_template", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;!DOCTYPE html&gt;
+        ///&lt;html&gt;
+        ///  &lt;head&gt;
+        ///    &lt;meta charset=&quot;utf-8&quot;/&gt;
+        ///    &lt;meta name=&quot;robots&quot; content=&quot;noarchive&quot;/&gt;
+        ///    &lt;meta name=&quot;referrer&quot; content=&quot;origin&quot;/&gt;
+        ///    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1&quot;/&gt;
+        ///    &lt;link rel=&quot;shortcut icon&quot; href=&quot;/favicon.ico&quot;/&gt;
+        ///    &lt;link rel=&quot;stylesheet&quot; href=&quot;/res/blue.css&quot;/&gt;
+        ///    &lt;title&gt;{board-title}&lt;/title&gt;
+        ///  &lt;/head&gt;
+        ///
+        ///  &lt;body class=&quot;board_{board-letter}&quot;&gt;
+        ///
+        ///    &lt;div id=&quot;boardNavDesktop&quot; class=&quot;desktop&quot;&gt;
+        ///      &lt;span class=&quot;boardList&quot;&gt;
+        ///        [ [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string page_template {
+            get {
+                return ResourceManager.GetString("page_template", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &lt;div class=&quot;replyContainer&quot; id=&quot;pc{wpost:id}&quot;&gt;
         ///
         ///  &lt;div id=&quot;p{wpost:id}&quot; class=&quot;post reply&quot;&gt;
@@ -607,6 +684,30 @@ namespace ChanArchiver.Properties {
         internal static string reply_post {
             get {
                 return ResourceManager.GetString("reply_post", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;div class=&quot;postContainer replyContainer&quot; id=&quot;pc{post:id}&quot;&gt;
+        ///  &lt;div class=&quot;sideArrows&quot; id=&quot;sa{post:id}&quot;&gt;&amp;gt;&amp;gt;&lt;/div&gt;
+        ///  &lt;div id=&quot;p{post:id}&quot; class=&quot;post reply&quot;&gt;
+        ///
+        ///    &lt;div class=&quot;postInfo desktop&quot; id=&quot;pi{post:id}&quot;&gt;
+        ///      &lt;input type=&quot;checkbox&quot; name=&quot;{post:id}&quot; value=&quot;delete&quot;/&gt;
+        ///      &lt;span class=&quot;subject&quot;&gt;{post:subject}&lt;/span&gt;
+        ///
+        ///      &lt;span class=&quot;nameBlock&quot;&gt;
+        ///        {post:nameblock}
+        ///        {post:trip}
+        ///      &lt;/span&gt;
+        ///
+        ///      {post:posterid}
+        ///
+        ///      &lt;span class=&quot;dateTime&quot; data-utc=&quot;{post:unixepoch} [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string reply_template {
+            get {
+                return ResourceManager.GetString("reply_template", resourceCulture);
             }
         }
         

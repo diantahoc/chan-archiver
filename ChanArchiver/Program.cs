@@ -315,7 +315,7 @@ namespace ChanArchiver
             {
                 bw.Value.SaveManuallyAddedThreads();
                 bw.Value.SaveFilters();
-                boards.Add(bw.Key);
+                boards.Add(string.Format("{0}:{1}", bw.Key, Convert.ToInt32(bw.Value.Mode)));
             }
 
             File.WriteAllLines(added_boards_save_file_path, boards.ToArray());
@@ -332,9 +332,24 @@ namespace ChanArchiver
             {
                 foreach (string s in File.ReadAllLines(added_boards_save_file_path))
                 {
-                    if (!string.IsNullOrEmpty(s))
+                    try
                     {
-                        archive_board(s, BoardWatcher.BoardMode.None);
+                        if (!string.IsNullOrEmpty(s))
+                        {
+                            string[] data = s.Split(':');
+                            if (data.Length == 2)
+                            {
+                                archive_board(data[0], (BoardWatcher.BoardMode)Convert.ToInt32(data[1]));
+                            }
+                            else if (data.Length == 1)
+                            {
+                                archive_board(data[0], BoardWatcher.BoardMode.None);
+                            }
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        continue;
                     }
                 }
             }

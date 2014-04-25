@@ -31,6 +31,11 @@ namespace ChanArchiver
 
         public FileFormatter MyFile { get; set; }
 
+        private int GetTicks(DateTime t) 
+        {
+            return Convert.ToInt32((t - AniWrap.Common.UnixEpoch).TotalSeconds);
+        }
+
         public override string ToString()
         {
             StringBuilder template = null;
@@ -38,77 +43,78 @@ namespace ChanArchiver
             switch (this.Type)
             {
                 case PostType.OP:
-                    template = new StringBuilder(Properties.Resources.op_post);
+                    template = new StringBuilder(Properties.Resources.op_template);
 
                     template.Replace("{op:sticky}", this.IsSticky ? "<img src='/res/sticky.png' />" : "");
                     template.Replace("{op:locked}", this.IsLocked ? "<img src='/res/locked.png' />" : "");
 
                     break;
                 case PostType.Reply:
-                    template = new StringBuilder(Properties.Resources.reply_post);
+                    template = new StringBuilder(Properties.Resources.reply_template);
                     break;
                 default:
                     return "";
             }
 
-            template.Replace("{wpost:id}", this.PostID.ToString());
+            template.Replace("{post:id}", this.PostID.ToString());
 
             //Post subject
             if (string.IsNullOrEmpty(this.Subject))
             {
-                template.Replace("{wpost:subject}", "");
+                template.Replace("{post:subject}", "");
             }
             else
             {
-                template.Replace("{wpost:subject}", string.Format("<span class='subject'>{0}</span>", this.Subject));
+                template.Replace("{post:subject}", this.Subject);
             }
 
             //Poster ID.
             if (string.IsNullOrEmpty(this.PosterID))
             {
-                template.Replace("{wpost:posterId}", "");
+                template.Replace("{post:posterid}", "");
             }
             else
             {
-                template.Replace("{wpost:posterId}", string.Format("(<span class='posterid'>{0}</span>)", this.PosterID));
+                template.Replace("{post:posterid}", string.Format("<span class=\"posteruid id_{0}\">(ID: <span class=\"hand\" title=\"Highlight posts by this ID\">{0}</span>)</span>", this.PosterID));
             }
 
             //Post tripcode
             if (string.IsNullOrEmpty(this.Trip))
             {
-                template.Replace("{wpost:trip}", "");
+                template.Replace("{post:trip}", "");
             }
             else
             {
-                template.Replace("{wpost:trip}", string.Format("<span class='trip'>{0}</span>", this.Trip));
+                template.Replace("{post:trip}", string.Format("<span class=\"postertrip\">{0}</span>", this.Trip));
             }
 
             if (string.IsNullOrEmpty(this.Email))
             {
-                template.Replace("{wpost:name}", this.Name);
+                template.Replace("{post:nameblock}", string.Format("<span class=\"name\">{0}</span>", this.Name));
             }
             else
             {
-                template.Replace("{wpost:name}", string.Format("<a href=\"mailto:{0}\">{1}</a>", this.Email, this.Name));
+                template.Replace("{post:nameblock}", string.Format("<a href=\"mailto:{0}\" class=\"useremail\"><span class=\"name\">{1}</span></a>", this.Email, this.Name));
             }
 
-            template.Replace("{wpost:time}", System.Xml.XmlConvert.ToString(this.Time, "yyyy-MM-dd HH:mm:ss"));
+            template.Replace("{post:datetime}", System.Xml.XmlConvert.ToString(this.Time, "yyyy-MM-dd HH:mm:ss"));
+
+            template.Replace("{post:unixepoch}", GetTicks(this.Time).ToString());
 
             if (this.MyFile == null)
             {
-                template.Replace("{wpost:file}", "");
-
+                template.Replace("{post:file}", "");
             }
             else
             {
-                template.Replace("{wpost:file}", MyFile.ToString());
+                template.Replace("{post:file}", MyFile.ToString());
             }
 
             if (string.IsNullOrEmpty(this.Comment))
             {
-                template.Replace("{wpost:comment}", "");
+                template.Replace("{post:comment}", "");
             }
-            else { template.Replace("{wpost:comment}", string.Format("<blockquote class=\"postMessage\">{0}</blockquote>", this.Comment)); }
+            else { template.Replace("{post:comment}", this.Comment); }
 
             return template.ToString();
         }

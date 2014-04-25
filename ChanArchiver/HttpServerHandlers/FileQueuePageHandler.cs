@@ -13,10 +13,10 @@ namespace ChanArchiver.HttpServerHandlers
 
             if (command == "/fq" || command == "/fq/")
             {
-
                 StringBuilder sb = new StringBuilder();
 
                 var ordered = Program.queued_files.OrderByDescending(x => x.Value.Percent());
+
                 int count = ordered.Count();
 
                 for (int index = 0; index < count; index++)
@@ -38,13 +38,29 @@ namespace ChanArchiver.HttpServerHandlers
                         sb.AppendFormat("<td>{0}</td>", get_type(f.Type));
                         sb.AppendFormat("<td>{0}</td>", f.Hash);
 
-                        sb.AppendFormat("<td>{0}</td>", Program.format_size_string(f.Length));
-
+                        if (f.Type == FileQueueStateInfo.FileType.FullFile)
+                        {
+                            sb.AppendFormat("<td>{0}</td>", Program.format_size_string(f.PostFile.size));
+                        }
+                        else 
+                        {
+                            sb.AppendFormat("<td>{0}</td>", Program.format_size_string(f.Length));
+                        }
+                    
                         sb.AppendFormat("<td>/{0}/</td>", f.PostFile.board);
 
                         sb.AppendFormat("<td><code><a href='/boards/{0}/{1}'>{1}</a></code></td>", f.PostFile.board, f.PostFile.owner.OwnerThread.ID);
 
-                        sb.AppendFormat("<td>{0}</td>", get_ext(f.PostFile.ext));
+                        sb.AppendFormat("<td><code><a href='/boards/{0}/{1}#p{2}'>{2}</a></code></td>", f.PostFile.board, f.PostFile.owner.OwnerThread.ID, f.PostFile.owner.ID);
+
+                        if (f.Type == FileQueueStateInfo.FileType.Thumbnail)
+                        {
+                            sb.Append("<td><span class=\"label label-info\">JPG</span></td>");
+                        }
+                        else 
+                        {
+                            sb.AppendFormat("<td>{0}</td>", get_ext(f.PostFile.ext));
+                        }
 
                         sb.AppendFormat("<td>{0} %</td>", Math.Round(f.Percent(), 2));
 
