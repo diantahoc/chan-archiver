@@ -19,6 +19,15 @@ namespace ChanArchiver.HttpServerHandlers
 
                 sb.Replace("{thumbmode}", Program.thumb_only ? "<div class=\"bs-callout bs-callout-warning\"><h4>ChanArchiver is running in thumbnail mode</h4><p>Only thumbnails will be saved. To disable it, restart ChanArchiver without the <code>--thumbonly</code> switch, or click <a href='/action/enablefullfile'>here</a></p></div>" : "");
 
+                if (FileSystemStats.IsSaveDirDriveLowOnDiskSpace)
+                {
+                    sb.Replace("{lowdiskspacenotice}", "<div class=\"bs-callout bs-callout-danger\"><h4>Low disk space</h4><p>ChanArchive is configured to save on a harddrive with low disk space (less than 1 GB). Free up some disk space or change the save directory location.</p></div>");
+                }
+                else
+                {
+                    sb.Replace("{lowdiskspacenotice}", "");
+                }
+
                 sb.Replace("{RunningTime}", (new RunningTimeInfo()).ToString());
 
                 sb.Replace("{DiskUsage}", get_DiskUsageInfo());
@@ -78,26 +87,27 @@ namespace ChanArchiver.HttpServerHandlers
             KeyValuePair<string, string>[] dirs = new KeyValuePair<string, string>[] 
             {
                 new KeyValuePair<string, string>("Thumbnails", Program.thumb_save_dir),
-                new KeyValuePair<string, string>("Full Files", Program.file_save_dir),
+                new KeyValuePair<string, string>("Full files", Program.file_save_dir),
                 new KeyValuePair<string, string>("API Cached files", Program.api_cache_dir ),
-                new KeyValuePair<string, string>("Post Files", Program.post_files_dir)
+                new KeyValuePair<string, string>("Post files", Program.post_files_dir),
+               // new KeyValuePair<string, string>("Temporary files", Program.temp_files_dir),
             };
 
-            foreach (KeyValuePair<string, string> a in dirs)
+            foreach (KeyValuePair<string, string> a in dirs.OrderBy(x => x.Key))
             {
-                DirectoryStats ds = new DirectoryStats(a.Value);
+                DirectoryStatsEntry ds = FileSystemStats.GetDirStats(a.Value);
 
-                sb.Append("<tr>");
-
-                sb.AppendFormat("<td>{0}</td>", ds.FileCount);
-                sb.AppendFormat("<td>{0}</td>", a.Key);
-                sb.AppendFormat("<td>{0}</td>", Program.format_size_string(ds.Size));
-                sb.AppendFormat("<td>{0}</td>", Program.format_size_string(ds.AverageFileSize));
-                sb.AppendFormat("<td>{0}</td>", Program.format_size_string(ds.BiggestFile));
-                sb.AppendFormat("<td>{0}</td>", Program.format_size_string(ds.SmallestFile));
-
-                sb.Append("</tr>");
-
+                if (ds != null)
+                {
+                    sb.Append("<tr>");
+                    sb.AppendFormat("<td>{0}</td>", ds.FileCount);
+                    sb.AppendFormat("<td>{0}</td>", a.Key);
+                    sb.AppendFormat("<td>{0}</td>", Program.format_size_string(ds.TotalSize));
+                    sb.AppendFormat("<td>{0}</td>", Program.format_size_string(ds.AverageFileSize));
+                    sb.AppendFormat("<td>{0}</td>", Program.format_size_string(ds.LargestFile));
+                    sb.AppendFormat("<td>{0}</td>", Program.format_size_string(ds.SmallestFile));
+                    sb.Append("</tr>");
+                }
             }
 
             return sb.ToString();
@@ -146,19 +156,12 @@ namespace ChanArchiver.HttpServerHandlers
         public RunningTimeInfo()
         {
 
-            //rt
+
             this.RunningTime = DateTime.Now - Program.StartUpTime;
 
+            this.DiskUsage = FileSystemStats.TotalUsage;
 
-            //du
-            DirectoryInfo di = new DirectoryInfo(Program.program_dir);
-
-            foreach (FileInfo info in di.GetFiles("*", SearchOption.AllDirectories))
-            {
-                this.DiskUsage += info.Length;
-            }
-
-            //nu
+        
             this.NetworkUsage = NetworkUsageCounter.TotalConsumedAllTime;
 
 
@@ -169,14 +172,13 @@ namespace ChanArchiver.HttpServerHandlers
                 this.ArchivedThreads += dir.GetDirectories("*", SearchOption.TopDirectoryOnly).Length;
             }
 
-            this.ApplicationErrors = 0;
         }
 
         public TimeSpan RunningTime { get; private set; }
-        public long DiskUsage { get; private set; }
+        public double DiskUsage { get; private set; }
         public double NetworkUsage { get; private set; }
         public int ArchivedThreads { get; private set; }
-        public int ApplicationErrors { get; private set; }
+        //public int ApplicationErrors { get; private set; }
 
         public override string ToString()
         {
@@ -184,11 +186,11 @@ namespace ChanArchiver.HttpServerHandlers
 
             s.Append("<tr>");
 
-            s.AppendFormat("<td>{0}</td>", this.RunningTime.ToString());
+            s.AppendFormat("<td>{0}</td>", GetReadableTimespan(this.RunningTime));
             s.AppendFormat("<td>{0}</td>", Program.format_size_string(this.DiskUsage));
             s.AppendFormat("<td>{0}</td>", Program.format_size_string(this.NetworkUsage));
             s.AppendFormat("<td>{0}</td>", this.ArchivedThreads);
-            s.AppendFormat("<td>{0}</td>", this.ApplicationErrors);
+            //s.AppendFormat("<td>{0}</td>", this.ApplicationErrors);
 
             s.Append("</tr>");
 
@@ -196,54 +198,84 @@ namespace ChanArchiver.HttpServerHandlers
 
         }
 
-    }
-
-    public class DirectoryStats
-    {
-        public DirectoryStats(string path)
+        //http://stackoverflow.com/questions/16689468/how-to-produce-human-readable-strings-to-represent-a-timespan
+        private string GetReadableTimespan(TimeSpan ts)
         {
-            if (Directory.Exists(path))
-            {
-                DirectoryInfo df = new DirectoryInfo(path);
+            // formats and its cutoffs based on totalseconds
+            var cutoff = new SortedList<long, string> 
+            { 
+                {60, "{3:S}" },
+                {60*60, "{2:M}, {3:S}"},
+                {24*60*60, "{1:H}, {2:M}"},
+                {Int64.MaxValue , "{0:D}, {1:H}"}
+            };
 
-                FileInfo[] All_Files = df.GetFiles("*", SearchOption.AllDirectories);
-
-                this.FileCount = All_Files.Length;
-
-                IOrderedEnumerable<FileInfo> sorted = All_Files.OrderBy(x => x.Length); // ;_; poor poor poor performance
-
-                for (int index = 0; index < this.FileCount; index++)
-                {
-                    FileInfo fifo = All_Files[index];
-                    this.Size += fifo.Length;
-                }
-
-                if (sorted.Count() > 0)
-                {
-                    this.BiggestFile = sorted.Last().Length;
-                    this.SmallestFile = sorted.First().Length;
-                }
-                else
-                {
-                    this.BiggestFile = 0;
-                    this.SmallestFile = 0;
-                }
-
-                if (this.FileCount > 0)
-                {
-                    this.AverageFileSize = Convert.ToInt32(this.Size / this.FileCount);
-                }
-            }
+            // find nearest best match
+            var find = cutoff.Keys.ToList()
+                          .BinarySearch((long)ts.TotalSeconds);
+            // negative values indicate a nearest match
+            var near = find < 0 ? Math.Abs(find) - 1 : find;
+            // use custom formatter to get the string
+            return String.Format(
+                new HMSFormatter(),
+                cutoff[cutoff.Keys[near]],
+                ts.Days,
+                ts.Hours,
+                ts.Minutes,
+                ts.Seconds);
         }
 
-        public int FileCount { get; private set; }
-        public long Size { get; private set; }
-        public int AverageFileSize { get; private set; }
-        public long BiggestFile { get; private set; }
-        public long SmallestFile { get; private set; }
+    }
 
 
+    // formatter for plural/singular forms of
+    // seconds/hours/days
+    //http://stackoverflow.com/questions/16689468/how-to-produce-human-readable-strings-to-represent-a-timespan
+    public class HMSFormatter : ICustomFormatter, IFormatProvider
+    {
+        string _plural, _singular;
 
+        public HMSFormatter() { }
+
+        private HMSFormatter(string plural, string singular)
+        {
+            _plural = plural;
+            _singular = singular;
+        }
+
+        public object GetFormat(Type formatType)
+        {
+            return formatType == typeof(ICustomFormatter) ? this : null;
+        }
+
+        public string Format(string format, object arg, IFormatProvider formatProvider)
+        {
+            if (arg != null)
+            {
+                string fmt;
+                switch (format)
+                {
+                    case "S": // second
+                        fmt = String.Format(new HMSFormatter("{0} Seconds", "{0} Second"), "{0}", arg);
+                        break;
+                    case "M": // minute
+                        fmt = String.Format(new HMSFormatter("{0} Minutes", "{0} Minute"), "{0}", arg);
+                        break;
+                    case "H": // hour
+                        fmt = String.Format(new HMSFormatter("{0} Hours", "{0} Hour"), "{0}", arg);
+                        break;
+                    case "D": // day
+                        fmt = String.Format(new HMSFormatter("{0} Days", "{0} Day"), "{0}", arg);
+                        break;
+                    default:
+                        // plural/ singular             
+                        fmt = String.Format((int)arg > 1 ? _plural : _singular, arg);  // watch the cast to int here...
+                        break;
+                }
+                return fmt;
+            }
+            return String.Format(format, arg);
+        }
     }
 
 }

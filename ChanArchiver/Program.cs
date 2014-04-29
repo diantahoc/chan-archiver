@@ -135,7 +135,7 @@ namespace ChanArchiver
             Console.Title = "ChanArchiver";
 
             print("ChanArchiver", ConsoleColor.Cyan);
-            Console.WriteLine(" v0.80 stable");
+            Console.WriteLine(" v0.81 stable");
 
 
             if (Environment.OSVersion.Platform == PlatformID.Unix)
@@ -201,6 +201,7 @@ namespace ChanArchiver
             interactive_console();
 
             save_settings();
+            FileSystemStats.Dispose();
         }
 
         private static string get_ffmpeg_path_unix()
@@ -436,6 +437,7 @@ namespace ChanArchiver
         {
             try
             {
+                FileSystemStats.Init();
                 HttpServer.HttpServer server = new HttpServer.HttpServer();
 
                 server.ServerName = "ChanArchiver";

@@ -80,6 +80,7 @@
         <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
           <h1 class="page-header">Overview</h1>
           {thumbmode}
+          {lowdiskspacenotice}
           <div class="table-responsive">
             <table class="table table-striped">
               <thead>
@@ -88,7 +89,6 @@
                   <th>Disk usage</th>
                   <th>Network usage</th>
                   <th>Archived threads</th>
-                  <th>App. Errors</th>
                 </tr>
               </thead>
               <tbody>
@@ -153,22 +153,6 @@
               </thead>
               <tbody>
                 {ArchivedThreads}
-              </tbody>
-            </table>
-          </div>
-
-          <h2 class="sub-header">Application errors</h2>
-          <div class="table-responsive">
-            <table class="table table-striped">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Type</th>
-                  <th>Description</th>
-                </tr>
-              </thead>
-              <tbody>
-
               </tbody>
             </table>
           </div>

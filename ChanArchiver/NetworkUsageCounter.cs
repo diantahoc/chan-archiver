@@ -95,23 +95,28 @@ namespace ChanArchiver
         /// <returns></returns>
         public static KeyValuePair<int, double>[] GetDayStats(DateTime day)
         {
-            string[] keys = data_history.Keys.ToArray();
-
             List<KeyValuePair<int, double>> il = new List<KeyValuePair<int, double>>();
 
-            string d = string.Format("{0}-{1}-{2}", day.Day, day.Month, day.Year);
-
-            foreach (string key in keys)
+            for (int i = 0; i < 24; i++)
             {
-                if (key.StartsWith(d))
+                DateTime fake_d = new DateTime(day.Year, day.Month, day.Day, i, 0, 0);
+                string date_key = string.Format("{0}-{1}-{2}-{3}", fake_d.Day, fake_d.Month, fake_d.Year, fake_d.Hour);
+
+                if (data_history.ContainsKey(date_key))
                 {
-                    double[] ss = data_history[key];
+                    double[] ss = data_history[date_key];
 
                     double sum = ss[0] + ss[1] + ss[2];
 
-                    il.Add(new KeyValuePair<int, double>(Convert.ToInt32(key.Replace(d + "-", "")), sum));
+                    il.Add(new KeyValuePair<int, double>(i, sum));
                 }
+                else 
+                {
+                    il.Add(new KeyValuePair<int, double>(i, 0));
+                }
+
             }
+
             return il.ToArray();
         }
 

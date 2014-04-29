@@ -100,6 +100,7 @@
     <Compile Include="BoardWatcher.cs" />
     <Compile Include="FileFormatter.cs" />
     <Compile Include="FileQueueStateInfo.cs" />
+    <Compile Include="FileSystemStats.cs" />
     <Compile Include="Filters\Filters.cs" />
     <Compile Include="Filters\IFilter.cs" />
     <Compile Include="HttpServerHandlers\FileHandler.cs" />

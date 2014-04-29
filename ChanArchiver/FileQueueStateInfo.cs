@@ -5,6 +5,9 @@ using System.Text;
 
 namespace ChanArchiver
 {
+    /// <summary>
+    /// Queued File Info
+    /// </summary>
     public class FileQueueStateInfo
     {
         public string Hash { get; private set; }
