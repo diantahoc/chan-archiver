@@ -90,7 +90,14 @@ namespace AniWrap
             {
                 case APIResponse.ErrorType.NoError:
                     ThreadContainer tc = null;
-                    Dictionary<string, object> list = (Dictionary<string, object>)Newtonsoft.Json.JsonConvert.DeserializeObject(response.Data, typeof(Dictionary<string, object>));
+
+                    Dictionary<string, object> list = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(response.Data);
+
+                    //if (list == null) 
+                    //{
+                    //    FlushAPI(string.Format("http://a.4cdn.org/{0}/thread/{1}.json", board, id));
+                    //    return GetThreadData(board, id);
+                    //}
 
                     if (list.ContainsKey("posts"))
                     {
@@ -678,6 +685,14 @@ namespace AniWrap
             }
 
             return result;
+        }
+
+        private void FlushAPI(string url) 
+        {
+            string hash = Common.MD5(url);
+
+            delete_file( Path.Combine(_cache_dir, hash)); 
+            delete_file(Path.Combine(_cache_dir, hash + "_data"));
         }
 
         private static void delete_file(string s)

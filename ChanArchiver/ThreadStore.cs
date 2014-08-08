@@ -45,6 +45,16 @@ namespace ChanArchiver
             return thread_pf.ToArray();
         }
 
+        public static void DeleteThread(string board, string id) 
+        {
+            string thread_dir_path = Path.Combine(Program.post_files_dir, board, id);
+
+            if (Directory.Exists(thread_dir_path))
+            {
+                Directory.Delete(thread_dir_path, true);
+            }
+        }
+
         public static PostFormatter[] GetIndex(string board)
         {
             string board_folder = Path.Combine(Program.post_files_dir, board);

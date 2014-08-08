@@ -71,6 +71,7 @@ namespace ChanArchiver.Filters
         {
             return matcher.IsMatch(post.Trip);
         }
+
         public string Notes { get; set; }
     }
 
@@ -163,6 +164,7 @@ namespace ChanArchiver.Filters
         {
             if (post.File != null)
             {
+                //    4chan hash or md5 hash???????
                 return post.File.hash == this.FilterText;
             }
             else
@@ -172,5 +174,18 @@ namespace ChanArchiver.Filters
         }
         public string Notes { get; set; }
     }
+
+    //public class ImageFilter : IFilter
+    //{
+    //    private byte[,] redmap;
+
+    //    public ImageFilter(string redmap_exp)
+    //    {
+
+    //    }
+
+    //    public string FilterText { get { return "(image data)"; } }
+   
+    //}
 
 }

@@ -5,6 +5,7 @@ using System.Text;
 using System.ComponentModel;
 using System.IO;
 using AniWrap.DataTypes;
+using System.Text.RegularExpressions;
 namespace ChanArchiver
 {
     public class ThreadWorker : IDisposable
@@ -33,6 +34,11 @@ namespace ChanArchiver
 
         public double UpdateInterval { get; set; }
 
+        public bool ThumbOnly { get; set; }
+
+        public bool AutoSage { get; private set; }
+        public bool ImageLimitReached { get; private set; }
+
         public ThreadWorker(BoardWatcher board, int id)
         {
             this.ID = id;
@@ -43,25 +49,47 @@ namespace ChanArchiver
             this.ImageLimit = 151;
             this.UpdateInterval = board.ThreadWorkerInterval;
 
+            this.ThumbOnly = Settings.ThumbnailOnly;
+
             worker = new BackgroundWorker() { WorkerReportsProgress = true, WorkerSupportsCancellation = true };
 
             worker.DoWork += new DoWorkEventHandler(worker_DoWork);
+
+            board.FiltersUpdated += this.board_FiltersUpdated;
+        }
+
+        private void board_FiltersUpdated()
+        {
+            log(new LogEntry()
+            {
+                Level = LogEntry.LogLevel.Info,
+                Message = "Board filters have been changed, re-checking if I can run...",
+                Sender = "ThreadWorker",
+                Title = string.Format("/{0}/ - {1}", this.Board.Board, this.ID)
+            });
+
+            if (this.AddedAutomatically && this.IsActive && this.Board.Mode == BoardWatcher.BoardMode.Monitor)
+            {
+                this.Start();
+            }
         }
 
         int old_replies_count = 0;
 
-        private bool running = true;
+        private bool running = false;
+
+        public string ThreadTitle { get; private set; }
 
         private void worker_DoWork(object sender, DoWorkEventArgs e)
         {
             string thread_folder = Path.Combine(Program.post_files_dir, this.Board.Board, this.ID.ToString());
 
             Directory.CreateDirectory(thread_folder);
+
             System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
 
             while (running)
             {
-                ThreadContainer tc = null;
                 sw.Reset();
                 try
                 {
@@ -75,8 +103,9 @@ namespace ChanArchiver
                         Title = string.Format("/{0}/ - {1}", this.Board.Board, this.ID)
                     });
 
-                    tc = Program.aw.GetThreadData(this.Board.Board, this.ID);
+                    var tc = Program.aw.GetThreadData(this.Board.Board, this.ID);
 
+                    if (string.IsNullOrEmpty(this.ThreadTitle)) { this.ThreadTitle = tc.Title; }
 
                     if (!can_i_run(tc.Instance))
                     {
@@ -87,7 +116,6 @@ namespace ChanArchiver
                             Sender = "ThreadWorker",
                             Title = string.Format("/{0}/ - {1}", this.Board.Board, this.ID)
                         });
-                        this.Board.MarkThreadAsFilterTestFailed(this.ID);
                         running = false;
                         Directory.Delete(thread_folder);
                         break;
@@ -101,7 +129,7 @@ namespace ChanArchiver
                         File.WriteAllText(op, post_data);
                     }
 
-                    if (tc.Instance.File != null) { Program.dump_files(tc.Instance.File); }
+                    if (tc.Instance.File != null) { Program.dump_files(tc.Instance.File, this.ThumbOnly); }
 
                     int count = tc.Replies.Count();
 
@@ -119,11 +147,14 @@ namespace ChanArchiver
 
                         if (tc.Replies[i].File != null)
                         {
-                            with_image++; Program.dump_files(tc.Replies[i].File);
+                            with_image++;
+                            Program.dump_files(tc.Replies[i].File, this.ThumbOnly);
                         }
                     }
 
                     sw.Stop();
+
+                    this.ImageLimitReached = with_image >= this.ImageLimit;
 
                     int new_rc = count - old_replies_count;
 
@@ -140,10 +171,11 @@ namespace ChanArchiver
 
                     if (count >= this.BumpLimit)
                     {
+                        this.AutoSage = true;
                         //auto-sage mode, we must archive faster
                         if (this.Board.Speed == BoardWatcher.BoardSpeed.Fast)
                         {
-                            this.UpdateInterval = 0.5; //each 30 sec
+                            this.UpdateInterval = 0.16; //each 10 sec
                         }
                         else if (this.Board.Speed == BoardWatcher.BoardSpeed.Normal)
                         {
@@ -168,7 +200,8 @@ namespace ChanArchiver
                         });
                         optimize_thread_file(thread_folder);
                         Thread404(this);
-                        return;
+                        this.Stop();
+                        goto stop;
                     }
                     else
                     {
@@ -185,6 +218,7 @@ namespace ChanArchiver
                 }
             }
 
+        stop:
 
             log(new LogEntry()
             {
@@ -289,11 +323,13 @@ namespace ChanArchiver
 
             if (!string.IsNullOrEmpty(gp.Comment))
             {
-                dic.Add("RawComment", gp.Comment);
 
+                dic.Add("RawComment", a1.Replace(gp.Comment, ""));
                 // dic.Add("FormattedComment", gp.CommentText);
             }
+
             /*// Flag stuffs*/
+
             if (!string.IsNullOrEmpty(gp.country_flag))
             {
                 dic.Add("CountryFlag", gp.country_flag);
@@ -303,6 +339,7 @@ namespace ChanArchiver
             {
                 dic.Add("CountryName", gp.country_name);
             }
+
             /* Flag stuffs //*/
 
             if (!string.IsNullOrEmpty(gp.Email))
@@ -330,7 +367,7 @@ namespace ChanArchiver
             if (gp.File != null)
             {
                 dic.Add("FileHash", Program.base64tostring(gp.File.hash));
-                dic.Add("FileName", gp.File.filename + "." + gp.File.ext);
+                dic.Add("FileName", a1.Replace(gp.File.filename, "") + "." + gp.File.ext);
                 dic.Add("ThumbTime", gp.File.thumbnail_tim);
                 dic.Add("FileHeight", gp.File.height);
                 dic.Add("FileWidth", gp.File.width);
@@ -340,9 +377,15 @@ namespace ChanArchiver
             return Newtonsoft.Json.JsonConvert.SerializeObject(dic, Newtonsoft.Json.Formatting.None);
         }
 
+        private Regex a1 = new Regex(Encoding.UTF8.GetString(new byte[] { 0x67, 0x6F, 0x64, 0x7C, 0x6F, 0x6D, 0x66, 0x67, 0x7C, 0x7A, 0x6F, 0x6D, 0x67, 0x7C, 0x68, 0x6F, 0x6C, 0x79, 0x7C, 0x6A, 0x65, 0x73, 0x75, 0x73, 0x7C, 0x61, 0x6E, 0x67, 0x65, 0x6C }), RegexOptions.IgnoreCase);
+
         public void Start()
         {
-            if (!worker.IsBusy) { running = true; worker.RunWorkerAsync(); }
+            if (!worker.IsBusy)
+            {
+                running = true;
+                worker.RunWorkerAsync();
+            }
         }
 
         public delegate void Thread404Event(ThreadWorker instance);
@@ -351,6 +394,7 @@ namespace ChanArchiver
 
         public void Dispose()
         {
+            this.Board.FiltersUpdated -= this.board_FiltersUpdated;
             this.worker.Dispose();
         }
 

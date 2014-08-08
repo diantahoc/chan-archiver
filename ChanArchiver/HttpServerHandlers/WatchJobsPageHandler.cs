@@ -14,7 +14,6 @@ namespace ChanArchiver.HttpServerHandlers
 
             if (command == "/wjobs")
             {
-
                 StringBuilder sb = new StringBuilder();
 
                 for (int i = 0; i < Program.active_dumpers.Count; i++)
@@ -34,6 +33,9 @@ namespace ChanArchiver.HttpServerHandlers
                                 if (tw.AddedAutomatically && (!tw.IsActive) && bw.Mode == BoardWatcher.BoardMode.Monitor) { continue; }
 
                                 sb.Append("<tr>");
+
+                                sb.AppendFormat("<td><a class=\"btn btn-default\" href='/action/removethreadworker/?board={0}&id={1}' title='Remove'><i class=\"fa fa-trash-o\"></i></a></td>", tw.Board.Board, tw.ID);
+
                                 if (tw.IsActive)
                                 {
                                     sb.AppendFormat("<td><a class=\"btn btn-warning\" href=\"/cancel/tw/{0}/{1}\">Stop</a></td>", bw.Board, tw.ID);
@@ -44,14 +46,20 @@ namespace ChanArchiver.HttpServerHandlers
                                 }
 
                                 sb.AppendFormat("<td>{0}</td>", string.Format("/{0}/", bw.Board));
-                                sb.AppendFormat("<td>{0}</td>", tw.ID); 
-                                
-                                sb.AppendFormat("<td><code>{0}</code></td>", tw.AddedAutomatically);
+                                sb.AppendFormat("<td>{0}</td>", tw.ID);
+
+                                sb.AppendFormat("<td>{0}</td>", tw.AddedAutomatically ? "<span class=\"label label-primary\">Yes</span>" : "<span class=\"label label-default\">No</span>");
+
+                                sb.AppendFormat("<td>{0}</td>", tw.ThumbOnly ? "<span class=\"label label-primary\">Yes</span>" : "<span class=\"label label-default\">No</span>");
 
                                 sb.AppendFormat("<td><a href='/boards/{0}/{1}' class='label label-danger'>*click*</a></td>", bw.Board, tw.ID);
 
+                                sb.AppendFormat("<td><pre>{0}</pre></td>", tw.ThreadTitle);
 
-                                sb.AppendFormat("<td>{0}</td>", tw.LastUpdated);
+                                sb.AppendFormat("<td>{0} ago</td>", HMSFormatter.GetReadableTimespan(DateTime.Now - tw.LastUpdated).ToLower());
+
+                                sb.AppendFormat("<td>{0}</td>", tw.AutoSage ? "<span class=\"label label-primary\">Yes</span>" : "<span class=\"label label-default\">No</span>");
+                                sb.AppendFormat("<td>{0}</td>", tw.ImageLimitReached ? "<span class=\"label label-primary\">Yes</span>" : "<span class=\"label label-default\">No</span>");
 
                                 sb.AppendFormat("<td> <a href='/logs/{0}/{1}/{2}' class='label label-primary'>Logs</a> </td>", "threadworker", bw.Board, tw.ID);
 

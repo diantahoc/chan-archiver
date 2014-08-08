@@ -1,10 +1,17 @@
+<div class="links">
+  <a href="/action/showfilereposts?hash={file:4chan-md5}">[Show Info]</a>
+  <a href="/action/banfile?hash={file:4chan-md5}">[Ban File]</a>
+  <!--<a href="/action/deletefile?hash={file:4chan-md5}">[Delete File]</a>-->
+</div>
+
 <div class="file" id="f{post:id}">
-    <div class="fileText" id="fT{post:id}">
-        File: <a href="{file:fulllink}" target="_blank">{file:name}</a>
-        ({file:size}, {file:dimensions})</div>
-    <a class="fileThumb" href="{file:fulllink}" target="_blank">
-        <img src="{file:thumbsrc}" alt="{file:size}" data-md5="{file:4chan-md5}"
-            style="max-height: 250px; max-width: 250px;"/>
-            <div class="mFileInfo mobile">{file:size} {file:ext}</div>
-    </a>
+  <div class="fileText" id="fT{post:id}">
+    File: <a href="{file:fulllink}" target="_blank">{file:name}</a>
+    ({file:size}, {file:dimensions})
+  </div>
+
+  <a class="fileThumb" href="{file:fulllink}" target="_blank">
+    <img src="{file:thumbsrc}" alt="{file:size}"/>
+    <div class="mFileInfo mobile">{file:size} {file:ext}</div>
+  </a>
 </div>

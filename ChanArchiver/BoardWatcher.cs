@@ -36,7 +36,7 @@ namespace ChanArchiver
 
         public BoardMode Mode { get; private set; }
 
-        List<int> rejected_threads_because_of_filters = new List<int>();
+        //List<int> rejected_threads_because_of_filters = new List<int>();
 
         public BoardWatcher(string board)
         {
@@ -48,9 +48,10 @@ namespace ChanArchiver
             {
                 this.Board = board;
                 this.Mode = BoardMode.None;
+                Task.Factory.StartNew(load_board_sleep_times);
+
                 LoadFilters();
                 LoadManuallyAddedThreads();
-                // Task.Factory.StartNew(load_board_sleep_times);
             }
         }
 
@@ -70,16 +71,78 @@ namespace ChanArchiver
             Monitor
         }
 
-        //private void load_board_sleep_times()
-        //{
-        //    try
-        //    {
-        //        AniWrap.AniWrap.ThreadAndDate[] e = Program.aw.GetBoardThreadsID(this.Board);
-        //    }
-        //    catch (Exception)
-        //    {
-        //    }
-        //}
+        private void load_board_sleep_times()
+        {
+            //speed up
+            if (this.Board == "b" || this.Board == "v") 
+            {
+                this.Speed = BoardSpeed.Fast;
+                return;
+            }
+
+            try
+            {
+                var e = Program.aw.GetBoardThreadsID(this.Board);
+
+                if (e.Count() == 0) { return; }
+
+                DateTime n = DateTime.UtcNow;
+
+                int[] list = new int[e.Count];
+
+                for (int i = 0; i < e.Count; i++)
+                {
+                    list[i] = Convert.ToInt32((n - e.ElementAt(i).Value).TotalSeconds);
+                }
+
+                int mode = compute_mode(list);
+
+                if (mode < 60)
+                {
+                    this.Speed = BoardSpeed.Fast;
+                }
+                else if (mode >= 60 && mode <= 650)
+                {
+                    this.Speed = BoardSpeed.Normal;
+                }
+                else
+                {
+                    this.Speed = BoardSpeed.Slow;
+                }
+
+                this.Log(new LogEntry() { Level = LogEntry.LogLevel.Info, Message = "Board speed detected: " + this.Speed.ToString(), Sender = "BoardWatcher", Title = this.Board });
+            }
+            catch (Exception ex)
+            {
+                if (ex.Message.Contains("404"))
+                {
+                    //board does not exist!
+                    board_404 = true;
+                    return;
+                }
+                this.Speed = BoardSpeed.Normal;
+            }
+        }
+
+        //compute statistic mode value
+        private int compute_mode(int[] ns)
+        {
+            Dictionary<int, int> a = new Dictionary<int, int>(ns.Length);
+
+            foreach (int n in ns)
+            {
+                if (a.ContainsKey(n))
+                {
+                    a[n]++;
+                }
+                else
+                {
+                    a.Add(n, 1);
+                }
+            }
+
+            return (a.OrderByDescending(c => c.Value).First().Key);
+        }
 
         public void StartMonitoring(BoardMode mode)
         {
@@ -109,23 +172,36 @@ namespace ChanArchiver
                 Task.Factory.StartNew((Action)delegate
                 {
                     //log("Starting board watcher");
+
                     load_catalog();
-                    catalog_loaded_callback();
+
+                    start_rss_watcher();
+
                     // log("Board watcher started");
                 });
             }
         }
 
-        public void AddThreadId(int id)
+        public void AddThreadId(int id, bool thumbOnly)
         {
-            if (!this.watched_threads.ContainsKey(id))
+            ThreadWorker t = null;
+
+            if (this.watched_threads.ContainsKey(id))
             {
-                ThreadWorker t = new ThreadWorker(this, id);
+                t = this.watched_threads[id];
+            }
+            else
+            {
+                t = new ThreadWorker(this, id);
                 this.watched_threads.Add(id, t);
                 t.Thread404 += this.handle_thread_404;
-                t.Start();
-                SaveManuallyAddedThreads();
             }
+
+            t.AddedAutomatically = false; // THIS IS CRITICAL, OTHERWISE IT PREVENT MANUALLY ADDED THREADS FROM STARTING IN MONITOR MODE
+            t.ThumbOnly = thumbOnly;
+            t.Start();
+
+            SaveManuallyAddedThreads();
         }
 
         public void LoadManuallyAddedThreads()
@@ -134,17 +210,52 @@ namespace ChanArchiver
             {
                 string data = System.IO.File.ReadAllText(this.ManuallyAddedThreadsSaveFilePath);
 
-                List<object> t = Newtonsoft.Json.JsonConvert.DeserializeObject<List<object>>(data);
+                object des = null;
 
-                foreach (object id in t)
+                try
                 {
-                    try
+                    des = Newtonsoft.Json.JsonConvert.DeserializeObject(data);
+                }
+                catch (Exception) { return; }
+
+                Type des_type = (des == null ? null : des.GetType());
+
+                if (des_type == typeof(Newtonsoft.Json.Linq.JArray))
+                {
+                    // legacy save file, des is a was List<int> which is equivalent to JArray
+
+                    Newtonsoft.Json.Linq.JArray w = des as Newtonsoft.Json.Linq.JArray;
+
+                    foreach (Newtonsoft.Json.Linq.JToken id in w)
                     {
-                        AddThreadId(Convert.ToInt32(id));
+                        try
+                        {
+                            if (id.Type == Newtonsoft.Json.Linq.JTokenType.Integer)
+                            {
+                                AddThreadId(Convert.ToInt32(id), Settings.ThumbnailOnly);
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            continue;
+                        }
                     }
-                    catch (Exception)
+                }
+                else if (des_type == typeof(Newtonsoft.Json.Linq.JObject))
+                {
+                    //new save file, which was a Dictionary<int, bool>
+                    Newtonsoft.Json.Linq.JObject w = des as Newtonsoft.Json.Linq.JObject;
+
+                    foreach (KeyValuePair<string, Newtonsoft.Json.Linq.JToken> thread in w)
                     {
-                        continue;
+                        try
+                        {
+                            AddThreadId(Convert.ToInt32(thread.Key), Convert.ToBoolean(thread.Value));
+                        }
+                        catch (Exception)
+                        {
+                            continue;
+                        }
                     }
                 }
             }
@@ -152,7 +263,7 @@ namespace ChanArchiver
 
         public void SaveManuallyAddedThreads()
         {
-            List<int> t = new List<int>();
+            Dictionary<int, bool> dic = new Dictionary<int, bool>();
 
             for (int i = 0; i < watched_threads.Count(); i++)
             {
@@ -161,7 +272,7 @@ namespace ChanArchiver
                     ThreadWorker tw = watched_threads.ElementAt(i).Value;
                     if (!tw.AddedAutomatically)
                     {
-                        t.Add(tw.ID);
+                        dic.Add(tw.ID, tw.ThumbOnly);
                     }
                 }
                 catch (Exception)
@@ -169,7 +280,7 @@ namespace ChanArchiver
                     if (i > watched_threads.Count() - 1) { break; }
                 }
             }
-            System.IO.File.WriteAllText(this.ManuallyAddedThreadsSaveFilePath, Newtonsoft.Json.JsonConvert.SerializeObject(t));
+            System.IO.File.WriteAllText(this.ManuallyAddedThreadsSaveFilePath, Newtonsoft.Json.JsonConvert.SerializeObject(dic));
         }
 
         public int ActiveThreadWorkers
@@ -201,8 +312,6 @@ namespace ChanArchiver
             {
                 try
                 {
-                    List<DateTime> post_dates = new List<DateTime>();
-
                     Log(new LogEntry()
                     {
                         Level = LogEntry.LogLevel.Info,
@@ -221,107 +330,108 @@ namespace ChanArchiver
                         Title = string.Format("/{0}/", this.Board)
                     });
 
-                    int loaded_count = 0;
+                    int thread_count = 0;
+                    int started_count = 0;
 
                     foreach (CatalogItem[] page in catalog)
                     {
                         foreach (CatalogItem thread in page)
                         {
+                            thread_count++;
+
                             if (Mode == BoardMode.None)
                             {
                                 //board watcher have been stopped, return
                                 return;
                             }
 
-                            if (this.Mode == BoardMode.Monitor)
-                            {
-                                if (!this.MatchFilters(thread))
-                                {
-                                    //in monitor mode, don't add unacceptable threads
-                                    this.MarkThreadAsFilterTestFailed(thread.ID);
-                                    this.Log(new LogEntry()
-                                    {
-                                        Level = LogEntry.LogLevel.Info,
-                                        Message = "Thread " + thread.ID.ToString() + " has no matching filter, not starting it.",
-                                        Sender = "BoardWatcher",
-                                        Title = ""
-                                    });
-                                    continue;
-                                }
-                            }
+                            ThreadWorker tw = null;
 
                             if (!watched_threads.ContainsKey(thread.ID))
                             {
-                                watched_threads.Add(thread.ID, new ThreadWorker(this, thread.ID)
+                                tw = new ThreadWorker(this, thread.ID)
                                 {
                                     ImageLimit = thread.ImageLimit,
                                     BumpLimit = thread.BumpLimit,
                                     AddedAutomatically = true
-                                });
-                            }
+                                };
 
-                            if (Program.verbose)
-                            {
-                                Log(new LogEntry()
-                                {
-                                    Level = LogEntry.LogLevel.Info,
-                                    Message = string.Format("Loaded from catalog thread {0}", thread.ID),
-                                    Sender = "BoardWatcher",
-                                    Title = string.Format("/{0}/", this.Board)
-                                });
-                            }
+                                tw.Thread404 += this.handle_thread_404;
 
-                            if (thread.trails != null)
+                                watched_threads.Add(thread.ID, tw);
+                            }
+                            else
                             {
-                                foreach (GenericPost p in thread.trails)
+                                tw = watched_threads[thread.ID];
+                                if (!tw.AddedAutomatically)
                                 {
-                                    post_dates.Add(p.Time);
+                                    continue;
                                 }
                             }
 
-                            loaded_count++;
+                            if (this.Mode == BoardMode.Monitor)
+                            {
+                                if (!this.MatchFilters(thread))
+                                {
+                                    //in monitor mode, don't auto-start unacceptable threads
+                                    this.Log(new LogEntry()
+                                    {
+                                        Level = LogEntry.LogLevel.Info,
+                                        Message = "Thread " + thread.ID.ToString() + " has no matching filter, skipping it.",
+                                        Sender = "BoardWatcher",
+                                        Title = ""
+                                    });
+                                }
+                                else 
+                                {
+                                    started_count++;
+
+                                    Log(new LogEntry()
+                                    {
+                                        Level = LogEntry.LogLevel.Info,
+                                        Message = string.Format("Thread {0} has matching filters, starting it.", thread.ID),
+                                        Sender = "BoardWatcher",
+                                        Title = string.Format("/{0}/", this.Board)
+                                    });
+
+                                    tw.Start();
+                                }
+                            }
+                            else if (this.Mode == BoardMode.FullBoard)
+                            {
+                                if (Program.verbose)
+                                {
+                                    Log(new LogEntry()
+                                    {
+                                        Level = LogEntry.LogLevel.Info,
+                                        Message = string.Format("Starting thread worker for thread # {0}", thread.ID),
+                                        Sender = "BoardWatcher",
+                                        Title = string.Format("/{0}/", this.Board)
+                                    });
+                                }
+
+                                started_count++;
+
+                                Task.Factory.StartNew((Action)delegate
+                                {
+                                    //Allow 5 sec delay between thread startup
+                                    System.Threading.Thread.Sleep(5000);
+                                    tw.Start();
+                                });
+                            }
+
                         }
                     }
 
                     Log(new LogEntry()
                     {
                         Level = LogEntry.LogLevel.Success,
-                        Message = string.Format("Finished loading {0} thread", loaded_count),
+                        Message = string.Format("Finished loading {0} thread, {1} started.", thread_count, started_count),
                         Sender = "BoardWatcher",
                         Title = string.Format("/{0}/", this.Board)
                     });
 
-                    if (post_dates.Count >= 2)
-                    {
-                        IOrderedEnumerable<DateTime> sorted_dates = post_dates.OrderBy(x => x);
-
-                        TimeSpan ts = sorted_dates.Last() - sorted_dates.First();
-
-                        if (ts.TotalMinutes > 0)
-                        {
-                            this.AvgPostPerMinute = post_dates.Count / ts.TotalMinutes;
-
-                            /*
-                               if the ppm < 1, it is a slow board.
-                               if the 5 <= ppm, it is a fast board.
-                               if (1 < ppm < 5), it is a normal board. 
-                             */
-
-                            if (this.AvgPostPerMinute < 1.0)
-                            {
-                                this.Speed = BoardSpeed.Slow;
-                            }
-                            else if (1.0 < this.AvgPostPerMinute && this.AvgPostPerMinute < 5.0)
-                            {
-                                this.Speed = BoardSpeed.Normal;
-                            }
-                            else
-                            {
-                                this.Speed = BoardSpeed.Fast;
-                            }
-                        }
-                    }
-
+                    //breaks the while
                     break;
                 }
                 catch (Exception ex)
@@ -329,6 +439,8 @@ namespace ChanArchiver
                     if (ex.Message.Contains("404"))
                     {
                         //board does not exist!
+                        board_404 = true;
+                        return;
                     }
                     Log(new LogEntry()
                     {
@@ -341,7 +453,6 @@ namespace ChanArchiver
                     System.Threading.Thread.Sleep(5000);
                 }
             }
-            return;
         }
 
         public void StopMonitoring()
@@ -372,38 +483,50 @@ namespace ChanArchiver
                 }
                 catch (Exception) { }
             }
-        }
 
-        private void catalog_loaded_callback()
-        {
-            foreach (KeyValuePair<int, ThreadWorker> w in watched_threads)
+            this.mylogs.Clear();
+
+            Log(new LogEntry()
             {
-                if (w.Value.AddedAutomatically)
-                {
-                    if (this.Mode == BoardMode.None)
-                    {
-                        //board watcher have been stopped, exit
-                        return;
-                    }
-                    w.Value.Thread404 += this.handle_thread_404;
-                    w.Value.Start();
-
-                    if (Program.verbose)
-                    {
-                        Log(new LogEntry()
-                        {
-                            Level = LogEntry.LogLevel.Info,
-                            Message = "Starting thread worker '" + w.Value.ID + "'",
-                            Sender = "BoardWatcher",
-                            Title = string.Format("/{0}/", this.Board)
-                        });
-                    }
-
-                    System.Threading.Thread.Sleep(500); //Allow 0.5 seconds between thread worker startup
-                }
-            }
-            start_rss_watcher();
+                Level = LogEntry.LogLevel.Success,
+                Message = "Monitoring has been stopped",
+                Sender = "BoardWatcher",
+                Title = string.Format("/{0}/", this.Board)
+            });
         }
+
+        //private void catalog_loaded_callback()
+        //{
+        //    foreach (KeyValuePair<int, ThreadWorker> w in watched_threads)
+        //    {
+        //        if (w.Value.AddedAutomatically)
+        //        {
+        //            if (this.Mode == BoardMode.None || this.Mode == BoardMode.Monitor)
+        //            {
+        //                //board watcher have been stopped, exit
+        //                return;
+        //            }
+
+        //            w.Value.Thread404 += this.handle_thread_404;
+
+        //            w.Value.Start();
+
+        //            if (Program.verbose)
+        //            {
+        //                Log(new LogEntry()
+        //                {
+        //                    Level = LogEntry.LogLevel.Info,
+        //                    Message = "Starting thread worker '" + w.Value.ID + "'",
+        //                    Sender = "BoardWatcher",
+        //                    Title = string.Format("/{0}/", this.Board)
+        //                });
+        //            }
+
+        //            System.Threading.Thread.Sleep(500); //Allow 0.5 seconds between thread worker startup
+        //        }
+        //    }
+        //    start_rss_watcher();
+        //}
 
         private void handle_thread_404(ThreadWorker instance)
         {
@@ -441,6 +564,7 @@ namespace ChanArchiver
             foreach (int id in data)
             {
                 if (this.Mode == BoardMode.None) { return; }
+
                 if (!this.watched_threads.ContainsKey(id))
                 {
                     if (!this._404_threads.Contains(id))
@@ -451,6 +575,7 @@ namespace ChanArchiver
                         t.Thread404 += this.handle_thread_404;
 
                         t.Start();
+
                         Log(new LogEntry()
                         {
                             Level = LogEntry.LogLevel.Info,
@@ -462,6 +587,10 @@ namespace ChanArchiver
                 }
             }
         }
+
+        public delegate void FiltersUpdatedEvent();
+
+        public event FiltersUpdatedEvent FiltersUpdated;
 
         List<ChanArchiver.Filters.IFilter> my_filters = new List<Filters.IFilter>();
 
@@ -476,7 +605,10 @@ namespace ChanArchiver
             {
                 my_filters.Add(filter);
 
-                ReCheckAllFailedThreads();
+                if (FiltersUpdated != null)
+                {
+                    FiltersUpdated();
+                }
             }
         }
 
@@ -496,55 +628,56 @@ namespace ChanArchiver
                         return true;
                     }
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
+                    continue;
                 }
             }
 
             return false;
         }
 
-        /// <summary>
-        /// Runs when filters are changed (added or removed)
-        /// </summary>
-        private void ReCheckAllFailedThreads()
-        {
-            if (this.Mode == BoardMode.Monitor)
-            {
-                for (int index = 0; index < rejected_threads_because_of_filters.Count; index++)
-                {
-                    try
-                    {
-                        int tid = rejected_threads_because_of_filters[index];
-                        if (!this.watched_threads.ContainsKey(tid))
-                        {
-                            ThreadWorker tw = new ThreadWorker(this, tid);
-                            this.watched_threads.Add(tid, tw);
-                            tw.Thread404 += this.handle_thread_404;
-                            tw.AddedAutomatically = true;
-                            tw.Start();
-                        }
-                        else
-                        {
-                            ThreadWorker tw = watched_threads[tid];
-                            tw.Start();
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        if (index >= rejected_threads_because_of_filters.Count) { return; }
-                    }
-                }
-            }
-        }
+        ///// <summary>
+        ///// Runs when filters are changed (added or removed)
+        ///// </summary>
+        //private void ReCheckAllFailedThreads()
+        //{
+        //    if (this.Mode == BoardMode.Monitor)
+        //    {
+        //        for (int index = 0; index < rejected_threads_because_of_filters.Count; index++)
+        //        {
+        //            try
+        //            {
+        //                int tid = rejected_threads_because_of_filters[index];
+        //                if (!this.watched_threads.ContainsKey(tid))
+        //                {
+        //                    ThreadWorker tw = new ThreadWorker(this, tid);
+        //                    this.watched_threads.Add(tid, tw);
+        //                    tw.Thread404 += this.handle_thread_404;
+        //                    tw.AddedAutomatically = true;
+        //                    tw.Start();
+        //                }
+        //                else
+        //                {
+        //                    ThreadWorker tw = watched_threads[tid];
+        //                    tw.Start();
+        //                }
+        //            }
+        //            catch (Exception)
+        //            {
+        //                if (index >= rejected_threads_because_of_filters.Count) { return; }
+        //            }
+        //        }
+        //    }
+        //}
 
-        public void MarkThreadAsFilterTestFailed(int id)
-        {
-            if (this.Mode == BoardMode.Monitor)
-            {
-                if (!this.rejected_threads_because_of_filters.Contains(id)) { this.rejected_threads_because_of_filters.Add(id); }
-            }
-        }
+        //public void MarkThreadAsFilterTestFailed(int id)
+        //{
+        //    if (this.Mode == BoardMode.Monitor)
+        //    {
+        //        if (!this.rejected_threads_because_of_filters.Contains(id)) { this.rejected_threads_because_of_filters.Add(id); }
+        //    }
+        //}
 
         public void SaveFilters()
         {

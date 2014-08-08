@@ -17,7 +17,7 @@ namespace ChanArchiver.HttpServerHandlers
 
                 StringBuilder sb = new StringBuilder(Properties.Resources.dashboard_page);
 
-                sb.Replace("{thumbmode}", Program.thumb_only ? "<div class=\"bs-callout bs-callout-warning\"><h4>ChanArchiver is running in thumbnail mode</h4><p>Only thumbnails will be saved. To disable it, restart ChanArchiver without the <code>--thumbonly</code> switch, or click <a href='/action/enablefullfile'>here</a></p></div>" : "");
+                sb.Replace("{thumbmode}", Settings.ThumbnailOnly ? "<div class=\"bs-callout bs-callout-warning\"><h4>ChanArchiver is running in thumbnail mode</h4><p>Only thumbnails will be saved. To disable it, restart ChanArchiver without the <code>--thumbonly</code> switch, or click <a href='/action/enablefullfile'>here</a></p></div>" : "");
 
                 if (FileSystemStats.IsSaveDirDriveLowOnDiskSpace)
                 {
@@ -28,15 +28,28 @@ namespace ChanArchiver.HttpServerHandlers
                     sb.Replace("{lowdiskspacenotice}", "");
                 }
 
-                sb.Replace("{RunningTime}", (new RunningTimeInfo()).ToString());
+                sb.Replace("{RunningTime}", get_running_time_info());
 
-                sb.Replace("{DiskUsage}", get_DiskUsageInfo());
+                if (Settings.EnableFileStats)
+                {
+                    string disk_usage_table = "<h2 class=\"sub-header\">Disk usage</h2> <div class=\"table-responsive\"> <table class=\"table table-striped\"> <thead> <tr> <th># of files</th> <th>Category</th> <th>Used space</th> <th>Average file size</th> <th>Biggest file</th> <th>Smallest file</th> </tr> </thead> <tbody> {0} </tbody> </table> </div>";
+
+                    sb.Replace("{DiskUsage}", string.Format(disk_usage_table, get_DiskUsageInfo()));
+                }
+                else
+                {
+                    sb.Replace("{DiskUsage}", "");
+                }
 
                 sb.Replace("{NetworkStats}", get_NetWorkStats());
 
                 sb.Replace("{ArchivedThreads}", get_ArchivedThreadsStats());
 
                 sb.Replace("{network-stats-data}", get_network_history(DateTime.Now));
+
+                sb.Replace("{thread-stats-data}", get_json_thread_stats());
+
+                sb.Replace("{network-stats-month}", get_network_history_month(DateTime.Now));
 
                 //write everything
                 response.Status = System.Net.HttpStatusCode.OK;
@@ -130,11 +143,31 @@ namespace ChanArchiver.HttpServerHandlers
             return sb.ToString();
         }
 
+        public string get_json_thread_stats() 
+        {
+            StringBuilder sb = new StringBuilder();
+
+            DirectoryInfo board_storage = new DirectoryInfo(Program.post_files_dir);
+
+            DirectoryInfo[] data = board_storage.GetDirectories();
+
+            for (int i = 0; i < data.Length; i++) 
+            {
+                sb.AppendFormat("[ \"{0}\"  , {1} ]", data[i].Name, data[i].EnumerateDirectories().Count());
+
+                if (i < data.Length - 1) 
+                {
+                    sb.Append(",");
+                }
+            }
+
+            return sb.ToString();
+        }
+
         private string get_network_history(DateTime day)
         {
             //[ ["January", 10], ["February", 8], ["March", 4], ["April", 13], ["May", 17], ["June", 9] ]
             StringBuilder sb = new StringBuilder();
-            sb.Append("[");
             var data = NetworkUsageCounter.GetDayStats(day);
             for (int i = 0; i < data.Length; i++)
             {
@@ -142,140 +175,48 @@ namespace ChanArchiver.HttpServerHandlers
                 sb.AppendFormat(" [ {0}, {1} ] ", data[i].Key, Math.Round(t, 2, MidpointRounding.AwayFromZero));
                 if (i < data.Length - 1) { sb.Append(","); }
             }
-            sb.Append("]");
             return sb.ToString();
         }
-    }
 
-
-
-    public class RunningTimeInfo
-    {
-        /*Running Time*/
-
-        public RunningTimeInfo()
+        private string get_network_history_month(DateTime day)
         {
-
-
-            this.RunningTime = DateTime.Now - Program.StartUpTime;
-
-            this.DiskUsage = FileSystemStats.TotalUsage;
-
-        
-            this.NetworkUsage = NetworkUsageCounter.TotalConsumedAllTime;
-
-
-            //ar
-            DirectoryInfo board_dir = new DirectoryInfo(Program.post_files_dir);
-            foreach (DirectoryInfo dir in board_dir.GetDirectories())
+            StringBuilder sb = new StringBuilder();
+            var data = NetworkUsageCounter.GetMonthStats(day);
+            for (int i = 0; i < data.Length; i++)
             {
-                this.ArchivedThreads += dir.GetDirectories("*", SearchOption.TopDirectoryOnly).Length;
+                double t = data[i].Value / 1024 / 1024;
+                sb.AppendFormat(" [ {0}, {1} ] ", data[i].Key, Math.Round(t, 2, MidpointRounding.AwayFromZero));
+                if (i < data.Length - 1) { sb.Append(","); }
             }
-
+            return sb.ToString();
         }
 
-        public TimeSpan RunningTime { get; private set; }
-        public double DiskUsage { get; private set; }
-        public double NetworkUsage { get; private set; }
-        public int ArchivedThreads { get; private set; }
-        //public int ApplicationErrors { get; private set; }
-
-        public override string ToString()
+        private string get_running_time_info()
         {
             StringBuilder s = new StringBuilder();
 
             s.Append("<tr>");
 
-            s.AppendFormat("<td>{0}</td>", GetReadableTimespan(this.RunningTime));
-            s.AppendFormat("<td>{0}</td>", Program.format_size_string(this.DiskUsage));
-            s.AppendFormat("<td>{0}</td>", Program.format_size_string(this.NetworkUsage));
-            s.AppendFormat("<td>{0}</td>", this.ArchivedThreads);
-            //s.AppendFormat("<td>{0}</td>", this.ApplicationErrors);
+            s.AppendFormat("<td>{0}</td>", HMSFormatter.GetReadableTimespan(DateTime.Now - Program.StartUpTime));
+
+            s.AppendFormat("<td>{0}</td>", Settings.EnableFileStats ? Program.format_size_string(FileSystemStats.TotalUsage) : "<i class=\"fa fa-times-circle-o\"></i>");
+
+            s.AppendFormat("<td>{0}</td>", Program.format_size_string(NetworkUsageCounter.TotalConsumedAllTime));
+
+
+            int archived_threads_count = 0;
+
+            foreach (DirectoryInfo dir in (new DirectoryInfo(Program.post_files_dir)).GetDirectories())
+            {
+                archived_threads_count += dir.GetDirectories("*", SearchOption.TopDirectoryOnly).Length;
+            }
+
+
+            s.AppendFormat("<td>{0}</td>", archived_threads_count);
 
             s.Append("</tr>");
 
             return s.ToString();
-
-        }
-
-        //http://stackoverflow.com/questions/16689468/how-to-produce-human-readable-strings-to-represent-a-timespan
-        private string GetReadableTimespan(TimeSpan ts)
-        {
-            // formats and its cutoffs based on totalseconds
-            var cutoff = new SortedList<long, string> 
-            { 
-                {60, "{3:S}" },
-                {60*60, "{2:M}, {3:S}"},
-                {24*60*60, "{1:H}, {2:M}"},
-                {Int64.MaxValue , "{0:D}, {1:H}"}
-            };
-
-            // find nearest best match
-            var find = cutoff.Keys.ToList()
-                          .BinarySearch((long)ts.TotalSeconds);
-            // negative values indicate a nearest match
-            var near = find < 0 ? Math.Abs(find) - 1 : find;
-            // use custom formatter to get the string
-            return String.Format(
-                new HMSFormatter(),
-                cutoff[cutoff.Keys[near]],
-                ts.Days,
-                ts.Hours,
-                ts.Minutes,
-                ts.Seconds);
-        }
-
-    }
-
-
-    // formatter for plural/singular forms of
-    // seconds/hours/days
-    //http://stackoverflow.com/questions/16689468/how-to-produce-human-readable-strings-to-represent-a-timespan
-    public class HMSFormatter : ICustomFormatter, IFormatProvider
-    {
-        string _plural, _singular;
-
-        public HMSFormatter() { }
-
-        private HMSFormatter(string plural, string singular)
-        {
-            _plural = plural;
-            _singular = singular;
-        }
-
-        public object GetFormat(Type formatType)
-        {
-            return formatType == typeof(ICustomFormatter) ? this : null;
-        }
-
-        public string Format(string format, object arg, IFormatProvider formatProvider)
-        {
-            if (arg != null)
-            {
-                string fmt;
-                switch (format)
-                {
-                    case "S": // second
-                        fmt = String.Format(new HMSFormatter("{0} Seconds", "{0} Second"), "{0}", arg);
-                        break;
-                    case "M": // minute
-                        fmt = String.Format(new HMSFormatter("{0} Minutes", "{0} Minute"), "{0}", arg);
-                        break;
-                    case "H": // hour
-                        fmt = String.Format(new HMSFormatter("{0} Hours", "{0} Hour"), "{0}", arg);
-                        break;
-                    case "D": // day
-                        fmt = String.Format(new HMSFormatter("{0} Days", "{0} Day"), "{0}", arg);
-                        break;
-                    default:
-                        // plural/ singular             
-                        fmt = String.Format((int)arg > 1 ? _plural : _singular, arg);  // watch the cast to int here...
-                        break;
-                }
-                return fmt;
-            }
-            return String.Format(format, arg);
         }
     }
-
 }

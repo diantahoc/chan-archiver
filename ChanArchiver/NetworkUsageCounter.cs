@@ -110,11 +110,43 @@ namespace ChanArchiver
 
                     il.Add(new KeyValuePair<int, double>(i, sum));
                 }
-                else 
+                else
                 {
                     il.Add(new KeyValuePair<int, double>(i, 0));
                 }
 
+            }
+
+            return il.ToArray();
+        }
+
+        /// <summary>
+        /// Get total consumed for each day of the month
+        /// </summary>
+        /// <param name="day"></param>
+        /// <returns></returns>
+        public static KeyValuePair<int, double>[] GetMonthStats(DateTime month)
+        {
+            List<KeyValuePair<int, double>> il = new List<KeyValuePair<int, double>>();
+
+            for (int day_index = 1; day_index < DateTime.DaysInMonth(month.Year, month.Month) + 1; day_index++)
+            {
+                double day_sum = 0;
+
+                for (int hour_index = 0; hour_index < 24; hour_index++)
+                {
+                    DateTime fake_d = new DateTime(month.Year, month.Month, day_index, hour_index, 0, 0);
+                    string date_key = string.Format("{0}-{1}-{2}-{3}", fake_d.Day, fake_d.Month, fake_d.Year, fake_d.Hour);
+
+                    if (data_history.ContainsKey(date_key))
+                    {
+                        double[] ss = data_history[date_key];
+
+                        day_sum += (ss[0] + ss[1] + ss[2]);
+                    }
+                }
+
+                il.Add(new KeyValuePair<int, double>(day_index, day_sum));
             }
 
             return il.ToArray();

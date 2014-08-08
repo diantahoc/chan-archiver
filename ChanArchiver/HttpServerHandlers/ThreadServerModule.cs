@@ -77,7 +77,8 @@ namespace ChanArchiver
                         .Replace("{pagen}", page_numbers.ToString())
                         .Replace("{Items}", s.ToString()));
 
-                    response.ContentType = "text/html";
+                    response.ContentType = "text/html; charset=utf-8";
+                    response.Encoding = Encoding.UTF8;
                     response.Status = System.Net.HttpStatusCode.OK;
                     response.ContentLength = data.Length;
                     response.SendHeaders();
@@ -115,8 +116,9 @@ namespace ChanArchiver
                         .Replace("{thread-id}", threadid)
                         .Replace("{thread-posts}", body.ToString()));
 
+                    response.ContentType = "text/html; charset=utf-8";
                     response.ContentLength = respon.Length;
-
+                    response.Encoding = Encoding.UTF8;
                     response.SendHeaders();
                     response.SendBody(respon);
 
@@ -148,11 +150,62 @@ namespace ChanArchiver
                 }
 
                 byte[] data = Encoding.UTF8.GetBytes(sb.ToString());
-                response.ContentType = "text/html";
+                response.ContentType = "text/html; charset=utf-8";
                 response.ContentLength = data.Length;
                 response.Encoding = Encoding.UTF8;
                 response.SendHeaders();
                 response.SendBody(data);
+                return true;
+            }
+
+            if (command.StartsWith("/deletethread/?"))
+            {
+                string board = request.QueryString["board"].Value;
+
+                string threadid = request.QueryString["thread"].Value;
+
+                if (string.IsNullOrEmpty(board) || string.IsNullOrEmpty(threadid)) { _404(response); }
+
+                PostFormatter[] thread_data = ThreadStore.GetThread(board, threadid);
+
+
+                //make sure file index is up-to-date
+                Program.update_file_index();
+
+                //delete the files
+                foreach (var post in thread_data)
+                {
+                    if (post.MyFile == null) { continue; }
+
+                    var state = Program.get_file_index_state(post.MyFile.Hash);
+
+                    if (state == null) { continue; }
+
+                    if (state.RepostCount == 1)
+                    {
+                        string path = Path.Combine(Program.file_save_dir, post.MyFile.Hash + "." + post.MyFile.Extension);
+
+                        if (File.Exists(path))
+                        {
+                            File.Delete(path);
+                        }
+                        else if (File.Exists(path + ".webm"))
+                        {
+                            File.Exists(path + ".webm");
+                        }
+
+                        path = Path.Combine(Program.thumb_save_dir, post.MyFile.Hash + ".jpg");
+
+                        File.Delete(path);
+                    }
+                }
+
+                //delete the thread
+                ThreadStore.DeleteThread(board, threadid);
+
+                Program.update_file_index();
+
+                response.Redirect("/boards/" + board);
                 return true;
             }
 
@@ -162,7 +215,7 @@ namespace ChanArchiver
 
                 if (Directory.Exists(Program.post_files_dir))
                 {
-                    response.ContentType = "text/html";
+                    response.ContentType = "text/html; charset=utf-8";
                     response.Status = System.Net.HttpStatusCode.OK;
 
                     DirectoryInfo info = new DirectoryInfo(Program.post_files_dir);
@@ -181,8 +234,6 @@ namespace ChanArchiver
                         s.AppendFormat("<p><a class=\"btn btn-default\" href=\"/boards/{0}\" role=\"button\">browse »</a></p>", folders[i].Name);
 
                         s.Append("</div>");
-
-                        // s.AppendFormat("<a href='/boards/{0}'>/{0}/</a><br/>", folders[i].Name);
                     }
 
                     byte[] data = System.Text.Encoding.UTF8.GetBytes(Properties.Resources.archivedboard_page.Replace("{Items}", s.ToString()));
@@ -310,7 +361,7 @@ namespace ChanArchiver
                 foreach (KeyValuePair<string, FileQueueStateInfo> s in files_to_restart)
                 {
                     Program.queued_files.Remove(s.Key);
-                    Program.dump_files(s.Value.PostFile);
+                    Program.dump_files(s.Value.PostFile, s.Value.IsThumbOnly);
                 }
                 response.Redirect("/fq");
 
@@ -357,9 +408,10 @@ namespace ChanArchiver
 
                     string input = request.QueryString["urlorformat"].Value;
 
+                    bool thumbOnly = request.QueryString["to"].Value == "1";
+
                     string board = "";
                     int id = -1;
-
 
                     if (input.ToLower().StartsWith("http"))
                     {
@@ -390,9 +442,8 @@ namespace ChanArchiver
 
                     if (id > 0 & !string.IsNullOrEmpty(board))
                     {
-                        Program.archive_single(board, id);
+                        Program.archive_single(board, id, thumbOnly);
                         response.Status = System.Net.HttpStatusCode.OK;
-
                         response.Redirect("/wjobs");
                     }
                     else
@@ -475,6 +526,32 @@ namespace ChanArchiver
                 return true;
             }
 
+            if (command.StartsWith("/action/removethreadworker/"))
+            {
+                string board = request.QueryString["board"].Value;
+                string tid = request.QueryString["id"].Value;
+
+                if (Program.active_dumpers.ContainsKey(board))
+                {
+                    BoardWatcher bw = Program.active_dumpers[board];
+
+                    int id = -1;
+                    Int32.TryParse(tid, out id);
+
+                    if (bw.watched_threads.ContainsKey(id))
+                    {
+                        ThreadWorker tw = bw.watched_threads[id];
+                        tw.Stop();
+                        bw.watched_threads.Remove(id);
+                    }
+                }
+
+                response.Redirect("/wjobs");
+
+                return true;
+            }
+
+
             #endregion
 
             #region File Actions
@@ -489,7 +566,7 @@ namespace ChanArchiver
                 {
                     f.ForceStop = true;
                     Program.queued_files.Remove(workid);
-                    Program.dump_files(f.PostFile);
+                    Program.dump_files(f.PostFile, f.IsThumbOnly);
                     response.Redirect("/fileinfo/" + workid);
                 }
                 else
@@ -522,6 +599,75 @@ namespace ChanArchiver
                 return true;
             }
 
+            if (command.StartsWith("/action/banfile"))
+            {
+                string hash = request.QueryString["hash"].Value;
+
+                if (!string.IsNullOrEmpty(hash))
+                {
+                    Program.ban_file(hash);
+                }
+
+                string referrer = request.Headers["referer"];
+
+                if (!string.IsNullOrEmpty(referrer)) { response.Redirect(referrer); }
+
+                return true;
+            }
+
+            if (command.StartsWith("/action/showfilereposts"))
+            {
+                string hash = request.QueryString["hash"].Value;
+
+                if (!string.IsNullOrEmpty(hash))
+                {
+
+                    Program.update_file_index();
+
+                    Program.FileIndexInfo info = Program.get_file_index_state(hash);
+
+                    if (info != null)
+                    {
+                        StringBuilder sb = new StringBuilder();
+
+                        var rposts = info.GetRepostsData();
+
+                        for (int i = 0; i < rposts.Length; i++)
+                        {
+                            sb.Append("<tr>");
+
+                            sb.AppendFormat("<td>{0}</td>", rposts[i].FileName);
+
+                            sb.AppendFormat("<td><a href='/boards/{0}'></a>{0}</td>", rposts[i].Board);
+
+                            sb.AppendFormat("<td><code><a href='/boards/{0}/{1}'>{1}</a></code></td>", rposts[i].Board, rposts[i].ThreadID);
+
+                            sb.AppendFormat("<td><code><a href='/boards/{0}/{1}#p{2}'>{2}</a></code></td>", rposts[i].Board, rposts[i].ThreadID, rposts[i].PostID);
+
+                            sb.Append("</tr>");
+                        }
+
+                        write_text(Properties.Resources.file_reposts_page
+                            .Replace("{thumbsource}", string.Format("/thumb/{0}.jpg", hash))
+                            .Replace("{md5}", hash)
+                            .Replace("{rinfo}", sb.ToString()), response);
+                        return true;
+                    }
+
+
+                }
+                else
+                {
+                    _404(response);
+                    return true;
+                }
+
+
+
+                return true;
+            }
+
+
             if (command.StartsWith("/action/removefile/"))
             {
                 string workid = command.Split('/').Last();
@@ -541,7 +687,7 @@ namespace ChanArchiver
                 return true;
             }
 
-           
+
 
             if (command.StartsWith("/action/resetfileretrycount/"))
             {
@@ -581,11 +727,22 @@ namespace ChanArchiver
                 return true;
             }
 
+            if (command.StartsWith("/action/unbanfile"))
+            {
+                string hash = request.QueryString["hash"].Value;
+
+                Program.unban_file(hash);
+
+                response.Redirect("/bannedfiles");
+
+                return true;
+            }
+
             #endregion
 
             if (command.StartsWith("/action/enablefullfile"))
             {
-                Program.thumb_only = false;
+                Settings.ThumbnailOnly = false;
                 response.Redirect("/");
                 return true;
             }
@@ -605,6 +762,7 @@ namespace ChanArchiver
         public static void write_text(string text, HttpServer.IHttpResponse response)
         {
             byte[] data = Encoding.UTF8.GetBytes(text);
+            response.ContentType = "text/html; charset=utf-8";
             response.ContentLength = data.Length;
             response.SendHeaders();
             response.SendBody(data);

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
@@ -9,7 +9,7 @@
     <meta name="author" content=""/>
     <link rel="shortcut icon" href="/res/favicon.ico"/>
 
-    <title>[ChanArchiver] - Watch Jobs</title>
+    <title>[ChanArchiver] - Banned Files</title>
 
     <!-- Bootstrap core CSS -->
     <link href="/res/bootstrap.css" rel="stylesheet"/>
@@ -62,7 +62,7 @@
           </ul>
 
           <ul class="nav nav-sidebar">
-            <li class="active">
+            <li>
               <a href="/wjobs">Watch Jobs</a>
             </li>
             <li>
@@ -76,7 +76,7 @@
 
 
           <ul class="nav nav-sidebar">
-            <li>
+            <li class="active">
               <a href="/bannedfiles">Banned files</a>
             </li>
 
@@ -89,51 +89,15 @@
         </div>
 
         <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
-          <h1 class="page-header">Watch Jobs</h1>
-
-          <div class="row">
-
-            <form action="/add/thread/">
-              <div class="col-lg-6">
-                <span>
-                  Enter 4chan thread URL or text in this format <code>board:threadid</code>
-                </span>
-                <div class="input-group">
-
-                  <input name="urlorformat" type="text" class="form-control" placeholder="4chan thread url or board:threadid"/>
-                  <span class="input-group-btn">
-                    <button class="btn btn-default" type="submit">Watch thread</button>
-                  </span>
-                                
-                </div>
-                
-                <input id="to" type="checkbox" name="to" value="1"/>
-                <label for="to">Save only thumbnails</label>
-                
-              </div>
-            </form>
-            
-          </div>
-          <!-- /.row -->
-
-          <hr/>
+          <h1 class="page-header">Banned Files</h1>
 
           <div class="table-responsive">
             <table class="table table-striped">
               <thead>
                 <tr>
+                  <th>Thumbnail (if available)</th>
+                  <th>File Hash</th>
                   <th></th>
-                  <th>#</th>
-                  <th>Board</th>
-                  <th>ID</th>
-                  <th>Added Automatically?</th>
-                  <th>Thumbnail Only?</th>
-                  <th>Link</th>
-                  <th>Title</th>
-                  <th>Last updated</th>
-                  <th>Auto-sage?</th>
-                  <th>Image Limit?</th>
-                  <th>Logs</th>
                 </tr>
               </thead>
               <tbody>

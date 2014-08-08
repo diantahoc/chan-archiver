@@ -18,9 +18,11 @@ namespace ChanArchiver
 
         public int RetryCount { get; set; }
 
-        public enum DownloadStatus { Queued, Pending, Downloading, Error, Complete, Stopped, NotFound };
+        public enum DownloadStatus { Queued, Connecting, Downloading, Error, Complete, Stopped, NotFound };
 
         public DownloadStatus Status { get; set; }
+
+        public bool IsThumbOnly { get; set; }
 
         public enum FileType { Thumbnail, FullFile };
 

@@ -55,7 +55,13 @@ namespace ChanArchiver
 
                         System.Threading.Thread.Sleep(1000 * 2 * 60);
                     }
-                    catch (Exception){}
+                    catch (Exception)
+                    {
+
+                        System.Threading.Thread.Sleep(1000 * 10); // HACK
+
+                        //throw;
+                    }
                 }
             });
         }

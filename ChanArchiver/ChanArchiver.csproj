@@ -38,7 +38,7 @@
     <StartupObject>ChanArchiver.Program</StartupObject>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>favicon.ico.bin</ApplicationIcon>
+    <ApplicationIcon>clover_icon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="HttpServer">
@@ -103,6 +103,8 @@
     <Compile Include="FileSystemStats.cs" />
     <Compile Include="Filters\Filters.cs" />
     <Compile Include="Filters\IFilter.cs" />
+    <Compile Include="HMSFormatter.cs" />
+    <Compile Include="HttpServerHandlers\BannedFilesPageHandler.cs" />
     <Compile Include="HttpServerHandlers\FileHandler.cs" />
     <Compile Include="HttpServerHandlers\FileInfoPageHandler.cs" />
     <Compile Include="HttpServerHandlers\FileQueuePageHandler.cs" />
@@ -110,6 +112,7 @@
     <Compile Include="HttpServerHandlers\MonitoredBoardsPageHandler.cs" />
     <Compile Include="HttpServerHandlers\OverviewPageHandler.cs" />
     <Compile Include="HttpServerHandlers\ResourcesHandler.cs" />
+    <Compile Include="HttpServerHandlers\SettingsPageHandler.cs" />
     <Compile Include="HttpServerHandlers\ThreadFiltersPageHandler.cs" />
     <Compile Include="HttpServerHandlers\WatchJobsPageHandler.cs" />
     <Compile Include="LightWatcher.cs" />
@@ -123,6 +126,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="Settings.cs" />
     <Compile Include="stp\CallerThreadContext.cs" />
     <Compile Include="stp\CanceledWorkItemsGroup.cs" />
     <Compile Include="stp\EventWaitHandle.cs" />
@@ -156,16 +160,33 @@
     <None Include="app.config" />
     <None Include="favicon.ico.bin" />
     <None Include="html\bgwhite" />
+    <None Include="html\bs\res\fonts\fontawesome-webfont.eot" />
+    <None Include="html\bs\res\fonts\fontawesome-webfont.svg" />
+    <None Include="html\bs\res\fonts\fontawesome-webfont.ttf" />
+    <None Include="html\bs\res\fonts\fontawesome-webfont.woff" />
+    <None Include="html\bs\res\fonts\FontAwesome.otf" />
     <None Include="html\hr" />
     <None Include="html\locked" />
     <None Include="html\sticky" />
     <None Include="Resources\_b" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="clover_icon.ico" />
+    <Content Include="html\bs\banned_files.html" />
+    <Content Include="html\bs\file_reposts.html" />
+    <Content Include="html\bs\res\font-awesome.min.css" />
+    <Content Include="html\bs\res\jquery.flot.pie.min.js" />
+    <Content Include="html\bs\settings_page.html">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="html\chan-templates\blue.css" />
-    <Content Include="html\chan-templates\file_template.htm" />
+    <Content Include="html\chan-templates\file_template.htm">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="html\chan-templates\op_template.htm" />
-    <Content Include="html\chan-templates\page_template.htm" />
+    <Content Include="html\chan-templates\page_template.htm">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="html\chan-templates\reply_template.htm" />
     <None Include="Resources\cached_boards.txt" />
     <None Include="html\4" />
@@ -191,7 +212,9 @@
     <Content Include="html\bs\filters.htm">
       <SubType>Designer</SubType>
     </Content>
-    <Content Include="html\bs\logs.htm" />
+    <Content Include="html\bs\logs.htm">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="html\bs\res\bootstrap.css" />
     <Content Include="html\bs\res\bootstrap.js" />
     <Content Include="html\bs\res\dashboard.css" />

@@ -1,0 +1,205 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta name="description" content=""/>
+    <meta name="author" content=""/>
+    <link rel="shortcut icon" href="/res/favicon.ico"/>
+
+    <title>[ChanArchiver] - Settings</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="/res/bootstrap.css" rel="stylesheet"/>
+
+    <!-- Custom styles for this template -->
+    <link href="/res/dashboard.css" rel="stylesheet"/>
+
+    <style type="text/css" id="holderjs-style"></style>
+  </head>
+
+  <body>
+
+    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">ChanArchiver</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right">
+            <li>
+              <a href="/boards">Archived Boards</a>
+            </li>
+            <li>
+              <a href="https://github.com/diantahoc/chan-archiver" target="_blank">Github</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-sm-3 col-md-2 sidebar">
+
+          <ul class="nav nav-sidebar">
+            <li>
+              <a href="/">Overview</a>
+            </li>
+
+            <li>
+              <a href="/fq">File Queue</a>
+            </li>
+          </ul>
+
+          <ul class="nav nav-sidebar">
+            <li>
+              <a href="/wjobs">Watch Jobs</a>
+            </li>
+
+            <li>
+              <a href="/monboards">Monitored Boards</a>
+            </li>
+
+            <li>
+              <a href="/filters">Thread Filters</a>
+            </li>
+
+          </ul>
+
+
+          <ul class="nav nav-sidebar">
+            <li>
+              <a href="/bannedfiles">Banned files</a>
+            </li>
+
+            <li class="active">
+              <a href="/settings">Settings</a>
+            </li>
+
+          </ul>
+
+        </div>
+
+        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+
+          <h1 class="page-header">Settings</h1>
+
+          <form action="/settings/">
+
+            <h2 class="sub-header">General Settings</h2>
+            <div class="input-group">
+
+
+              <input id="gs0" type="checkbox" name="gs0" value="1" {gs0c}/>
+              <label for="gs0">Auto start manually added threads on startup</label>
+
+              <br/>
+              
+              <input id="gs1" type="checkbox" name="gs1" value="1" {gs1c}/>
+              <label for="gs1">Only save thumbnails</label>
+
+              <br/>
+              
+              <input id="gs2" type="checkbox" name="gs2" value="1" {gs2c}/>
+              <label for="gs2">Enable disk usage statistics (cause additional RAM usage)</label>
+
+              <!--<input id="gs3" type="checkbox" name="gs3" value="1" {gs3c}/>
+              <label for="gs3">Convert PNG image with no transparent pixels to JPG (you might loose embedded files if any)</label>-->
+
+            </div>
+
+            <h2 class="sub-header">FFMpeg Settings</h2>
+            <div class="input-group">
+
+              <input type="text" name="ffmpeg_path" value="{ffpath}" placeholder="enter ffmpeg path" class="form-control"/>
+
+              <br/>
+              
+              <input id="ff0" type="checkbox" name="ff0" value="1" {ff0c}/>
+              <label for="ff0">Convert GIF files to WebM (to save disk space)</label>
+              <br/>
+             
+              <input id="ff1" type="checkbox" name="ff1" value="1" {ff1c}/>
+              <label for="ff1">Convert WebM files to MP4 for devices that does not support WebM files</label>
+              
+              <br/>
+
+              <input id="ff2" type="checkbox" name="ff2" value="1" {ff2c}/>
+              <label for="ff2">Convert WebM files that were GIF files to</label>
+              <span>
+                <select name="ff2s1">
+                  <option {ff2s1o1c} value="gif">GIF</option>
+                  <option {ff2s1o2c} value="mp4">MP4</option>
+                </select>
+                
+                <select name="ff2s2">
+                    <option {ff2s2o1c} value="ff2s2o1">when devices does not support WebM</option>
+                    <option {ff2s2o2c} value="ff2s2o2">always</option>
+                </select>
+              </span>
+
+            </div>
+
+
+            <h2 class="sub-header">File Queue Settings</h2>
+            <div class="input-group">
+
+              <input id="fq0" type="checkbox" name="fq0" value="1" {fq0c}/>
+              <label for="fq0">List thumbnail download jobs</label>
+             
+              <br/>
+              
+              <!--<input id="fq1" type="checkbox" name="fq1" value="1" {fq1c}/>
+              <label for="fq1">Prioritize threads who have reached bumplimit</label>
+              
+              <br/>
+              
+              <span>
+                Prioritize by 
+                <select name="fq2s1">
+                  <option {fq2s1o1c} value="fq2s1o1">File size (smaller ones are downloaded first)</option>
+                  <option {fq2s1o2c} value="fq2s1o2">File size (larger ones are downloaded first)</option>
+                  <option {fq2s1o3c} value="fq2s1o3">Board speed (faster boards files are downloaded first)</option>
+                </select>
+              </span>-->
+
+              <input id="fq3" type="checkbox" name="fq3" value="1" {fq3c}/>
+              <label for="fq3">Automatically remove completed files.</label>
+              
+            </div>
+
+
+            <h2 class="sub-header">Misc actions</h2>
+            <div>
+              <a href="/action/clearapicache" class="btn btn-default">Clear API files cache</a>
+              <a href="/action/resetnetstats" class="btn btn-default">Reset network statistics</a>
+            </div>
+
+            <hr/>
+            
+            <button class="btn btn-default" style="float: right" type="submit">Save</button>
+            
+          </form>
+
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="/res/jquery.js"></script>
+    <script src="/res/bootstrap.js"></script>
+    <script src="/res/docs.js"></script>
+  </body>
+</html>

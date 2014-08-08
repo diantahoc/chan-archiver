@@ -105,6 +105,29 @@ namespace ChanArchiver.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &lt;!DOCTYPE html&gt;
+        ///&lt;html lang=&quot;en&quot;&gt;
+        ///  &lt;head&gt;
+        ///    &lt;meta http-equiv=&quot;content-type&quot; content=&quot;text/html; charset=UTF-8&quot;/&gt;
+        ///    &lt;meta charset=&quot;utf-8&quot;/&gt;
+        ///    &lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=edge&quot;/&gt;
+        ///    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;/&gt;
+        ///    &lt;meta name=&quot;description&quot; content=&quot;&quot;/&gt;
+        ///    &lt;meta name=&quot;author&quot; content=&quot;&quot;/&gt;
+        ///    &lt;link rel=&quot;shortcut icon&quot; href=&quot;/res/favicon.ico&quot;/&gt;
+        ///
+        ///    &lt;title&gt;[ChanArchiver] - Banned Files&lt;/title&gt;
+        ///
+        ///    &lt;!-- Bootstrap core CSS --&gt;
+        ///     [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string banned_files_page {
+            get {
+                return ResourceManager.GetString("banned_files_page", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
         internal static byte[] bgwhite {
@@ -162,13 +185,8 @@ namespace ChanArchiver.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to /*!
-        /// * Bootstrap v3.1.1 (http://getbootstrap.com)
-        /// * Copyright 2011-2014 Twitter, Inc.
-        /// * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
-        /// */
-        ///
-        ////*! normalize.css v3.0.0 | MIT License | git.io/normalize */html{font-family:sans-serif;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%}body{margin:0}article,aside,details,figcaption,figure,footer,header,hgroup,main,nav,section,summary{display:block}audio,canvas,progress,video{display:inline-block;vertical-align:baseline}audio:not([ [rest of string was truncated]&quot;;.
+        ///   Looks up a localized string similar to 
+        ///html{font-family:sans-serif;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%}body{margin:0}article,aside,details,figcaption,figure,footer,header,hgroup,main,nav,section,summary{display:block}audio,canvas,progress,video{display:inline-block;vertical-align:baseline}audio:not([controls]){display:none;height:0}[hidden],template{display:none}a{background:0 0}a:active,a:hover{outline:0}abbr[title]{border-bottom:1px dotted}b,strong{font-weight:700}dfn{font-style:italic}h1{font-size:2em;margin:.67em 0}mark [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string bootstrap_css {
             get {
@@ -329,16 +347,44 @@ namespace ChanArchiver.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &lt;div class=&quot;file&quot; id=&quot;f{post:id}&quot;&gt;
-        ///    &lt;div class=&quot;fileText&quot; id=&quot;fT{post:id}&quot;&gt;
-        ///        File: &lt;a href=&quot;{file:fulllink}&quot; target=&quot;_blank&quot;&gt;{file:name}&lt;/a&gt;
-        ///        ({file:size}, {file:dimensions})&lt;/div&gt;
-        ///    &lt;a class=&quot;fileThumb&quot; href=&quot;{file:fulllink}&quot; target=&quot;_blank&quot;&gt;
-        ///        &lt;img src=&quot;{file:thumbsrc}&quot; alt=&quot;{file:size}&quot; data-md5=&quot;{file:4chan-md5}&quot;
-        ///            style=&quot;max-height: 250px; max-width: 250px;&quot;/&gt;
-        ///            &lt;div class=&quot;mFileInfo mobile&quot;&gt;{file:size} {file:ext}&lt;/div&gt;
-        ///    &lt;/a&gt;
-        ///&lt;/div&gt;.
+        ///   Looks up a localized string similar to &lt;!DOCTYPE html&gt;
+        ///&lt;html lang=&quot;en&quot;&gt;
+        ///  &lt;head&gt;
+        ///    &lt;meta http-equiv=&quot;content-type&quot; content=&quot;text/html; charset=UTF-8&quot;/&gt;
+        ///    &lt;meta charset=&quot;utf-8&quot;/&gt;
+        ///    &lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=edge&quot;/&gt;
+        ///    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;/&gt;
+        ///    &lt;meta name=&quot;description&quot; content=&quot;&quot;/&gt;
+        ///    &lt;meta name=&quot;author&quot; content=&quot;&quot;/&gt;
+        ///    &lt;link rel=&quot;shortcut icon&quot; href=&quot;/res/favicon.ico&quot;/&gt;
+        ///
+        ///    &lt;title&gt;[ChanArchiver] - File Reposts&lt;/title&gt;
+        ///
+        ///    &lt;!-- Bootstrap core CSS --&gt;
+        ///     [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string file_reposts_page {
+            get {
+                return ResourceManager.GetString("file_reposts_page", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;div class=&quot;links&quot;&gt;
+        ///  &lt;a href=&quot;/action/showfilereposts?hash={file:4chan-md5}&quot;&gt;[Show Info]&lt;/a&gt;
+        ///  &lt;a href=&quot;/action/banfile?hash={file:4chan-md5}&quot;&gt;[Ban File]&lt;/a&gt;
+        ///  &lt;a href=&quot;/action/deletefile?hash={file:4chan-md5}&quot;&gt;[Delete File]&lt;/a&gt;
+        ///  
+        ///&lt;/div&gt;
+        ///
+        ///&lt;div class=&quot;file&quot; id=&quot;f{post:id}&quot;&gt;
+        ///  &lt;div class=&quot;fileText&quot; id=&quot;fT{post:id}&quot;&gt;
+        ///    File: &lt;a href=&quot;{file:fulllink}&quot; target=&quot;_blank&quot;&gt;{file:name}&lt;/a&gt;
+        ///    ({file:size}, {file:dimensions})
+        ///  &lt;/div&gt;
+        ///
+        ///  &lt;a class=&quot;fileThumb&quot; href=&quot;{file:fulllink}&quot; target=&quot;_blank&quot;&gt;
+        ///   [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string file_template {
             get {
@@ -412,6 +458,66 @@ namespace ChanArchiver.Properties {
         internal static string filters_page {
             get {
                 return ResourceManager.GetString("filters_page", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] font_awesome_min {
+            get {
+                object obj = ResourceManager.GetObject("font_awesome_min", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] FontAwesome_otf {
+            get {
+                object obj = ResourceManager.GetObject("FontAwesome_otf", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] fontawesome_webfont_eot {
+            get {
+                object obj = ResourceManager.GetObject("fontawesome_webfont_eot", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] fontawesome_webfont_svg {
+            get {
+                object obj = ResourceManager.GetObject("fontawesome_webfont_svg", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] fontawesome_webfont_ttf {
+            get {
+                object obj = ResourceManager.GetObject("fontawesome_webfont_ttf", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] fontawesome_webfont_woff {
+            get {
+                object obj = ResourceManager.GetObject("fontawesome_webfont_woff", resourceCulture);
+                return ((byte[])(obj));
             }
         }
         
@@ -491,6 +597,16 @@ namespace ChanArchiver.Properties {
         internal static string jquery_flot_min {
             get {
                 return ResourceManager.GetString("jquery_flot_min", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] jquery_flot_pie_min {
+            get {
+                object obj = ResourceManager.GetObject("jquery_flot_pie_min", resourceCulture);
+                return ((byte[])(obj));
             }
         }
         
@@ -641,14 +757,15 @@ namespace ChanArchiver.Properties {
         ///    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1&quot;/&gt;
         ///    &lt;link rel=&quot;shortcut icon&quot; href=&quot;/favicon.ico&quot;/&gt;
         ///    &lt;link rel=&quot;stylesheet&quot; href=&quot;/res/blue.css&quot;/&gt;
+        ///
         ///    &lt;title&gt;{board-title}&lt;/title&gt;
         ///  &lt;/head&gt;
         ///
         ///  &lt;body class=&quot;board_{board-letter}&quot;&gt;
+        ///    &lt;span id=&quot;id_css&quot;&gt;&lt;/span&gt;
         ///
-        ///    &lt;div id=&quot;boardNavDesktop&quot; class=&quot;desktop&quot;&gt;
-        ///      &lt;span class=&quot;boardList&quot;&gt;
-        ///        [ [rest of string was truncated]&quot;;.
+        ///    &lt;hr class=&quot;desktop&quot;/&gt;
+        ///    &lt;div class=&quot;navLinks desk [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string page_template {
             get {
@@ -708,6 +825,29 @@ namespace ChanArchiver.Properties {
         internal static string reply_template {
             get {
                 return ResourceManager.GetString("reply_template", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;!DOCTYPE html&gt;
+        ///&lt;html lang=&quot;en&quot;&gt;
+        ///  &lt;head&gt;
+        ///    &lt;meta http-equiv=&quot;content-type&quot; content=&quot;text/html; charset=UTF-8&quot;/&gt;
+        ///    &lt;meta charset=&quot;utf-8&quot;/&gt;
+        ///    &lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=edge&quot;/&gt;
+        ///    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;/&gt;
+        ///    &lt;meta name=&quot;description&quot; content=&quot;&quot;/&gt;
+        ///    &lt;meta name=&quot;author&quot; content=&quot;&quot;/&gt;
+        ///    &lt;link rel=&quot;shortcut icon&quot; href=&quot;/res/favicon.ico&quot;/&gt;
+        ///
+        ///    &lt;title&gt;[ChanArchiver] - Settings&lt;/title&gt;
+        ///
+        ///    &lt;!-- Bootstrap core CSS --&gt;
+        ///    &lt;lin [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string settings_page {
+            get {
+                return ResourceManager.GetString("settings_page", resourceCulture);
             }
         }
         

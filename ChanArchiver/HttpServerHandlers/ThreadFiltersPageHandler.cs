@@ -62,7 +62,7 @@ namespace ChanArchiver.HttpServerHandlers
                             }
 
                             //sb.AppendFormat("<td><a class='label label-warning' href='/filters/?mode=edit&b={0}&i={1}'>Edit</a></td>", bw.Board, index);
-                            sb.AppendFormat("<td><a class='label label-danger' href='/filters/?mode=delete&b={0}&i={1}'>Delete</a></td>", bw.Board, index);
+                            sb.AppendFormat("<td><a class=\"btn btn-default\" title='Delete' href='/filters/?mode=delete&b={0}&i={1}'><i class=\"fa fa-trash-o\"></i></a></td>", bw.Board, index);
 
                             sb.Append("</tr>");
                         }

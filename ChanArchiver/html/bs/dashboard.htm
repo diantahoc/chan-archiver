@@ -13,7 +13,9 @@
 
     <!-- Bootstrap core CSS -->
     <link href="/res/bootstrap.css" rel="stylesheet"/>
-
+    
+    <link rel="stylesheet" href="res/font-awesome.min.css" />
+    
     <!-- Custom styles for this template -->
     <link href="/res/dashboard.css" rel="stylesheet"/>
 
@@ -75,6 +77,18 @@
 
           </ul>
 
+
+          <ul class="nav nav-sidebar">
+            <li>
+              <a href="/bannedfiles">Banned files</a>
+            </li>
+
+            <li>
+              <a href="/settings">Settings</a>
+            </li>
+
+          </ul>
+          
         </div>
 
         <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
@@ -97,29 +111,10 @@
             </table>
           </div>
 
-          <h2 class="sub-header">Disk usage</h2>
-          <div class="table-responsive">
-            <table class="table table-striped">
-              <thead>
-                <tr>
-                  <th># of files</th>
-                  <th>Category</th>
-                  <th>Used space</th>
-                  <th>Average file size</th>
-                  <th>Biggest file</th>
-                  <th>Smallest file</th>
-                </tr>
-              </thead>
-              <tbody>
+          {DiskUsage}
 
-                {DiskUsage}
-
-              </tbody>
-            </table>
-          </div>
-
-
-          <h2 class="sub-header">Network usage (this hour)</h2>
+          <h2 class="sub-header">Network usage</h2>
+          <span class="label label-primary">This hour</span>
           <div class="table-responsive">
             <table class="table table-striped">
               <thead>
@@ -140,22 +135,32 @@
 
           </div>
 
+          <span class="label label-primary">This day</span>
           <div id="netstats" style="width: 100%; height: 300px;"></div>
+
+          <span class="label label-primary">This month</span>
+          <div id="netstats-month" style="width: 100%; height: 300px;"></div>
           
+
           <h2 class="sub-header">Archived threads</h2>
-          <div class="table-responsive">
-            <table class="table table-striped">
-              <thead>
-                <tr>
-                  <th>Board</th>
-                  <th>Count</th>
-                </tr>
-              </thead>
-              <tbody>
-                {ArchivedThreads}
-              </tbody>
-            </table>
-          </div>
+          
+          <div id="threadstats" style="width: 100%; height: 300px;" display="none"></div>
+          
+          <noscript>
+            <div class="table-responsive">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>Board</th>
+                    <th>Count</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ArchivedThreads}
+                </tbody>
+              </table>
+            </div>
+          </noscript>
 
         </div>
       </div>
@@ -169,9 +174,10 @@
     <script src="/res/docs.js"></script>
     <script src="/res/jquery.flot.min.js"></script>
     <script src="/res/jquery.flot.categories.min.js"></script>
+    <script src="/res/jquery.flot.pie.min.js"></script>
     <script>
 	$(function() {
-		var data =  {network-stats-data};
+		var data =  [{network-stats-data}];
 		$.plot("#netstats", [ data ], {
 			series: {
 				bars: {
@@ -186,6 +192,66 @@
 			}
 		});
 	});
+  
+  	$(function() {
+		var data =  [{network-stats-month}];
+		$.plot("#netstats-month", [ data ], {
+			series: {
+				bars: {
+					show: true,
+					barWidth: 0.6,
+					align: "center"
+				}
+			},
+			xaxis: {
+				mode: "categories",
+				tickLength: 0
+			}
+		});
+	});
+  
+  
+  $(function() {
+  
+    $("#threadstats").show();
+    
+		var data =  [{thread-stats-data}];
+    
+    /*$.plot('#threadstats', data, {
+    series: {
+        pie: {
+            show: true,
+            radius: 500,
+            label: {
+                show: true,
+                formatter: labelFormatter,
+                threshold: 0.1
+            }
+        }
+    },
+    legend: {
+        show: false
+    }
+});*/
+
+  
+		$.plot("#threadstats", [ data ], {
+			series: {
+				bars: {
+					show: true,
+					barWidth: 0.6,
+					align: "center"
+				}
+			},
+			xaxis: {
+				mode: "categories",
+				tickLength: 0
+			}
+		});
+    
+	});
+  
+
     </script>
   </body>
 </html>

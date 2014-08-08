@@ -2,8 +2,20 @@
   <div class="sideArrows" id="sa{post:id}">&gt;&gt;</div>
   <div id="p{post:id}" class="post reply">
 
+    <div class="postInfoM mobile" id="pim{post:id}">
+      <span class="nameBlock">
+        {post:nameblock}
+        {post:trip}
+      </span>
+
+      <span class="dateTime postNum" data-utc="{post:unixepoch}">{post:datetime}
+      <a href="#p{post:id}" title="Link to this post">No.</a>
+      <a href="javascript:quote('{post:id}');" title="Reply to this post">{post:id}</a>
+      </span>
+    </div>
+
     <div class="postInfo desktop" id="pi{post:id}">
-      <input type="checkbox" name="{post:id}" value="delete"/>
+      <!--<input type="checkbox" name="{post:id}" value="delete"/>-->
       <span class="subject">{post:subject}</span>
 
       <span class="nameBlock">

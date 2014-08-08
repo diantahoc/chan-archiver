@@ -7,6 +7,12 @@ namespace ChanArchiver.HttpServerHandlers
 {
     public class FileQueuePageHandler : HttpServer.HttpModules.HttpModule
     {
+
+        public static void IncrementKey(Dictionary<string, int> a, string key)
+        {
+            if (a.ContainsKey(key)) { a[key]++; } else { a.Add(key, 1); }
+        }
+
         public override bool Process(HttpServer.IHttpRequest request, HttpServer.IHttpResponse response, HttpServer.Sessions.IHttpSession session)
         {
             string command = request.UriPath.ToString();
@@ -19,6 +25,12 @@ namespace ChanArchiver.HttpServerHandlers
 
                 int count = ordered.Count();
 
+                double total_size = 0;
+
+                Dictionary<string, int> exts_stats = new Dictionary<string, int>();
+                Dictionary<string, int> board_stats = new Dictionary<string, int>();
+                // {qstats}
+
                 for (int index = 0; index < count; index++)
                 {
                     try
@@ -26,6 +38,11 @@ namespace ChanArchiver.HttpServerHandlers
                         KeyValuePair<string, FileQueueStateInfo> kvp = ordered.ElementAt(index);
 
                         FileQueueStateInfo f = kvp.Value;
+
+                        if ((!Settings.ListThumbsInQueue) && f.Type == FileQueueStateInfo.FileType.Thumbnail)
+                        {
+                            continue;
+                        }
 
                         //sb.AppendFormat("<tr id='{0}'>", kvp.Key);
 
@@ -41,12 +58,24 @@ namespace ChanArchiver.HttpServerHandlers
                         if (f.Type == FileQueueStateInfo.FileType.FullFile)
                         {
                             sb.AppendFormat("<td>{0}</td>", Program.format_size_string(f.PostFile.size));
+
+                            if (f.Status != FileQueueStateInfo.DownloadStatus.Complete || f.Status != FileQueueStateInfo.DownloadStatus.NotFound)
+                            {
+                                total_size += f.PostFile.size;
+                            }
                         }
-                        else 
+                        else
                         {
                             sb.AppendFormat("<td>{0}</td>", Program.format_size_string(f.Length));
+
+                            //complete files are not in the queue any more
+                            if (f.Status != FileQueueStateInfo.DownloadStatus.Complete || f.Status != FileQueueStateInfo.DownloadStatus.NotFound)
+                            {
+                                total_size += f.Length;
+                            }
+
                         }
-                    
+
                         sb.AppendFormat("<td>/{0}/</td>", f.PostFile.board);
 
                         sb.AppendFormat("<td><code><a href='/boards/{0}/{1}'>{1}</a></code></td>", f.PostFile.board, f.PostFile.owner.OwnerThread.ID);
@@ -56,10 +85,12 @@ namespace ChanArchiver.HttpServerHandlers
                         if (f.Type == FileQueueStateInfo.FileType.Thumbnail)
                         {
                             sb.Append("<td><span class=\"label label-info\">JPG</span></td>");
+                            IncrementKey(exts_stats, "jpg");
                         }
-                        else 
+                        else
                         {
                             sb.AppendFormat("<td>{0}</td>", get_ext(f.PostFile.ext));
+                            IncrementKey(exts_stats, f.PostFile.ext);
                         }
 
                         sb.AppendFormat("<td>{0} %</td>", Math.Round(f.Percent(), 2));
@@ -67,6 +98,10 @@ namespace ChanArchiver.HttpServerHandlers
                         sb.AppendFormat("<td> <a href=\"/fileinfo/{0}\" class=\"label label-primary\">Info</a> </td>", kvp.Key);
 
                         sb.Append("</tr>");
+
+
+                        IncrementKey(board_stats, f.PostFile.board);
+
 
                     }
                     catch (Exception)
@@ -76,11 +111,43 @@ namespace ChanArchiver.HttpServerHandlers
                 }
 
 
+                StringBuilder stats = new StringBuilder();
+
+                stats.AppendFormat("<p>{0}: <b>{1}</b></p>", "Total file in the queue", count);
+
+                stats.AppendFormat("<p>{0}: <b>{1}</b></p>", "Total files size", Program.format_size_string(total_size));
+
+                if (board_stats.Count > 0)
+                {
+
+                    stats.Append("<p><ul>");
+
+                    foreach (KeyValuePair<string, int> v in board_stats)
+                    {
+                        stats.AppendFormat("<li>{0} file for /{1}/</li>", v.Value, v.Key);
+                    }
+
+                    stats.Append("</ul></p>");
+                }
+
+                if (exts_stats.Count > 0)
+                {
+
+                    stats.Append("<p><ul>");
+
+                    foreach (KeyValuePair<string, int> v in exts_stats)
+                    {
+                        stats.AppendFormat("<li>{0} file is {1}</li>", v.Value, get_ext(v.Key));
+                    }
+
+                    stats.Append("</ul></p>");
+                }
+
                 //write everything
                 response.Status = System.Net.HttpStatusCode.OK;
                 response.ContentType = "text/html";
 
-                byte[] data = Encoding.UTF8.GetBytes(Properties.Resources.filequeue_page.Replace("{mff}", Program.file_stp.MaxThreads.ToString()).Replace("{Files}", sb.ToString()));
+                byte[] data = Encoding.UTF8.GetBytes(Properties.Resources.filequeue_page.Replace("{qstats}", stats.ToString()).Replace("{mff}", Program.file_stp.MaxThreads.ToString()).Replace("{Files}", sb.ToString()));
                 response.ContentLength = data.Length;
                 response.SendHeaders();
                 response.SendBody(data);
@@ -102,7 +169,8 @@ namespace ChanArchiver.HttpServerHandlers
                     {
                         FileQueueStateInfo f = Program.queued_files[request.QueryString["hash"].Value];
 
-                        Dictionary<string, object> dt = new Dictionary<string, object>();
+                        Dictionary<string, object> dt = new Dictionary<string, object>(3);
+
                         if (ifo)
                         {
                             dt.Add("p", f.Percent().ToString());
@@ -118,9 +186,7 @@ namespace ChanArchiver.HttpServerHandlers
                         response.Status = System.Net.HttpStatusCode.OK;
                         response.ContentType = "application/json";
 
-                        string text = Newtonsoft.Json.JsonConvert.SerializeObject(dt);
-
-                        ThreadServerModule.write_text(text, response);
+                        ThreadServerModule.write_text(Newtonsoft.Json.JsonConvert.SerializeObject(dt), response);
                     }
                 }
                 return true;
@@ -144,6 +210,7 @@ namespace ChanArchiver.HttpServerHandlers
                     return ("<span class=\"label label-success\">PDF</span>");
                 case "webm":
                     return ("<span class=\"label label-default\">WebM</span>");
+                case "swf":
                 default:
                     return string.Format("<span class=\"label label-default\">{0}</span>", ext.ToUpper());
             }
@@ -167,8 +234,8 @@ namespace ChanArchiver.HttpServerHandlers
             {
                 case FileQueueStateInfo.DownloadStatus.Downloading:
                     return "<span class=\"label label-info\">Downloading</span>";
-                case FileQueueStateInfo.DownloadStatus.Pending:
-                    return ("<span class=\"label label-warning\">Pending</span>");
+                case FileQueueStateInfo.DownloadStatus.Connecting:
+                    return ("<span class=\"label label-warning\">Connecting</span>");
                 case FileQueueStateInfo.DownloadStatus.Error:
                     return ("<span class=\"label label-danger\">Error</span>");
                 case FileQueueStateInfo.DownloadStatus.Complete:

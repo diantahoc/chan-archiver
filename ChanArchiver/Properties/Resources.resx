@@ -175,9 +175,6 @@
   <data name="logs_page" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\html\bs\logs.htm;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
-  <data name="wjobs_page" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\html\bs\wjobs.htm;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
-  </data>
   <data name="fileinfo" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\html\bs\fileinfo.htm;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>
@@ -222,5 +219,38 @@
   </data>
   <data name="reply_template" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\html\chan-templates\reply_template.htm;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
+  </data>
+  <data name="settings_page" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\html\bs\settings_page.html;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="FontAwesome_otf" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\html\bs\res\fonts\fontawesome.otf;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="fontawesome_webfont_eot" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\html\bs\res\fonts\fontawesome-webfont.eot;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="fontawesome_webfont_svg" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\html\bs\res\fonts\fontawesome-webfont.svg;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="fontawesome_webfont_ttf" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\html\bs\res\fonts\fontawesome-webfont.ttf;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="fontawesome_webfont_woff" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\html\bs\res\fonts\fontawesome-webfont.woff;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="font_awesome_min" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\html\bs\res\font-awesome.min.css;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="banned_files_page" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\html\bs\banned_files.html;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="wjobs_page" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\html\bs\wjobs.htm;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
+  </data>
+  <data name="jquery_flot_pie_min" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\html\bs\res\jquery.flot.pie.min.js;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="file_reposts_page" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\html\bs\file_reposts.html;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>
 </root>

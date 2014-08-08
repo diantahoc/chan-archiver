@@ -22,7 +22,7 @@ namespace ChanArchiver
 
 
         public static string program_dir;
-        private static string ffmpeg_path;
+        public static string ffmpeg_path;
 
         static string board = "";
 
@@ -30,8 +30,6 @@ namespace ChanArchiver
         public static Amib.Threading.SmartThreadPool file_stp;
 
         public static AniWrap.AniWrap aw;
-
-        public static bool thumb_only = false;
 
         public static bool verbose = false;
 
@@ -50,11 +48,13 @@ namespace ChanArchiver
         static void Main(string[] args)
         {
             WebRequest.DefaultWebProxy = null;
-            ServicePointManager.DefaultConnectionLimit = 100;
+            ServicePointManager.DefaultConnectionLimit = 1000;
 
             int single_id = -1;
 
             bool server = true;
+
+            bool is_t = false;
 
             foreach (string arg in args)
             {
@@ -77,7 +77,7 @@ namespace ChanArchiver
 
                 if (arg == "--thumbonly")
                 {
-                    thumb_only = true;
+                    is_t = true;
                 }
 
                 if (arg == "--verbose")
@@ -130,12 +130,16 @@ namespace ChanArchiver
             Directory.CreateDirectory(temp_files_dir);
             Directory.CreateDirectory(board_settings_dir);
 
+            Settings.Load();
+
+            if (is_t) { Settings.ThumbnailOnly = true; }
+
             aw = new AniWrap.AniWrap(api_cache_dir);
 
             Console.Title = "ChanArchiver";
 
             print("ChanArchiver", ConsoleColor.Cyan);
-            Console.WriteLine(" v0.81 stable");
+            Console.WriteLine(" v1.0 stable");
 
 
             if (Environment.OSVersion.Platform == PlatformID.Unix)
@@ -174,7 +178,7 @@ namespace ChanArchiver
 
             load_settings();
 
-            if (thumb_only)
+            if (Settings.ThumbnailOnly)
             {
                 print("Warning:", ConsoleColor.Yellow);
                 Console.WriteLine("ChanArchiver is running in thumbnail only mode");
@@ -190,13 +194,30 @@ namespace ChanArchiver
             {
                 if (single_id > 0)
                 {
-                    archive_single(board, single_id);
+                    archive_single(board, single_id, Settings.ThumbnailOnly);
                 }
                 else
                 {
                     archive_board(board, BoardWatcher.BoardMode.FullBoard);
                 }
             }
+
+            Task.Factory.StartNew((Action)delegate { try { build_file_index(); } catch (Exception) { } });
+
+            //Console.WriteLine("Building file index...");
+
+            //try
+            //{
+            //    build_file_index();
+            //    Stopwatch sw = new Stopwatch();
+            //    sw.Start();
+            //    build_file_index();
+            //    sw.Stop();
+            //    Console.WriteLine("Total {0} unique file have been processed in {1} seconds", file_index.Count, sw.Elapsed.TotalSeconds);
+            //}
+            //catch (Exception) { }
+
+
 
             interactive_console();
 
@@ -218,6 +239,116 @@ namespace ChanArchiver
             }
         }
 
+        private static Dictionary<string, FileIndexInfo> file_index = new Dictionary<string, FileIndexInfo>();
+
+        public class FileIndexInfo
+        {
+            public FileIndexInfo(string hash)
+            {
+                this.Hash = hash;
+            }
+
+            public string Hash { get; private set; }
+
+            public struct Post
+            {
+                public string Board;
+                public int ThreadID;
+                public int PostID;
+                public string FileName;
+                //public string ToString()
+                //{
+                //    return string.Format("{0}-{1}-{2}", this.Board, this.ThreadID, this.PostID);
+                //}
+            }
+
+            private string get_post_hash(string board, int threadid, int postid)
+            {
+                return string.Format("{0}-{1}-{2}", board, threadid, postid);
+            }
+
+            private Dictionary<string, Post> my_posts = new Dictionary<string, Post>();
+
+            public void MarkPost(string board, int threadid, int postid, string file_name)
+            {
+                string hash = get_post_hash(board, threadid, postid);
+                if (!my_posts.ContainsKey(hash))
+                {
+                    my_posts.Add(hash, new Post()
+                    {
+                        Board = board,
+                        ThreadID = threadid,
+                        PostID = postid,
+                        FileName = file_name
+                    });
+                }
+            }
+
+            public int RepostCount
+            {
+                get
+                {
+                    return my_posts.Count();
+                }
+            }
+
+            public Post[] GetRepostsData() { return my_posts.Values.ToArray(); }
+        }
+
+        private static bool is_index_building = false;
+
+        private static void build_file_index()
+        {
+            if (is_index_building) { return; }
+            is_index_building = true;
+            foreach (var board in ValidBoards)
+            {
+                var threads = ThreadStore.GetIndex(board.Key);
+
+                if (threads.Length > 0)
+                {
+                    for (int t_index = 0; t_index < threads.Length; t_index++)
+                    {
+                        var thread_data = ThreadStore.GetThread(board.Key, threads[t_index].PostID.ToString());
+
+                        foreach (var post in thread_data)
+                        {
+                            if (post.MyFile != null)
+                            {
+                                FileIndexInfo w;
+
+                                if (file_index.ContainsKey(post.MyFile.Hash))
+                                {
+                                    w = file_index[post.MyFile.Hash];
+                                }
+                                else
+                                {
+                                    w = new FileIndexInfo(post.MyFile.Hash);
+                                    file_index.Add(post.MyFile.Hash, w);
+                                }
+
+                                w.MarkPost(board.Key, threads[t_index].PostID, post.PostID, post.MyFile.FileName);
+                            }
+                        }
+                    }
+                }
+            }
+            is_index_building = false;
+        }
+
+        public static void update_file_index()
+        {
+            file_index.Clear();
+            GC.Collect();
+            build_file_index();
+        }
+
+        public static FileIndexInfo get_file_index_state(string hash)
+        {
+            if (file_index.ContainsKey(hash)) { return file_index[hash]; }
+            return null;
+        }
+
         private static void interactive_console()
         {
             print("Interactive Console", ConsoleColor.Yellow);
@@ -236,8 +367,8 @@ namespace ChanArchiver
                         optimize_all_threads();
                         break;
                     case "toggle-ff":
-                        thumb_only = !thumb_only;
-                        Console.WriteLine("Full files saving is {0}", thumb_only ? "disabled" : "enabled");
+                        Settings.ThumbnailOnly = !Settings.ThumbnailOnly;
+                        Console.WriteLine("Full files saving is {0}", Settings.ThumbnailOnly ? "disabled" : "enabled");
                         break;
                     case "swf-gen":
                         {
@@ -256,6 +387,38 @@ namespace ChanArchiver
                         Console.WriteLine("- swf-gen: generate thumbnails for .swf files using ffmpeg");
                         Console.WriteLine("- exit: save settings and exit the program");
                         Console.WriteLine("- toggle-ff: Enable or disable full file saving.");
+                        Console.WriteLine("- optimize-gif: Convert all gifs files to .webm to save disk space. This action is not reversible");
+                        break;
+                    case "bench":
+                        Stopwatch sw = new Stopwatch();
+                        sw.Start();
+                        build_file_index();
+                        sw.Stop();
+                        Console.WriteLine("Total {0} unique file have been processed in {1} seconds", file_index.Count, sw.Elapsed.TotalSeconds);
+                        break;
+                    case "sanitize-files":
+                        {
+
+                            update_file_index();
+
+                            var files = Directory.EnumerateFiles(file_save_dir);
+                            int i = 0;
+                            foreach (var file in files)
+                            {
+                                string file_hash = file.Split('\\').Last().Split('.').First();
+                                if (!file_index.ContainsKey(file_hash))
+                                {
+                                    i++;
+                                    File.Delete(file);
+                                }
+                            }
+                            Console.WriteLine("Removed {0} file", i);
+
+                            update_file_index();
+                            break;
+                        }
+                    case "optimize-gif":
+                        convert_all_gifs();
                         break;
                     case "":
                         //Console.WriteLine(":^)");
@@ -268,6 +431,93 @@ namespace ChanArchiver
             }
         }
 
+        private static void convert_all_gifs()
+        {
+            if (File.Exists(ffmpeg_path))
+            {
+                string temp = Path.Combine(temp_files_dir, "gif2webm");
+                Directory.CreateDirectory(temp);
+
+                DirectoryInfo in_info = new DirectoryInfo(file_save_dir);
+
+                FileInfo[] files = in_info.GetFiles("*.gif", SearchOption.TopDirectoryOnly);
+                Console.WriteLine("Total GIFS found: {0}", files.Length);
+                int kb = 200 * 1024;
+
+                double gif_processed = 0;
+                double webm_produced = 0;
+
+                for (int index = 0; index < files.Length; index++)
+                {
+                    FileInfo fifo = files[index];
+
+                    if (fifo.Length > kb)
+                    {
+                        string webm_n = fifo.Name + ".webm";
+                        string webm_name = Path.Combine(temp, webm_n);
+
+                        string webm_gif_path = Path.Combine(fifo.Directory.FullName, webm_n);
+
+                        if (File.Exists(webm_gif_path))
+                        {
+                            Console.Beep();
+                            Console.WriteLine("PANIC: Duplicate WEBM/GIF: {0}. Stopping", fifo.Name);
+                            return;
+                        }
+
+                        try { convert_to_webm(fifo.FullName, webm_name); }
+                        catch { }
+
+                        if (File.Exists(webm_name))
+                        {
+                            FileInfo webm_info = new FileInfo(webm_name);
+
+                            webm_produced += webm_info.Length;
+                            gif_processed += fifo.Length;
+
+                            File.Delete(fifo.FullName);
+
+                            File.Move(webm_name, webm_gif_path);
+
+                            Console.Write(string.Format("{0}/{1}\n", index + 1, files.Length));
+                        }
+                        else
+                        {
+                            Console.WriteLine("Failed to convert file {0}", fifo.FullName);
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Not converting {0}, file size is less than 200KB", fifo.Name);
+                    }
+
+                }
+                Directory.Delete(temp, true);
+
+                Console.WriteLine("Total processed GIFs size: {0}", format_size_string(gif_processed));
+
+                Console.WriteLine("Total WebM produced size: {0}", format_size_string(webm_produced));
+
+                Console.WriteLine("Disk space saved: {0} ( {1} % )", format_size_string(gif_processed - webm_produced), 100 - ((webm_produced / gif_processed) * 100));
+            }
+        }
+
+        private static void convert_to_webm(string file, string output)
+        {
+            ProcessStartInfo psr = new ProcessStartInfo(ffmpeg_path);
+
+            psr.CreateNoWindow = true;
+            psr.UseShellExecute = false;
+
+            psr.Arguments = string.Format("-i \"{0}\" -c:v libvpx -crf 12 -b:v 500K \"{1}\"", file, output);
+
+            using (Process proc = Process.Start(psr))
+            {
+                proc.WaitForExit();
+            }
+            return;
+        }
+
         private static void optimize_all_threads()
         {
             DirectoryInfo[] boards = new DirectoryInfo(post_files_dir).GetDirectories();
@@ -277,6 +527,17 @@ namespace ChanArchiver
 
                 foreach (DirectoryInfo thread in threads)
                 {
+                    if (active_dumpers.ContainsKey(board.Name))
+                    {
+                        BoardWatcher bw = active_dumpers[board.Name];
+
+                        int w = -1;
+                        Int32.TryParse(thread.Name, out w);
+                        if (bw.watched_threads.ContainsKey(w))
+                        {
+                            continue;
+                        }
+                    }
                     ThreadWorker.optimize_thread_file(thread.FullName);
                     Console.WriteLine("Optimized thread {0} - {1}", board.Name, thread.Name);
                 }
@@ -306,6 +567,8 @@ namespace ChanArchiver
 
             Console.WriteLine("Saving banned files list...");
             save_banned_files_list();
+
+            Settings.Save();
         }
 
         private static void save_boards()
@@ -356,6 +619,8 @@ namespace ChanArchiver
             }
         }
 
+        #region SWF Thumbnail Generator
+
         static void handle_new_swf_file(object sender, FileSystemEventArgs e)
         {
             //using ffmpeg, I try to generate a thumbnail for .swf files
@@ -390,6 +655,8 @@ namespace ChanArchiver
             catch (Exception) { }
         }
 
+        #endregion
+
         private static void print(string text, ConsoleColor color)
         {
             ConsoleColor old_c = Console.ForegroundColor;
@@ -398,24 +665,19 @@ namespace ChanArchiver
             Console.ForegroundColor = old_c;
         }
 
-        public static void archive_single(string board, int id)
+        public static void archive_single(string board, int id, bool thumbOnly)
         {
             if (active_dumpers.ContainsKey(board))
             {
                 BoardWatcher bw = active_dumpers[board];
-                bw.AddThreadId(id);
+                bw.AddThreadId(id, thumbOnly);
             }
             else
             {
-                BoardWatcher bw = get_board_watcher(board);
+                BoardWatcher bw = new BoardWatcher(board);
                 active_dumpers.Add(board, bw);
-                bw.AddThreadId(id);
+                bw.AddThreadId(id, thumbOnly);
             }
-        }
-
-        private static BoardWatcher get_board_watcher(string board)
-        {
-            return new BoardWatcher(board);
         }
 
         public static void archive_board(string board, BoardWatcher.BoardMode mode)
@@ -427,7 +689,7 @@ namespace ChanArchiver
             }
             else
             {
-                BoardWatcher bw = get_board_watcher(board);
+                BoardWatcher bw = new BoardWatcher(board);
                 active_dumpers.Add(board, bw);
                 bw.StartMonitoring(mode);
             }
@@ -437,7 +699,11 @@ namespace ChanArchiver
         {
             try
             {
-                FileSystemStats.Init();
+                if (Settings.EnableFileStats)
+                {
+                    FileSystemStats.Init();
+                }
+
                 HttpServer.HttpServer server = new HttpServer.HttpServer();
 
                 server.ServerName = "ChanArchiver";
@@ -451,6 +717,9 @@ namespace ChanArchiver
                 server.Add(new ChanArchiver.HttpServerHandlers.FileInfoPageHandler());
                 server.Add(new ChanArchiver.HttpServerHandlers.ResourcesHandler());
                 server.Add(new ChanArchiver.HttpServerHandlers.FileHandler());
+                server.Add(new ChanArchiver.HttpServerHandlers.BannedFilesPageHandler());
+                server.Add(new ChanArchiver.HttpServerHandlers.SettingsPageHandler());
+
 
                 server.Add(new ThreadServerModule());
                 Console.WriteLine("Starting HTTP server...");
@@ -464,7 +733,9 @@ namespace ChanArchiver
             }
         }
 
-        public static void dump_files(PostFile pf)
+        #region File Downloader Logic
+
+        public static void dump_files(PostFile pf, bool thumbonly)
         {
             string md5 = base64tostring(pf.hash);
             string file_path = Path.Combine(file_save_dir, md5 + "." + pf.ext);
@@ -476,31 +747,54 @@ namespace ChanArchiver
             {
                 if (!File.Exists(thumb_path))
                 {
-                    if (!queued_files.ContainsKey("thumb" + md5))
-                    {
-                        queued_files.Add("thumb" + md5, new FileQueueStateInfo(md5, pf) { Type = FileQueueStateInfo.FileType.Thumbnail, Url = pf.ThumbLink });
+                    string thumb_key = "thumb" + md5;
 
-                        thumb_stp.QueueWorkItem(new Amib.Threading.Action((Action)delegate
+                    if (!queued_files.ContainsKey(thumb_key))
+                    {
+                        FileQueueStateInfo f = new FileQueueStateInfo(md5, pf);
+                        f.Type = FileQueueStateInfo.FileType.Thumbnail;
+                        f.Url = pf.ThumbLink;
+
+                        queued_files.Add(thumb_key, f);
+
+                        thumb_stp.QueueWorkItem(new Amib.Threading.Action(delegate
                         {
-                            download_file(new string[] { thumb_path, pf.ThumbLink, reff, "thumb" + md5 });
+                            download_file(thumb_path, reff, f);
                         }));
                     }
                 }
             }
 
-            if (!thumb_only)
+            if (!thumbonly)
             {
                 if (!is_file_banned(md5))
                 {
-                    if (!File.Exists(file_path))
-                    {
-                        if (!queued_files.ContainsKey("file" + md5))
-                        {
-                            queued_files.Add("file" + md5, new FileQueueStateInfo(md5, pf) { Type = FileQueueStateInfo.FileType.FullFile, Url = pf.FullImageLink });
+                    bool file_no_exist = !File.Exists(file_path);
 
-                            file_stp.QueueWorkItem(new Amib.Threading.Action((Action)delegate
+                    if (pf.ext == "gif")
+                    {
+                        //This file was a gif that were converted to webm
+                        //don't download it again
+                        if (File.Exists(file_path + ".webm"))
+                        {
+                            file_no_exist = false;
+                        }
+                    }
+
+                    if (file_no_exist) // GIF to webm check
+                    {
+                        string file_key = "file" + md5;
+                        if (!queued_files.ContainsKey(file_key))
+                        {
+                            FileQueueStateInfo f = new FileQueueStateInfo(md5, pf);
+                            f.Type = FileQueueStateInfo.FileType.FullFile;
+                            f.Url = pf.FullImageLink;
+
+                            queued_files.Add(file_key, f);
+
+                            file_stp.QueueWorkItem(new Amib.Threading.Action(delegate
                             {
-                                download_file(new string[] { file_path, pf.FullImageLink, reff, "file" + md5 });
+                                download_file(file_path, reff, f);
                             }), get_file_priority(pf));
                         }
                     }
@@ -544,23 +838,17 @@ namespace ChanArchiver
             }
         }
 
-        private static void download_file(string[] param)
+        const string user_agent = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:26.0) Gecko/20100101 Firefox/26.0";
+
+        private static void download_file(string save_path, string referer, FileQueueStateInfo f)
         {
-            string user_agent = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:26.0) Gecko/20100101 Firefox/26.0";
-
-            string save_path = param[0];
-            string url = param[1];
-            string referer = param[2];
-            string key = param[3];
-
-            FileQueueStateInfo f = get_file_state(key);
-            f.Status = FileQueueStateInfo.DownloadStatus.Pending; //means download thread has started, but no content is being received
+            f.Status = FileQueueStateInfo.DownloadStatus.Connecting;
 
             string temp_file_path = Path.Combine(temp_files_dir, f.Hash + f.Type.ToString());
 
             while (true)
             {
-                HttpWebRequest nc = (HttpWebRequest)(WebRequest.Create(url));
+                HttpWebRequest nc = (HttpWebRequest)(WebRequest.Create(f.Url));
 
                 nc.UserAgent = user_agent;
                 nc.Referer = referer;
@@ -689,7 +977,14 @@ namespace ChanArchiver
                                 Sender = "FileDumper",
                                 Title = "-"
                             });
+
                             f.Status = FileQueueStateInfo.DownloadStatus.Complete;
+
+                            if (Settings.AutoRemoveCompleteFiles)
+                            {
+                                queued_files.Remove((f.Type == FileQueueStateInfo.FileType.FullFile ? "file" : "thumb") + f.Hash);
+                            }
+
                         }
                         else
                         {
@@ -752,6 +1047,10 @@ namespace ChanArchiver
             return;
         }
 
+        #endregion
+
+        #region Banned Files Sub-system
+
         static List<string> banned_hashes;
 
         public static bool is_file_banned(string hash)
@@ -762,6 +1061,21 @@ namespace ChanArchiver
         public static void ban_file(string hash)
         {
             if (!banned_hashes.Contains(hash)) { banned_hashes.Add(hash); save_banned_files_list(); }
+        }
+
+        public static void unban_file(string hash)
+        {
+            banned_hashes.Remove(hash); save_banned_files_list();
+        }
+
+        public static string[] get_banned_file_list()
+        {
+            if (banned_hashes != null)
+            {
+                return banned_hashes.ToArray();
+            }
+
+            return new string[0];
         }
 
         private static string banned_files_savepath
@@ -789,6 +1103,10 @@ namespace ChanArchiver
             }
             else { banned_hashes = new List<string>(); }
         }
+
+        #endregion
+
+        #region Miscellaneous Functions
 
         private static bool verify_file_checksums(string path, string md5_hash)
         {
@@ -855,11 +1173,11 @@ namespace ChanArchiver
             {
                 return size.ToString() + " B";
             }
-            else if (size > KB & size < MB)
+            else if (size > KB && size < MB)
             {
                 return Math.Round(size / KB, 2).ToString() + " KB";
             }
-            else if (size > MB & size < GB)
+            else if (size > MB && size < GB)
             {
                 return Math.Round(size / MB, 2).ToString() + " MB";
             }
@@ -872,6 +1190,10 @@ namespace ChanArchiver
                 return Convert.ToString(size);
             }
         }
+
+        #endregion
+
+        #region Logging
 
         public static List<LogEntry> logs = new List<LogEntry>();
 
@@ -886,6 +1208,8 @@ namespace ChanArchiver
             //[Level] Time (sender - title) : message
             Console.WriteLine("[{0}] {1} {2}: {3}", entry.Level.ToString(), entry.Time.ToShortDateString() + entry.Time.ToShortTimeString(), entry.Title == "-" ? string.Format("({0})", entry.Sender) : string.Format("({0} - {1})", entry.Sender, entry.Title), entry.Message);
         }
+
+        #endregion
 
 
     }

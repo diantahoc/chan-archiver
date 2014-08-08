@@ -72,6 +72,18 @@
             </li>
           </ul>
 
+
+          <ul class="nav nav-sidebar">
+            <li>
+              <a href="/bannedfiles">Banned files</a>
+            </li>
+
+            <li>
+              <a href="/settings">Settings</a>
+            </li>
+
+          </ul>
+          
         </div>
 
         <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
@@ -85,18 +97,31 @@
               <a href="/action/removecompletefiles" class="btn btn-default">Remove complete files</a>
               <a href="/action/removefailedfiles" class="btn btn-default">Remove failed files</a>
 
+              <br/>
+              <label for="countff">Max # FullFile</label>
+
               <div class="input-group">
+
                 <form action="/set/maxfilequeue/">
-                  <label for="countff">Max # FullFile</label>
+
                   <input id="countff" class="form-control" type="text" name="count" placeholder="{mff}" autocomplete="off" />
-                  <br/>
-                  <button class="btn btn-default" type="submit">Set</button>
+
+                  <span class="input-group-btn">
+                    <button class="btn btn-default" type="submit">Set</button>
+                  </span>
+
                 </form>
+
               </div>
               
             </div>
           </div>
 
+          <div class="bs-callout bs-callout-info">
+            <h4>Queue stats</h4>
+            {qstats}
+          </div>
+          
           <div class="table-responsive">
             <table id="filequeue" class="table table-striped">
               <thead>
