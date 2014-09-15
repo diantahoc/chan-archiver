@@ -253,4 +253,16 @@
   <data name="file_reposts_page" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\html\bs\file_reposts.html;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>
+  <data name="paper_theme_min" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\html\bs\res\paper_theme.min.css;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="threadinfo_page" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\html\bs\threadinfo.html;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="sorttable_js" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\html\bs\res\sorttable.js;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="file_list_page" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\html\file_list_page.html;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
 </root>

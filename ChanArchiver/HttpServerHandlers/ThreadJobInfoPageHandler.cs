@@ -5,72 +5,64 @@ using System.Text;
 
 namespace ChanArchiver.HttpServerHandlers
 {
-    public class FileInfoPageHandler : HttpServer.HttpModules.HttpModule
+    public class ThreadJobInfoPageHandler : HttpServer.HttpModules.HttpModule
     {
         public override bool Process(HttpServer.IHttpRequest request, HttpServer.IHttpResponse response, HttpServer.Sessions.IHttpSession session)
         {
             string command = request.UriPath;
 
-            if (command.StartsWith("/fileinfo/"))
+            if (command.StartsWith("/threadinfo"))
             {
+                string board = request.QueryString["board"].Value;
+                string id = request.QueryString["id"].Value;
 
-                string[] a = command.Split('/');
-
-                if (a.Length >= 3)
+                if (string.IsNullOrEmpty(board) || string.IsNullOrEmpty(id))
                 {
-                    string filehash = a[2];
+                    response.Redirect("/wjobs"); return true;
+                }
 
-                    FileQueueStateInfo fqs = Program.get_file_state(filehash);
+                if (Program.active_dumpers.ContainsKey(board))
+                {
+                    BoardWatcher bw = Program.active_dumpers[board];
 
-                    if (fqs != null)
+                    int tid = 0;
+
+                    Int32.TryParse(id, out tid);
+
+                    if (bw.watched_threads.ContainsKey(tid))
                     {
+                        ThreadWorker tw = bw.watched_threads[tid];
 
-                        StringBuilder page = new StringBuilder(Properties.Resources.fileinfo);
+                        StringBuilder properties = new StringBuilder();
 
-                        page.Replace("{fullfilelink}", string.Format("/file/{0}.{1}", fqs.Hash, fqs.Ext));
+                        properties.AppendFormat("<span>{0}: </span><code>{1}</code><br/>", "Thread ID", tw.ID);
 
-                        page.Replace("{thumbsource}", string.Format("/thumb/{0}.jpg", fqs.Hash));
+                        properties.AppendFormat("<span>{0}: </span><code>{1}</code><br/>", "Board", tw.Board.Board);
 
-                        page.Replace("{url}", fqs.Url);
+                        properties.AppendFormat("<span>{0}: </span><code>{1}</code><br/>", "Update Interval (in min)", tw.UpdateInterval);
 
-                        page.Replace("{p}", fqs.Percent().ToString());
-                        page.Replace("{md5}", fqs.Hash);
+                        properties.AppendFormat("<span>{0}: </span><code>{1}</code><br/>", "BumpLimit", tw.BumpLimit);
 
-                        page.Replace("{name}", fqs.FileName);
-
-                        page.Replace("{workid}", filehash);
-
-                        page.Replace("{jtype}", fqs.Type.ToString());
-                        page.Replace("{rcount}", fqs.RetryCount.ToString());
-
-                        page.Replace("{downloaded}", Program.format_size_string(fqs.Downloaded));
-                        page.Replace("{length}", Program.format_size_string(fqs.Length));
-
-                        page.Replace("{Logs}", get_logs(fqs.Logs));
-
+                        properties.AppendFormat("<span>{0}: </span><code>{1}</code><br/>", "ImageLimit", tw.ImageLimit);
 
                         response.Status = System.Net.HttpStatusCode.OK;
                         response.ContentType = "text/html";
 
-                        byte[] data = Encoding.UTF8.GetBytes(page.ToString());
+                        byte[] data = Encoding.UTF8.GetBytes
+                            (Properties.Resources.threadinfo_page
+                            .Replace("{properties}", properties.ToString())
+                            .Replace("{Logs}", get_logs(tw.Logs)));
+
                         response.ContentLength = data.Length;
                         response.SendHeaders();
                         response.SendBody(data);
 
                         return true;
-
                     }
-                    else
-                    {
-                        response.Redirect("/fq");
-                        return true;
-                    }
-
-
                 }
+
+                response.Redirect("/wjobs"); return true;
             }
-
-
 
             return false;
         }

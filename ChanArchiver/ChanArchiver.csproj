@@ -14,6 +14,21 @@
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <PlatformTarget>x86</PlatformTarget>
@@ -26,7 +41,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -41,7 +56,8 @@
     <ApplicationIcon>clover_icon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="HttpServer">
+    <Reference Include="HttpServer, Version=1.0.0.0, Culture=neutral, PublicKeyToken=d7063c47c583695a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\Desktop\New folder\HttpServer.v1.1\HttpServer.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
@@ -105,6 +121,7 @@
     <Compile Include="Filters\IFilter.cs" />
     <Compile Include="HMSFormatter.cs" />
     <Compile Include="HttpServerHandlers\BannedFilesPageHandler.cs" />
+    <Compile Include="HttpServerHandlers\FileBrowserPageHandler.cs" />
     <Compile Include="HttpServerHandlers\FileHandler.cs" />
     <Compile Include="HttpServerHandlers\FileInfoPageHandler.cs" />
     <Compile Include="HttpServerHandlers\FileQueuePageHandler.cs" />
@@ -114,6 +131,7 @@
     <Compile Include="HttpServerHandlers\ResourcesHandler.cs" />
     <Compile Include="HttpServerHandlers\SettingsPageHandler.cs" />
     <Compile Include="HttpServerHandlers\ThreadFiltersPageHandler.cs" />
+    <Compile Include="HttpServerHandlers\ThreadJobInfoPageHandler.cs" />
     <Compile Include="HttpServerHandlers\WatchJobsPageHandler.cs" />
     <Compile Include="LightWatcher.cs" />
     <Compile Include="LogEntry.cs" />
@@ -135,7 +153,6 @@
     <Compile Include="stp\Interfaces.cs" />
     <Compile Include="stp\InternalInterfaces.cs" />
     <Compile Include="stp\PriorityQueue.cs" />
-    <Compile Include="stp\SLExt.cs" />
     <Compile Include="stp\SmartThreadPool.cs" />
     <Compile Include="stp\SmartThreadPool.ThreadEntry.cs" />
     <Compile Include="stp\Stopwatch.cs" />
@@ -155,6 +172,7 @@
     <Compile Include="HttpServerHandlers\ThreadServerModule.cs" />
     <Compile Include="ThreadStore.cs" />
     <Compile Include="ThreadWorker.cs" />
+    <Compile Include="Wordfilter.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
@@ -176,9 +194,12 @@
     <Content Include="html\bs\file_reposts.html" />
     <Content Include="html\bs\res\font-awesome.min.css" />
     <Content Include="html\bs\res\jquery.flot.pie.min.js" />
+    <Content Include="html\bs\res\paper_theme.min.css" />
     <Content Include="html\bs\settings_page.html">
       <SubType>Designer</SubType>
     </Content>
+    <Content Include="html\bs\res\sorttable.js" />
+    <Content Include="html\bs\threadinfo.html" />
     <Content Include="html\chan-templates\blue.css" />
     <Content Include="html\chan-templates\file_template.htm">
       <SubType>Designer</SubType>
@@ -188,6 +209,7 @@
       <SubType>Designer</SubType>
     </Content>
     <Content Include="html\chan-templates\reply_template.htm" />
+    <Content Include="html\file_list_page.html" />
     <None Include="Resources\cached_boards.txt" />
     <None Include="html\4" />
     <None Include="html\full_page.html">
@@ -236,9 +258,31 @@
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.0">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4 %28x86 and x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.4.5">
+      <Visible>False</Visible>
+      <ProductName>Windows Installer 4.5</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

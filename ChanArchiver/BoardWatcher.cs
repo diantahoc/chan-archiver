@@ -36,15 +36,15 @@ namespace ChanArchiver
 
         public BoardMode Mode { get; private set; }
 
+        public int BumpLimit { get { return Program.ValidBoards[this.Board].BumpLimit; } }
+        
+        public int ImageLimit { get { return Program.ValidBoards[this.Board].ImageLimit; } }
+
         //List<int> rejected_threads_because_of_filters = new List<int>();
 
         public BoardWatcher(string board)
         {
-            if (string.IsNullOrEmpty(board))
-            {
-                throw new ArgumentNullException("Board letter cannot be null");
-            }
-            else
+            if (Program.ValidBoards.ContainsKey(board))
             {
                 this.Board = board;
                 this.Mode = BoardMode.None;
@@ -52,6 +52,10 @@ namespace ChanArchiver
 
                 LoadFilters();
                 LoadManuallyAddedThreads();
+            }
+            else
+            {
+                throw new ArgumentNullException("Invalid board letter");
             }
         }
 
@@ -68,13 +72,17 @@ namespace ChanArchiver
             /// <summary>
             /// Monitor board for new threads, and only archive threads who has a filter match
             /// </summary>
-            Monitor
+            Monitor,
+            /// <summary>
+            /// Monitor all threads and download specific file types
+            /// </summary>
+            Harvester
         }
 
         private void load_board_sleep_times()
         {
             //speed up
-            if (this.Board == "b" || this.Board == "v") 
+            if (this.Board == "b" || this.Board == "v")
             {
                 this.Speed = BoardSpeed.Fast;
                 return;
@@ -193,6 +201,10 @@ namespace ChanArchiver
             else
             {
                 t = new ThreadWorker(this, id);
+                
+                t.ImageLimit = this.ImageLimit;
+                t.BumpLimit = this.BumpLimit;
+
                 this.watched_threads.Add(id, t);
                 t.Thread404 += this.handle_thread_404;
             }
@@ -382,7 +394,7 @@ namespace ChanArchiver
                                         Title = ""
                                     });
                                 }
-                                else 
+                                else
                                 {
                                     started_count++;
 
@@ -397,7 +409,7 @@ namespace ChanArchiver
                                     tw.Start();
                                 }
                             }
-                            else if (this.Mode == BoardMode.FullBoard)
+                            else if (this.Mode == BoardMode.FullBoard || this.Mode == BoardMode.Harvester)
                             {
                                 if (Program.verbose)
                                 {
@@ -419,7 +431,6 @@ namespace ChanArchiver
                                     tw.Start();
                                 });
                             }
-
                         }
                     }
 
@@ -495,39 +506,6 @@ namespace ChanArchiver
             });
         }
 
-        //private void catalog_loaded_callback()
-        //{
-        //    foreach (KeyValuePair<int, ThreadWorker> w in watched_threads)
-        //    {
-        //        if (w.Value.AddedAutomatically)
-        //        {
-        //            if (this.Mode == BoardMode.None || this.Mode == BoardMode.Monitor)
-        //            {
-        //                //board watcher have been stopped, exit
-        //                return;
-        //            }
-
-        //            w.Value.Thread404 += this.handle_thread_404;
-
-        //            w.Value.Start();
-
-        //            if (Program.verbose)
-        //            {
-        //                Log(new LogEntry()
-        //                {
-        //                    Level = LogEntry.LogLevel.Info,
-        //                    Message = "Starting thread worker '" + w.Value.ID + "'",
-        //                    Sender = "BoardWatcher",
-        //                    Title = string.Format("/{0}/", this.Board)
-        //                });
-        //            }
-
-        //            System.Threading.Thread.Sleep(500); //Allow 0.5 seconds between thread worker startup
-        //        }
-        //    }
-        //    start_rss_watcher();
-        //}
-
         private void handle_thread_404(ThreadWorker instance)
         {
             this.watched_threads.Remove(instance.ID);
@@ -570,6 +548,8 @@ namespace ChanArchiver
                     if (!this._404_threads.Contains(id))
                     {
                         ThreadWorker t = new ThreadWorker(this, id);
+                        t.BumpLimit = this.BumpLimit;
+                        t.ImageLimit = this.ImageLimit;
                         t.AddedAutomatically = true;
                         this.watched_threads.Add(id, t);
                         t.Thread404 += this.handle_thread_404;
@@ -628,56 +608,22 @@ namespace ChanArchiver
                         return true;
                     }
                 }
-                catch (Exception e)
-                {
-                    continue;
-                }
+                catch (Exception) { }
             }
 
             return false;
         }
 
-        ///// <summary>
-        ///// Runs when filters are changed (added or removed)
-        ///// </summary>
-        //private void ReCheckAllFailedThreads()
-        //{
-        //    if (this.Mode == BoardMode.Monitor)
-        //    {
-        //        for (int index = 0; index < rejected_threads_because_of_filters.Count; index++)
-        //        {
-        //            try
-        //            {
-        //                int tid = rejected_threads_because_of_filters[index];
-        //                if (!this.watched_threads.ContainsKey(tid))
-        //                {
-        //                    ThreadWorker tw = new ThreadWorker(this, tid);
-        //                    this.watched_threads.Add(tid, tw);
-        //                    tw.Thread404 += this.handle_thread_404;
-        //                    tw.AddedAutomatically = true;
-        //                    tw.Start();
-        //                }
-        //                else
-        //                {
-        //                    ThreadWorker tw = watched_threads[tid];
-        //                    tw.Start();
-        //                }
-        //            }
-        //            catch (Exception)
-        //            {
-        //                if (index >= rejected_threads_because_of_filters.Count) { return; }
-        //            }
-        //        }
-        //    }
-        //}
+        private List<string> allowed_ext = new List<string>() { "webm" }; // TODO: FIX THIS
 
-        //public void MarkThreadAsFilterTestFailed(int id)
-        //{
-        //    if (this.Mode == BoardMode.Monitor)
-        //    {
-        //        if (!this.rejected_threads_because_of_filters.Contains(id)) { this.rejected_threads_because_of_filters.Add(id); }
-        //    }
-        //}
+        public bool IsFileAllowed(string ext)
+        {
+            if (this.Mode == BoardMode.Harvester)
+            {
+                return allowed_ext.Contains(ext);
+            }
+            return true;
+        }
 
         public void SaveFilters()
         {

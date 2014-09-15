@@ -121,15 +121,38 @@ namespace ChanArchiver
                         break;
                     }
 
-                    string op = Path.Combine(thread_folder, "op.json");
 
-                    if (!File.Exists(op))
+                    if (this.AddedAutomatically && this.Board.Mode == BoardWatcher.BoardMode.Harvester)
                     {
-                        string post_data = get_post_string(tc.Instance);
-                        File.WriteAllText(op, post_data);
+                        if (tc.Instance.File != null)
+                        {
+                            if (this.Board.IsFileAllowed(tc.Instance.File.ext))
+                            {
+                                string op = Path.Combine(thread_folder, "op.json");
+
+                                if (!File.Exists(op))
+                                {
+                                    string post_data = get_post_string(tc.Instance);
+                                    File.WriteAllText(op, post_data);
+                                }
+
+                                Program.dump_files(tc.Instance.File, this.ThumbOnly);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        string op = Path.Combine(thread_folder, "op.json");
+
+                        if (!File.Exists(op))
+                        {
+                            string post_data = get_post_string(tc.Instance);
+                            File.WriteAllText(op, post_data);
+                        }
+
+                        if (tc.Instance.File != null) { Program.dump_files(tc.Instance.File, this.ThumbOnly); }
                     }
 
-                    if (tc.Instance.File != null) { Program.dump_files(tc.Instance.File, this.ThumbOnly); }
 
                     int count = tc.Replies.Count();
 
@@ -137,6 +160,20 @@ namespace ChanArchiver
 
                     for (int i = 0; i < count; i++)
                     {
+                        if (this.AddedAutomatically && this.Board.Mode == BoardWatcher.BoardMode.None) { continue; }
+
+                        if (this.AddedAutomatically && this.Board.Mode == BoardWatcher.BoardMode.Harvester)
+                        {
+                            if (tc.Replies[i].File != null)
+                            {
+                                if (!this.Board.IsFileAllowed(tc.Replies[i].File.ext))
+                                {
+                                    continue;
+                                }
+                            }
+                            else { continue; }
+                        }
+
                         string item_path = Path.Combine(thread_folder, tc.Replies[i].ID.ToString() + ".json");
 
                         if (!File.Exists(item_path))
@@ -184,6 +221,7 @@ namespace ChanArchiver
                     }
 
                     if (tc.Instance.IsSticky) { this.UpdateInterval = 5; }
+                    if (this.Board.Mode == BoardWatcher.BoardMode.Harvester) { this.UpdateInterval = 2; }
 
                     System.Threading.Thread.Sleep(Convert.ToInt32(this.UpdateInterval * 60 * 1000));
                 }
@@ -198,9 +236,14 @@ namespace ChanArchiver
                             Sender = "ThreadWorker",
                             Title = string.Format("/{0}/ - {1}", this.Board.Board, this.ID)
                         });
-                        optimize_thread_file(thread_folder);
-                        Thread404(this);
+
+                        if (!(this.AddedAutomatically && this.Board.Mode == BoardWatcher.BoardMode.Harvester))
+                        {
+                            optimize_thread_file(thread_folder);
+                        }
+
                         this.Stop();
+                        Thread404(this);
                         goto stop;
                     }
                     else
@@ -324,7 +367,7 @@ namespace ChanArchiver
             if (!string.IsNullOrEmpty(gp.Comment))
             {
 
-                dic.Add("RawComment", a1.Replace(gp.Comment, ""));
+                dic.Add("RawComment", Wordfilter.Process(gp.Comment));
                 // dic.Add("FormattedComment", gp.CommentText);
             }
 
@@ -367,7 +410,7 @@ namespace ChanArchiver
             if (gp.File != null)
             {
                 dic.Add("FileHash", Program.base64tostring(gp.File.hash));
-                dic.Add("FileName", a1.Replace(gp.File.filename, "") + "." + gp.File.ext);
+                dic.Add("FileName", Wordfilter.Process(gp.File.filename) + "." + gp.File.ext);
                 dic.Add("ThumbTime", gp.File.thumbnail_tim);
                 dic.Add("FileHeight", gp.File.height);
                 dic.Add("FileWidth", gp.File.width);
@@ -376,8 +419,6 @@ namespace ChanArchiver
 
             return Newtonsoft.Json.JsonConvert.SerializeObject(dic, Newtonsoft.Json.Formatting.None);
         }
-
-        private Regex a1 = new Regex(Encoding.UTF8.GetString(new byte[] { 0x67, 0x6F, 0x64, 0x7C, 0x6F, 0x6D, 0x66, 0x67, 0x7C, 0x7A, 0x6F, 0x6D, 0x67, 0x7C, 0x68, 0x6F, 0x6C, 0x79, 0x7C, 0x6A, 0x65, 0x73, 0x75, 0x73, 0x7C, 0x61, 0x6E, 0x67, 0x65, 0x6C }), RegexOptions.IgnoreCase);
 
         public void Start()
         {

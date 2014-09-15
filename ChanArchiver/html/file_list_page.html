@@ -1,0 +1,49 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>file list</title>
+    <style type="text/css">
+        body {
+            background-color: #222;
+        }
+
+        a {
+            text-decoration: none;
+            color: #ccc;
+        }
+
+        img {
+            max-height: 125px;
+            max-width: 125px;
+        }
+    </style>
+</head>
+<body>
+
+    <div>
+        <a href="/">ChanArchiver Home</a>
+        <a>current config: {ftvalue}</a>
+        <form action="/filetree/" method="get">
+            <select name="ftype">
+                <option {o0} value="0">WebM</option>
+                <option {o1} value="1">WebM (no wgif)</option>
+                <option {o2} value="2">JPEG</option>
+                <option {o3} value="3">PNG</option>
+                <option {o4} value="4">Gif</option>
+            </select>
+            <input name="limit" type="text" value="{lvalue}" />
+            <button type="submit">apply</button>
+            <hr />
+            <button name="prev_value" value="{next}">&gt;&gt;</button>
+                <!--<select name="prev_value">
+                    <option value="{prev}">&lt;&lt;</option>
+                    <option value="{next}">&gt;&gt;</option>
+                </select>-->
+</form>
+    </div>
+    <hr />
+
+    {items}
+
+</body>
+</html>

@@ -22,7 +22,7 @@ namespace ChanArchiver.HttpServerHandlers
                 bool no_webm = device_not_support_webm(ua);
 
                 FileInfo fi = new FileInfo(path);
-                
+
 
                 if (fi.Exists && fi.DirectoryName == Program.file_save_dir)
                 {
@@ -227,40 +227,46 @@ namespace ChanArchiver.HttpServerHandlers
 
             if (command.StartsWith("/thumb/"))
             {
-                string path = Path.Combine(Program.thumb_save_dir, command.Split('/').Last());
+                string hash = command.Split('/').Last();
 
-                FileInfo fi = new FileInfo(path);
-
-                if (fi.Exists && fi.DirectoryName == Program.thumb_save_dir)
+                if (hash.Length == 36)
                 {
-                    response.ContentType = "image/jpeg";
-                    response.Status = System.Net.HttpStatusCode.OK;
+                    string path = Path.Combine(Program.thumb_save_dir, hash[0].ToString().ToUpper(),
+                         hash[1].ToString().ToUpper(), hash);
 
-                    response.AddHeader("cache-control", "max-age=3600");
+                    FileInfo fi = new FileInfo(path);
 
-                    byte[] data = File.ReadAllBytes(path);
+                    if (fi.Exists && fi.Name == hash)
+                    {
+                        response.ContentType = "image/jpeg";
+                        response.Status = System.Net.HttpStatusCode.OK;
 
-                    response.ContentLength = data.Length;
+                        response.AddHeader("cache-control", "max-age=9999");
 
-                    response.SendHeaders();
+                        byte[] data = File.ReadAllBytes(path);
 
-                    response.SendBody(data);
+                        response.ContentLength = data.Length;
+
+                        response.SendHeaders();
+
+                        response.SendBody(data);
+
+                        return true;
+                    }
                 }
-                else
-                {
-                    response.ContentType = "image/gif";
-                    response.Status = System.Net.HttpStatusCode.NotFound;
-                    response.ContentLength = Properties.Resources._4.Length;
-                    response.SendHeaders();
-                    response.SendBody(Properties.Resources._4);
-                }
+
+                response.ContentType = "image/gif";
+                response.Status = System.Net.HttpStatusCode.NotFound;
+                response.ContentLength = Properties.Resources._4.Length;
+                response.SendHeaders();
+                response.SendBody(Properties.Resources._4);
                 return true;
             }
 
             return false;
         }
 
-        private bool device_not_support_webm(string ua)
+        public static bool device_not_support_webm(string ua)
         {
             return ua.Contains("s60") || ua.Contains("symbos");
         }

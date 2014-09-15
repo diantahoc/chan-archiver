@@ -14,7 +14,7 @@ namespace ChanArchiver
         {
             string thread_dir_path = Path.Combine(Program.post_files_dir, board, id);
 
-            if (!Directory.Exists(thread_dir_path)) { return new PostFormatter[]{}; }
+            if (!Directory.Exists(thread_dir_path)) { return new PostFormatter[] { }; }
 
             string opt_path = Path.Combine(thread_dir_path, id + "-opt.json");
 
@@ -33,19 +33,29 @@ namespace ChanArchiver
             else
             {
                 DirectoryInfo info = new DirectoryInfo(thread_dir_path);
-                FileInfo[] files = info.GetFiles("*.json", SearchOption.TopDirectoryOnly);
-                thread_pf.Add(load_post_data_str(File.ReadAllText(Path.Combine(thread_dir_path, "op.json")), true));
-                IOrderedEnumerable<FileInfo> sorted = files.OrderBy(x => x.Name);
-                int cou = sorted.Count();
-                for (int i = 0; i < cou - 1; i++)
+                if (info.Exists)
                 {
-                    thread_pf.Add(load_post_data_str(File.ReadAllText(files[i].FullName), false));
+                    FileInfo[] files = info.GetFiles("*.json", SearchOption.TopDirectoryOnly);
+
+                    string op = Path.Combine(thread_dir_path, "op.json");
+                    if (File.Exists(op))
+                    {
+                        thread_pf.Add(load_post_data_str(File.ReadAllText(op), true));
+                    }
+
+                    IOrderedEnumerable<FileInfo> sorted = files.OrderBy(x => x.Name);
+                    int cou = sorted.Count();
+                    for (int i = 0; i < cou; i++)
+                    {
+                        if (files[i].Name == "op.json") { continue; }
+                        thread_pf.Add(load_post_data_str(File.ReadAllText(files[i].FullName), false));
+                    }
                 }
             }
             return thread_pf.ToArray();
         }
 
-        public static void DeleteThread(string board, string id) 
+        public static void DeleteThread(string board, string id)
         {
             string thread_dir_path = Path.Combine(Program.post_files_dir, board, id);
 
@@ -93,10 +103,10 @@ namespace ChanArchiver
                         }
                     }
 
-                    else
-                    {
-                        check_thread_folder_sanity(folders[i].FullName);
-                    }
+                    //else
+                    //{
+                    //    check_thread_folder_sanity(folders[i].FullName);
+                    //}
                 }
 
                 List<PostFormatter> threads_pf = new List<PostFormatter>(threads_text.Count);
@@ -121,10 +131,10 @@ namespace ChanArchiver
             }
         }
 
-        private static void check_thread_folder_sanity(string folder)
-        {
+        //private static void check_thread_folder_sanity(string folder)
+        //{
 
-        }
+        //}
 
         private static PostFormatter load_post_data_str(string data, bool isop)
         {

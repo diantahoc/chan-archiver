@@ -44,7 +44,8 @@ namespace ChanArchiver.HttpServerHandlers
                         response.ContentType = "image/png";
                         break;
                     case "bootstrap.css":
-                        data = Encoding.UTF8.GetBytes(Properties.Resources.bootstrap_css);
+                        //data = Encoding.UTF8.GetBytes(Properties.Resources.bootstrap_css);
+                        data = Properties.Resources.paper_theme_min;
                         response.ContentType = "text/css";
                         break;
                     case "dashboard.css":
@@ -85,6 +86,10 @@ namespace ChanArchiver.HttpServerHandlers
                         break;
                     case "jquery.flot.pie.min.js":
                         data = Properties.Resources.jquery_flot_pie_min;
+                        response.ContentType = "application/javascript";
+                        break;
+                    case "sorttable.js":
+                        data = Properties.Resources.sorttable_js;
                         response.ContentType = "application/javascript";
                         break;
                         //webfonts

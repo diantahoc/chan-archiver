@@ -61,7 +61,7 @@ namespace ChanArchiver.HttpServerHandlers
                                 sb.AppendFormat("<td>{0}</td>", tw.AutoSage ? "<span class=\"label label-primary\">Yes</span>" : "<span class=\"label label-default\">No</span>");
                                 sb.AppendFormat("<td>{0}</td>", tw.ImageLimitReached ? "<span class=\"label label-primary\">Yes</span>" : "<span class=\"label label-default\">No</span>");
 
-                                sb.AppendFormat("<td> <a href='/logs/{0}/{1}/{2}' class='label label-primary'>Logs</a> </td>", "threadworker", bw.Board, tw.ID);
+                                sb.AppendFormat("<td> <a href='/threadinfo?board={0}&id={1}' class='label label-primary'>Info</a> </td>", bw.Board, tw.ID);
 
                                 sb.Append("</tr>");
                             }

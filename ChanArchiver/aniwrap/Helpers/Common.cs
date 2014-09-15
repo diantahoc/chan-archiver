@@ -11,11 +11,26 @@ namespace AniWrap
         /// <summary>
         /// {0}: board, {1}: tim, {2}: ext
         /// </summary>
-        public const string imageLink = @"http://i.4cdn.org/{0}/{1}.{2}";
+        public static readonly string imageLink = HttpPrefix + "://i.4cdn.org/{0}/{1}.{2}";
         /// <summary>
         /// {0}:board, {1}: tim
         /// </summary>
-        public const string thumbLink = @"http://t.4cdn.org/{0}/{1}s.jpg";
+        public static readonly string thumbLink = HttpPrefix + "://t.4cdn.org/{0}/{1}s.jpg";
+
+        public static string HttpPrefix
+        {
+            get
+            {
+                if (ChanArchiver.Settings.UseHttps)
+                {
+                    return "https";
+                }
+                else
+                {
+                    return "http";
+                }
+            }
+        }
 
         public static readonly DateTime UnixEpoch = new System.DateTime(1970, 1, 1, 0, 0, 0, 0);
 
@@ -27,7 +42,7 @@ namespace AniWrap
         public static string MD5(string s)
         {
             using (MD5CryptoServiceProvider md5s = new MD5CryptoServiceProvider())
-            { 
+            {
                 return ByteArrayToString(md5s.ComputeHash(System.Text.Encoding.ASCII.GetBytes(s)));
             }
         }

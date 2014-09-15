@@ -97,6 +97,8 @@ namespace ChanArchiver.HttpServerHandlers
 
                         sb.AppendFormat("<td> <a href=\"/fileinfo/{0}\" class=\"label label-primary\">Info</a> </td>", kvp.Key);
 
+                        sb.AppendFormat("<td><span class=\"label label-primary\">{0}</span></td>", f.Type == FileQueueStateInfo.FileType.FullFile ? f.Priority.ToString().Replace("Level", "") : "N/A");
+
                         sb.Append("</tr>");
 
 
@@ -148,6 +150,49 @@ namespace ChanArchiver.HttpServerHandlers
                 response.ContentType = "text/html";
 
                 byte[] data = Encoding.UTF8.GetBytes(Properties.Resources.filequeue_page.Replace("{qstats}", stats.ToString()).Replace("{mff}", Program.file_stp.MaxThreads.ToString()).Replace("{Files}", sb.ToString()));
+                response.ContentLength = data.Length;
+                response.SendHeaders();
+                response.SendBody(data);
+
+                return true;
+            }
+
+            if (command == "/fq/list.txt") 
+            {
+                StringBuilder sb = new StringBuilder();
+
+                var ordered = Program.queued_files;
+
+                int count = ordered.Count();
+
+
+                for (int index = 0; index < count; index++)
+                {
+                    try
+                    {
+                        KeyValuePair<string, FileQueueStateInfo> kvp = ordered.ElementAt(index);
+
+                        FileQueueStateInfo f = kvp.Value;
+
+                        if (f.Type == FileQueueStateInfo.FileType.Thumbnail)
+                        {
+                            continue;
+                        }
+                   
+                        sb.AppendFormat("<a href='{0}'>{0}</a><br/>", f.Url);
+
+                    }
+                    catch (Exception)
+                    {
+                        if (index >= Program.queued_files.Keys.Count) { break; }
+                    }
+                }
+
+                //write everything
+                response.Status = System.Net.HttpStatusCode.OK;
+                response.ContentType = "text/html";
+
+                byte[] data = Encoding.UTF8.GetBytes(sb.ToString());
                 response.ContentLength = data.Length;
                 response.SendHeaders();
                 response.SendBody(data);

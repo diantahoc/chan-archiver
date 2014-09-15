@@ -57,7 +57,6 @@ namespace ChanArchiver
                     }
                     catch (Exception)
                     {
-
                         System.Threading.Thread.Sleep(1000 * 10); // HACK
 
                         //throw;

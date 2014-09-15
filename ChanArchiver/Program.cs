@@ -37,11 +37,11 @@ namespace ChanArchiver
 
         public static Dictionary<string, FileQueueStateInfo> queued_files = new Dictionary<string, FileQueueStateInfo>();
 
-        public static DateTime StartUpTime = DateTime.Now;
+        public static readonly DateTime StartUpTime = DateTime.Now;
 
         private static int port = 8787;
 
-        public static KeyValuePair<string, string>[] ValidBoards { get; private set; }
+        public static Dictionary<string, AniWrap.AniWrap.BoardInfo> ValidBoards { get; private set; }
 
         private static FileSystemWatcher swf_watch;
 
@@ -116,23 +116,16 @@ namespace ChanArchiver
 
             Directory.CreateDirectory(program_dir);
 
-            file_save_dir = Path.Combine(program_dir, "files");
-            thumb_save_dir = Path.Combine(program_dir, "thumbs");
-            post_files_dir = Path.Combine(program_dir, "posts");
-            api_cache_dir = Path.Combine(program_dir, "aniwrap_cache");
-            temp_files_dir = Path.Combine(program_dir, "temp");
-            board_settings_dir = Path.Combine(program_dir, "settings");
-
-            Directory.CreateDirectory(file_save_dir);
-            Directory.CreateDirectory(thumb_save_dir);
-            Directory.CreateDirectory(post_files_dir);
-            Directory.CreateDirectory(api_cache_dir);
-            Directory.CreateDirectory(temp_files_dir);
-            Directory.CreateDirectory(board_settings_dir);
+            file_save_dir = Path.Combine(program_dir, "files"); Directory.CreateDirectory(file_save_dir);
+            thumb_save_dir = Path.Combine(program_dir, "thumbs"); Directory.CreateDirectory(thumb_save_dir);
+            post_files_dir = Path.Combine(program_dir, "posts"); Directory.CreateDirectory(post_files_dir);
+            api_cache_dir = Path.Combine(program_dir, "aniwrap_cache"); Directory.CreateDirectory(api_cache_dir);
+            temp_files_dir = Path.Combine(program_dir, "temp"); Directory.CreateDirectory(temp_files_dir);
+            board_settings_dir = Path.Combine(program_dir, "settings"); Directory.CreateDirectory(board_settings_dir);
 
             Settings.Load();
 
-            if (is_t) { Settings.ThumbnailOnly = true; }
+            Settings.ThumbnailOnly = is_t;
 
             aw = new AniWrap.AniWrap(api_cache_dir);
 
@@ -171,7 +164,7 @@ namespace ChanArchiver
 
             Console.Write("Downloading board data...");
             ValidBoards = aw.GetAvailableBoards();
-            Console.Write("loaded {0} board.\n", ValidBoards.Length);
+            Console.Write("loaded {0} board.\n", ValidBoards.Count);
 
             Console.Write("Saving files in ");
             print(string.Format("'{0}'\n", program_dir), ConsoleColor.Red);
@@ -202,7 +195,7 @@ namespace ChanArchiver
                 }
             }
 
-            Task.Factory.StartNew((Action)delegate { try { build_file_index(); } catch (Exception) { } });
+            //Task.Factory.StartNew((Action)delegate { try { build_file_index(); } catch (Exception) { } });
 
             //Console.WriteLine("Building file index...");
 
@@ -217,7 +210,7 @@ namespace ChanArchiver
             //}
             //catch (Exception) { }
 
-
+            optimize_directory_struct(thumb_save_dir);
 
             interactive_console();
 
@@ -349,6 +342,37 @@ namespace ChanArchiver
             return null;
         }
 
+        private static void optimize_directory_struct(string dir)
+        {
+            DirectoryInfo dirInfo = new DirectoryInfo(dir);
+
+            /*string[] first_level_dirs = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F" };
+            
+            string[] second_level_dirs = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F" };
+            
+            foreach (string s in first_level_dirs)
+            {
+                string p = Path.Combine(dirInfo.FullName, s);
+                if (!Directory.Exists(p)) { Directory.CreateDirectory(p); }
+            }*/
+
+            var files = dirInfo.GetFiles();
+
+            foreach (var f in files)
+            {
+                string first_folder = f.Name[0].ToString().ToUpper();
+                string second_folder = f.Name[1].ToString().ToUpper();
+
+                string p = Path.Combine(dirInfo.FullName, first_folder);
+                Directory.CreateDirectory(p);
+                p = Path.Combine(p, second_folder);
+                Directory.CreateDirectory(p);
+
+                File.Move(f.FullName, Path.Combine(p, f.Name));
+            }
+
+        }
+
         private static void interactive_console()
         {
             print("Interactive Console", ConsoleColor.Yellow);
@@ -388,6 +412,8 @@ namespace ChanArchiver
                         Console.WriteLine("- exit: save settings and exit the program");
                         Console.WriteLine("- toggle-ff: Enable or disable full file saving.");
                         Console.WriteLine("- optimize-gif: Convert all gifs files to .webm to save disk space. This action is not reversible");
+                        Console.WriteLine("- wordfilter-add [word1] [word2]...: Add words to the wordfilter. Please include the [brackets]");
+                        Console.WriteLine("- wordfilter-remove [word1] [word2]...: Add words from the wordfilter.");
                         break;
                     case "bench":
                         Stopwatch sw = new Stopwatch();
@@ -398,18 +424,18 @@ namespace ChanArchiver
                         break;
                     case "sanitize-files":
                         {
-
                             update_file_index();
 
                             var files = Directory.EnumerateFiles(file_save_dir);
                             int i = 0;
                             foreach (var file in files)
                             {
-                                string file_hash = file.Split('\\').Last().Split('.').First();
+                                string file_hash = file.Split(Path.DirectorySeparatorChar).Last().Split('.').First();
                                 if (!file_index.ContainsKey(file_hash))
                                 {
                                     i++;
-                                    File.Delete(file);
+                                    //File.Delete(file);
+                                    Console.WriteLine("Simulated delete of '{0}'", file);
                                 }
                             }
                             Console.WriteLine("Removed {0} file", i);
@@ -420,11 +446,38 @@ namespace ChanArchiver
                     case "optimize-gif":
                         convert_all_gifs();
                         break;
+                    case "http-mode":
+                        Console.WriteLine(Settings.UseHttps ? "https" : "http");
+                        break;
                     case "":
                         //Console.WriteLine(":^)");
                         break;
                     default:
-                        Console.WriteLine("Unkown command '{0}'", command);
+                        if (command.StartsWith("wordfilter-"))
+                        {
+                            bool add = command.StartsWith("wordfilter-add");
+                            System.Text.RegularExpressions.Regex a = new System.Text.RegularExpressions.Regex(@"\[\S+\]");
+                            var words = a.Matches(command);
+                            if (words.Count > 0) 
+                            {
+                                foreach (System.Text.RegularExpressions.Match match in words)
+                                {
+                                    string word = match.Value.Remove(0, 1);
+                                    word = word.Remove(word.Length - 1, 1);
+                                    if (add)
+                                    {
+                                        Wordfilter.Add(word);
+                                        Console.WriteLine("Added word '{0}'", word);
+                                    }
+                                    else 
+                                    {
+                                        Wordfilter.Remove(word);
+                                        Console.WriteLine("Removed word '{0}'", word);
+                                    }
+                                }
+                            }
+                        }
+                        else { Console.WriteLine("Unkown command '{0}'", command); }
                         break;
                 }
                 command = Console.ReadLine().Trim().ToLower();
@@ -555,6 +608,8 @@ namespace ChanArchiver
 
             Console.WriteLine("Loading manually added threads...");
             load_boards();
+
+            Wordfilter.Load();
         }
 
         private static void save_settings()
@@ -569,6 +624,8 @@ namespace ChanArchiver
             save_banned_files_list();
 
             Settings.Save();
+
+            Wordfilter.Save();
         }
 
         private static void save_boards()
@@ -719,7 +776,8 @@ namespace ChanArchiver
                 server.Add(new ChanArchiver.HttpServerHandlers.FileHandler());
                 server.Add(new ChanArchiver.HttpServerHandlers.BannedFilesPageHandler());
                 server.Add(new ChanArchiver.HttpServerHandlers.SettingsPageHandler());
-
+                server.Add(new ChanArchiver.HttpServerHandlers.ThreadJobInfoPageHandler());
+                server.Add(new ChanArchiver.HttpServerHandlers.FileBrowserPageHandler());
 
                 server.Add(new ThreadServerModule());
                 Console.WriteLine("Starting HTTP server...");
@@ -739,7 +797,7 @@ namespace ChanArchiver
         {
             string md5 = base64tostring(pf.hash);
             string file_path = Path.Combine(file_save_dir, md5 + "." + pf.ext);
-            string thumb_path = Path.Combine(thumb_save_dir, md5 + ".jpg");
+            string thumb_path = Path.Combine(thumb_save_dir, md5[0].ToString().ToUpper(), md5[1].ToString().ToUpper(), md5 + ".jpg");
 
             string reff = string.Format("http://boards.4chan.org/{0}/res/{1}", pf.board, pf.owner);
 
@@ -757,7 +815,7 @@ namespace ChanArchiver
 
                         queued_files.Add(thumb_key, f);
 
-                        thumb_stp.QueueWorkItem(new Amib.Threading.Action(delegate
+                        f.ThreadBG = thumb_stp.QueueWorkItem(new Amib.Threading.Action(delegate
                         {
                             download_file(thumb_path, reff, f);
                         }));
@@ -789,53 +847,174 @@ namespace ChanArchiver
                             FileQueueStateInfo f = new FileQueueStateInfo(md5, pf);
                             f.Type = FileQueueStateInfo.FileType.FullFile;
                             f.Url = pf.FullImageLink;
+                            var priority = get_file_priority(pf);
+                            f.Priority = priority;
 
                             queued_files.Add(file_key, f);
 
-                            file_stp.QueueWorkItem(new Amib.Threading.Action(delegate
+                            f.ThreadBG = file_stp.QueueWorkItem(new Amib.Threading.Action(delegate
                             {
                                 download_file(file_path, reff, f);
-                            }), get_file_priority(pf));
+                            }), priority);
                         }
                     }
                 }
             }
         }
 
+        /*
+        private static bool test_pr()
+        {
+            const int kb = 1024;
+            const int mb = 1048576;
+            Func<bool>[] tests = new Func<bool>[]
+            {
+                new Func<bool>( () => {    return 2300 * kb == 2.3 * mb;  }  ),
+                new Func<bool>( () => {    return get_file_p(49 * kb) == Amib.Threading.WorkItemPriority.Level14;  }  ),
+                new Func<bool>( () => {    return get_file_p(60 * kb) == Amib.Threading.WorkItemPriority.Level13;  }  ),
+                new Func<bool>( () => {    return get_file_p(350 * kb) == Amib.Threading.WorkItemPriority.Level12;  }  ),
+                new Func<bool>( () => {    return get_file_p(700 * kb) == Amib.Threading.WorkItemPriority.Level11;  }  ),
+                new Func<bool>( () => {    return get_file_p(1000 * kb) == Amib.Threading.WorkItemPriority.Level10;  }  ),
+                new Func<bool>( () => {    return get_file_p(1300 * kb) == Amib.Threading.WorkItemPriority.Level9;  }  ),
+                new Func<bool>( () => {    return get_file_p(1600 * kb) == Amib.Threading.WorkItemPriority.Level8;  }  ),
+                new Func<bool>( () => {    return get_file_p(1900 * kb) == Amib.Threading.WorkItemPriority.Level7;  }  ),
+                new Func<bool>( () => {    return get_file_p(2150 * kb) == Amib.Threading.WorkItemPriority.Level6;  }  ),
+                new Func<bool>( () => {    return get_file_p(2450 * kb) == Amib.Threading.WorkItemPriority.Level5;  }  ),
+                new Func<bool>( () => {    return get_file_p(3000 * kb) == Amib.Threading.WorkItemPriority.Level4;  }  ),
+                new Func<bool>( () => {    return get_file_p(3500 * kb) == Amib.Threading.WorkItemPriority.Level3;  }  ),
+                new Func<bool>( () => {    return get_file_p(5000 * kb) == Amib.Threading.WorkItemPriority.Level2;  }  ),
+                new Func<bool>( () => {    return get_file_p(8000 * kb) == Amib.Threading.WorkItemPriority.Level1;  }  )
+            };
+
+            for(int i =0; i < tests.Length; i++)
+            {
+                if (!tests[i]()) 
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+        private static Amib.Threading.WorkItemPriority get_file_p(int i)
+        {
+            return get_file_priority(new PostFile() { size = i });
+        }
+        */
+
         private static Amib.Threading.WorkItemPriority get_file_priority(PostFile pf)
         {
+            /*
+             * max file size is 8388608 bytes.
+             * new priority mapping:
+             * 0 - 50k: level 14 [x]
+             * 50k - 300k: level 13 [x]
+             * 300k - 600k: level 12 [x]
+             * 600k - 900k: level 11 [x]
+             * 900k - 1200k: level 10 [x]
+             * 1.2m - 1.5m: level 9 [x]
+             * 1.5m - 1.8m: level 8 [x]
+             * 1.8m - 2.0m: level 7 [x]
+             * 2.0m - 2.3m: level 6 [x]
+             * 2.3m - 2.6m: level 5 [x]
+             * 2.6m - 3.0m: level 4 [x]
+             * 3m - 4m: level 3 [x]
+             * 4m - 6m: level 2 [x]
+             * >6m: level 1 [x]
+             */
+
+            const int kb = 1024;
+            const int mb = 1048576;
+
+            if (pf.size <= 50 * kb)
+            {
+                return Amib.Threading.WorkItemPriority.Level14;
+            }
+            else if (pf.size > 50 * kb && pf.size <= 300 * kb)
+            {
+                return Amib.Threading.WorkItemPriority.Level13;
+            }
+            else if (pf.size > 300 * kb && pf.size <= 600 * kb)
+            {
+                return Amib.Threading.WorkItemPriority.Level12;
+            }
+            else if (pf.size > 600 * kb && pf.size <= 900 * kb)
+            {
+                return Amib.Threading.WorkItemPriority.Level11;
+            }
+            else if (pf.size > 900 * kb && pf.size <= 1200 * kb)
+            {
+                return Amib.Threading.WorkItemPriority.Level10;
+            }
+            else if (pf.size > 1200 * kb && pf.size <= 1500 * kb)
+            {
+                return Amib.Threading.WorkItemPriority.Level9;
+            }
+            else if (pf.size > 1500 * kb && pf.size <= 1800 * kb)
+            {
+                return Amib.Threading.WorkItemPriority.Level8;
+            }
+            else if (pf.size > 1800 * kb && pf.size <= 2 * mb)
+            {
+                return Amib.Threading.WorkItemPriority.Level7;
+            }
+            else if (pf.size > 2 * mb && pf.size <= 2300 * kb)
+            {
+                return Amib.Threading.WorkItemPriority.Level6;
+            }
+            else if (pf.size > 2300 * kb && pf.size <= 2600 * kb)
+            {
+                return Amib.Threading.WorkItemPriority.Level5;
+            }
+            else if (pf.size > 2600 * kb && pf.size <= 3 * mb)
+            {
+                return Amib.Threading.WorkItemPriority.Level4;
+            }
+            else if (pf.size > 3 * mb && pf.size <= 4 * mb)
+            {
+                return Amib.Threading.WorkItemPriority.Level3;
+            }
+            else if (pf.size > 4 * mb && pf.size <= 6 * mb)
+            {
+                return Amib.Threading.WorkItemPriority.Level2;
+            }
+            else if (pf.size > 6 * mb)
+            {
+                return Amib.Threading.WorkItemPriority.Level1;
+            }
+
+            //this should never occure
+            return Amib.Threading.WorkItemPriority.Level1;
+
             //smaller than 50KB, Highest Priority
             //between 50KB and 400KB, High pr
             //between 400KB and 1MB, normal pr
             //larger than 1MB, low
             //larger than 3mb, lowest
-            int kb = 1024;
-            int mb = 1048576;
 
-            if (pf.size < 50 * kb)
-            {
-                return Amib.Threading.WorkItemPriority.Highest;
-            }
-            else if (pf.size > 50 * kb && pf.size < 400 * kb)
-            {
-                return Amib.Threading.WorkItemPriority.AboveNormal;
-            }
-            else if (pf.size >= 400 * kb && pf.size <= 1 * mb)
-            {
-                return Amib.Threading.WorkItemPriority.Normal;
-            }
-            else if (pf.size > 1 * mb && pf.size < 3 * mb)
-            {
-                return Amib.Threading.WorkItemPriority.BelowNormal;
-            }
-            else if (pf.size >= 3 * mb)
-            {
-                return Amib.Threading.WorkItemPriority.Lowest;
-            }
-            else
-            {
-                return Amib.Threading.WorkItemPriority.Normal;
-            }
+            //if (pf.size < 50 * kb)
+            //{
+            //    return Amib.Threading.WorkItemPriority.Highest;
+            //}
+            //else if (pf.size > 50 * kb && pf.size < 400 * kb)
+            //{
+            //    return Amib.Threading.WorkItemPriority.AboveNormal;
+            //}
+            //else if (pf.size >= 400 * kb && pf.size <= 1 * mb)
+            //{
+            //    return Amib.Threading.WorkItemPriority.Normal;
+            //}
+            //else if (pf.size > 1 * mb && pf.size < 3 * mb)
+            //{
+            //    return Amib.Threading.WorkItemPriority.BelowNormal;
+            //}
+            //else if (pf.size >= 3 * mb)
+            //{
+            //    return Amib.Threading.WorkItemPriority.Lowest;
+            //}
+            //else
+            //{
+            //    return Amib.Threading.WorkItemPriority.Normal;
+            //}
         }
 
         const string user_agent = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:26.0) Gecko/20100101 Firefox/26.0";
@@ -966,7 +1145,7 @@ namespace ChanArchiver
                     if (File.Exists(temp_file_path))
                     {
                         //don't check hashes for thumbnails
-                        if (f.Type == FileQueueStateInfo.FileType.Thumbnail || verify_file_checksums(temp_file_path, f.Hash))
+                        if (f.Type == FileQueueStateInfo.FileType.Thumbnail || verify_file_checksums(temp_file_path, f.Hash, f.PostFile.size))
                         {
                             File.Move(temp_file_path, save_path);
 
@@ -991,7 +1170,7 @@ namespace ChanArchiver
                             f.Log(new LogEntry()
                             {
                                 Level = LogEntry.LogLevel.Warning,
-                                Message = string.Format("Downloaded file was corrupted, retrying", f.Url),
+                                Message = "Downloaded file was corrupted, retrying",
                                 Sender = "FileDumper",
                                 Title = "-"
                             });
@@ -1108,9 +1287,11 @@ namespace ChanArchiver
 
         #region Miscellaneous Functions
 
-        private static bool verify_file_checksums(string path, string md5_hash)
+        private static bool verify_file_checksums(string path, string md5_hash, int expected_size)
         {
             string computed_hash = "";
+
+            int actual_size = 0;
 
             using (System.Security.Cryptography.MD5CryptoServiceProvider md = new System.Security.Cryptography.MD5CryptoServiceProvider())
             {
@@ -1119,6 +1300,7 @@ namespace ChanArchiver
                 {
                     using (FileStream fs = new FileStream(path, FileMode.Open))
                     {
+                        actual_size = Convert.ToInt32(fs.Length);
                         byte[] hash = md.ComputeHash(fs);
 
                         foreach (byte b in hash)
@@ -1138,7 +1320,11 @@ namespace ChanArchiver
                 }
             }
 
-            return md5_hash.ToLower() == computed_hash;
+            // sometimes, 4chan supply an incorrect MD5 hash.
+            // A - If the file is OK (thumb match the full image):
+            // compare the full sized file to the thumbnail OR compare downloaded file size to the expected one
+            // B- If it was an image swap, neither the image hash nor the file size will match (tiny chance of size match)
+            return md5_hash.ToLower() == computed_hash || actual_size == expected_size;
         }
 
         public static FileQueueStateInfo get_file_state(string hash)

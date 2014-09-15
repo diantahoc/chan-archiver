@@ -39,7 +39,7 @@ namespace AniWrap
         /// 
         public CatalogItem[][] GetCatalog(string board)
         {
-            APIResponse response = LoadAPI("http://a.4cdn.org/%/catalog.json".Replace("%", board));
+            APIResponse response = LoadAPI(string.Format("{0}://a.4cdn.org/{1}/catalog.json", Common.HttpPrefix, board));
 
             switch (response.Error)
             {
@@ -84,7 +84,7 @@ namespace AniWrap
 
         public ThreadContainer GetThreadData(string board, int id)
         {
-            APIResponse response = LoadAPI(string.Format("http://a.4cdn.org/{0}/thread/{1}.json", board, id));
+            APIResponse response = LoadAPI(string.Format("{0}://a.4cdn.org/{1}/thread/{2}.json", Common.HttpPrefix, board, id));
 
             switch (response.Error)
             {
@@ -493,7 +493,7 @@ namespace AniWrap
 
         public Dictionary<int, DateTime> GetBoardThreadsID(string board)
         {
-            APIResponse response = LoadAPI("http://a.4cdn.org/#/threads.json".Replace("#", board));
+            APIResponse response = LoadAPI(string.Format("{0}://a.4cdn.org/{1}/threads.json", Common.HttpPrefix, board));
 
             switch (response.Error)
             {
@@ -534,11 +534,18 @@ namespace AniWrap
             get { return Path.Combine(this._cache_dir, "ltbwl"); }
         }
 
-        public KeyValuePair<string, string>[] GetAvailableBoards()
+        public struct BoardInfo
+        {
+            public string Title { get; set; }
+            public int BumpLimit { get; set; }
+            public int ImageLimit { get; set; }
+        }
+
+        public Dictionary<string, BoardInfo> GetAvailableBoards()
         {
             string data = ChanArchiver.Properties.Resources.cached_boards;
 
-            string cached_catalog_data = Path.Combine(this._cache_dir, "f4b3dd04a377f1118a219154caa1e8e0_data");
+            string cached_catalog_data = Path.Combine(this._cache_dir, "02d644062150340003abb3f0f427b906_data");
 
             if (File.Exists(cached_catalog_data)) { data = File.ReadAllText(cached_catalog_data); }
 
@@ -548,7 +555,7 @@ namespace AniWrap
 
             if ((DateTime.Now - ll).Days > 6)
             {
-                APIResponse api_r = LoadAPI("http://a.4cdn.org/boards.json");
+                APIResponse api_r = LoadAPI(string.Format("{0}://a.4cdn.org/boards.json", Common.HttpPrefix));
 
                 if (api_r.Error == APIResponse.ErrorType.NoError)
                 {
@@ -562,7 +569,7 @@ namespace AniWrap
 
             JArray boards = (JArray)json["boards"];
 
-            List<KeyValuePair<string, string>> il = new List<KeyValuePair<string, string>>();
+            var dic = new Dictionary<string, BoardInfo>();
 
             for (int i = 0; i < boards.Count; i++)
             {
@@ -570,11 +577,18 @@ namespace AniWrap
 
                 string letter = Convert.ToString(board["board"]);
                 string desc = Convert.ToString(board["title"]);
+                int bl = Convert.ToInt32(board["bump_limit"]);
+                int iml = Convert.ToInt32(board["image_limit"]);
 
-                il.Add(new KeyValuePair<string, string>(letter, desc));
+                dic.Add(letter, new BoardInfo()
+                {
+                    Title = desc,
+                    BumpLimit = bl,
+                    ImageLimit = iml
+                });
             }
 
-            return il.ToArray();
+            return dic;
         }
 
         #endregion
@@ -687,30 +701,30 @@ namespace AniWrap
             return result;
         }
 
-        private void FlushAPI(string url) 
+        private void FlushAPI(string url)
         {
             string hash = Common.MD5(url);
 
-            delete_file( Path.Combine(_cache_dir, hash)); 
+            delete_file(Path.Combine(_cache_dir, hash));
             delete_file(Path.Combine(_cache_dir, hash + "_data"));
         }
 
-        private static void delete_file(string s)
+        private void delete_file(string s)
         {
             if (File.Exists(s)) { File.Delete(s); }
         }
 
-        private static DateTime parse_datetime(string s)
+        private DateTime parse_datetime(string s)
         {
             return XmlConvert.ToDateTime(s, XmlDateTimeSerializationMode.Local);
         }
 
-        private static string datetime_tostring(DateTime s)
+        private string datetime_tostring(DateTime s)
         {
             return XmlConvert.ToString(s, XmlDateTimeSerializationMode.Local);
         }
 
-        private static void check_dir(string path)
+        private void check_dir(string path)
         {
             if (!Directory.Exists(path)) { Directory.CreateDirectory(path); }
         }

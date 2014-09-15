@@ -18,7 +18,7 @@ namespace Amib.Threading.Internal
 		/// <summary>
 		/// The number of queues, there is one for each type of priority
 		/// </summary>
-		private const int _queuesCount = WorkItemPriority.Highest-WorkItemPriority.Lowest+1;
+		private const int _queuesCount = WorkItemPriority.Level14-WorkItemPriority.Level1+1;
 
 		/// <summary>
 		/// Work items queues. There is one for each type of priority

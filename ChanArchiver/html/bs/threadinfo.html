@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
@@ -9,14 +9,13 @@
     <meta name="author" content="" />
     <link rel="shortcut icon" href="/res/favicon.ico" />
 
-    <title>[ChanArchiver] - File Queue</title>
+    <title>[ChanArchiver] - Thread Info</title>
 
     <!-- Bootstrap core CSS -->
     <link href="/res/bootstrap.css" rel="stylesheet" />
 
     <!-- Custom styles for this template -->
     <link href="/res/dashboard.css" rel="stylesheet" />
-
 </head>
 
 <body>
@@ -54,15 +53,16 @@
                         <a href="/">Overview</a>
                     </li>
 
-                    <li class="active">
+                    <li>
                         <a href="/fq">File Queue</a>
                     </li>
                 </ul>
 
                 <ul class="nav nav-sidebar">
-                    <li>
+                    <li class="active">
                         <a href="/wjobs">Watch Jobs</a>
                     </li>
+
                     <li>
                         <a href="/monboards">Monitored Boards</a>
                     </li>
@@ -70,6 +70,7 @@
                     <li>
                         <a href="/filters">Thread Filters</a>
                     </li>
+
                 </ul>
 
 
@@ -88,63 +89,30 @@
 
             <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
 
-                <h1 class="page-header">File Queue</h1>
+                <h1 class="page-header">Thread Info</h1>
 
-                <div class="panel panel-default">
-                    <div class="panel-heading">Actions</div>
-                    <div class="panel-body">
-                        <a href="/action/restartfailedfiles" class="btn btn-default">Restart failed files</a>
-                        <a href="/action/removecompletefiles" class="btn btn-default">Remove complete files</a>
-                        <a href="/action/removefailedfiles" class="btn btn-default">Remove failed files</a>
+                <div class="row">
 
-                        <br />
-                        <label for="countff">Max # FullFile</label>
+                    {properties}
 
-                        <div class="input-group">
-
-                            <form action="/set/maxfilequeue/">
-
-                                <input id="countff" class="form-control" type="text" name="count" placeholder="{mff}" autocomplete="off" />
-
-                                <span class="input-group-btn">
-                                    <button class="btn btn-default" type="submit">Set</button>
-                                </span>
-
-                            </form>
-
-                        </div>
-
-                    </div>
                 </div>
 
-                <div class="bs-callout bs-callout-info">
-                    <h4>Queue stats</h4>
-                    {qstats}
-                </div>
+                <hr />
 
+                <h1 class="page-header">Logs</h1>
                 <div class="table-responsive">
-                    <table id="filequeue" class="table sortable table-striped">
+                    <table class="table table-striped">
                         <thead>
-
                             <tr>
-                                <th>Status</th>
-                                <th># of retries</th>
-                                <th>Type</th>
-                                <th>MD5</th>
-                                <th>Size</th>
-                                <th>Board</th>
-                                <th>Thread</th>
-                                <th>Post</th>
-                                <th>Ext</th>
-                                <th>%</th>
-                                <th>Info</th>
-                                <th>WP</th>
+                                <th>Level</th>
+                                <th>Time</th>
+                                <th>Title</th>
+                                <th>Sender</th>
+                                <th>Message</th>
                             </tr>
-
                         </thead>
                         <tbody>
-                            {Files}
-
+                            {Logs}
                         </tbody>
                     </table>
                 </div>
@@ -160,32 +128,6 @@
     <script src="/res/jquery.js"></script>
     <script src="/res/bootstrap.js"></script>
     <script src="/res/docs.js"></script>
-    <script src="/res/sorttable.js"></script>
-<!--    <script>
-        function update_cols() {
-            var cols = document.getElementById("filequeue").children[1].children;
-            var update = function (item) {
-                var id = item.getAttribute("id");
-                $.get("/fq/json/",
-                {
-                    hash: id
-                },
-                function (data) {
-                    item.children[0].innerHTML = data.Status;
-                    item.children[1].textContent = data.RetryCount;
-                    item.children[5].textContent = data.Percent;
-                }, "json");
-            };
-            for (i = 0; i < cols.length; i++) {
-                var item = cols[i];
-                if (item.children[5].textContent != "100 %") {
-                    continue;
-                }
-                else {
-                    update(item);
-                }
-            }
-        }
-    </script>-->
+
 </body>
 </html>

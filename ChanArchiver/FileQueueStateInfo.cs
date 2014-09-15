@@ -30,6 +30,10 @@ namespace ChanArchiver
 
         public string Url { get; set; }
 
+        public Amib.Threading.WorkItemPriority Priority { get; set; }
+
+        public Amib.Threading.IWorkItemResult ThreadBG { get; set; }
+
         public double Percent()
         {
             if (this.Length > 0.0)

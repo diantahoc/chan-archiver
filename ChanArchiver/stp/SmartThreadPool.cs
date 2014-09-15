@@ -160,7 +160,7 @@ namespace Amib.Threading
 		/// <summary>
         /// The default work item priority (WorkItemPriority.Normal)
 		/// </summary>
-		public const WorkItemPriority DefaultWorkItemPriority = WorkItemPriority.Normal;
+		public const WorkItemPriority DefaultWorkItemPriority = WorkItemPriority.Level5;
 
 		/// <summary>
 		/// The default is to work on work items as soon as they arrive

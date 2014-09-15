@@ -391,6 +391,7 @@ namespace ChanArchiver
 
                     if (mon_type == "part") { m = BoardWatcher.BoardMode.Monitor; }
                     if (mon_type == "full") { m = BoardWatcher.BoardMode.FullBoard; }
+                    if (mon_type == "harvest") { m = BoardWatcher.BoardMode.Harvester; }
 
                     Program.archive_board(board, m);
 
@@ -727,6 +728,25 @@ namespace ChanArchiver
                 return true;
             }
 
+            if (command.StartsWith("/action/forcestopfile_thread/"))
+            {
+                string workid = command.Split('/').Last();
+
+                FileQueueStateInfo f = Program.get_file_state(workid);
+
+                if (f != null)
+                {
+                    f.ThreadBG.Cancel(true);
+                    response.Redirect("/fileinfo/" + workid);
+                }
+                else
+                {
+                    response.Redirect("/fq");
+                }
+
+                return true;
+            }
+
             if (command.StartsWith("/action/unbanfile"))
             {
                 string hash = request.QueryString["hash"].Value;
@@ -744,6 +764,14 @@ namespace ChanArchiver
             {
                 Settings.ThumbnailOnly = false;
                 response.Redirect("/");
+                return true;
+            }
+
+            if (command == "/ua") 
+            {
+                string ua = request.Headers["User-Agent"].ToLower();
+                write_text(string.Format("Your user agent: {0} <br/> Device support webm {1}", ua, 
+                    ChanArchiver.HttpServerHandlers.FileHandler.device_not_support_webm(ua)), response);
                 return true;
             }
 
@@ -774,9 +802,9 @@ namespace ChanArchiver
 
             sb.AppendFormat("<select name=\"{0}\" class=\"form-control\">", name);
 
-            foreach (KeyValuePair<string, string> bb in Program.ValidBoards)
+            foreach (var bb in Program.ValidBoards)
             {
-                sb.AppendFormat("<option value='{0}'>{0} - {1}</option>", bb.Key, bb.Value);
+                sb.AppendFormat("<option value='{0}'>{0} - {1}</option>", bb.Key, bb.Value.Title);
             }
 
             sb.Append("</select>");

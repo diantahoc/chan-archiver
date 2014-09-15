@@ -47,17 +47,31 @@ namespace Amib.Threading
 
     /// <summary>
     /// Defines the availeable priorities of a work item.
-    /// The higher the priority a work item has, the sooner
+    /// The higher the priority (level) a work item has, the sooner
     /// it will be executed.
     /// </summary>
-	public enum WorkItemPriority
-	{
-		Lowest,
-		BelowNormal,
-		Normal,
-		AboveNormal,
-		Highest,
-	}
+    public enum WorkItemPriority
+    {
+        Level1,
+        Level2,
+        Level3,
+        Level4,
+        Level5,
+        Level6,
+        Level7,
+        Level8,
+        Level9,
+        Level10,
+        Level11,
+        Level12,
+        Level13,
+        Level14
+        //Lowest,
+        //BelowNormal,
+        //Normal,
+        //AboveNormal,
+        //Highest,
+    }
 
 	#endregion
 

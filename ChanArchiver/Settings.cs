@@ -41,6 +41,8 @@ namespace ChanArchiver
 
         public static bool AutoRemoveCompleteFiles { get; set; }
 
+        public static bool UseHttps { get; set; }
+
         public static void Save()
         {
             Dictionary<string, object> data = new Dictionary<string, object>(11);
@@ -68,8 +70,10 @@ namespace ChanArchiver
             data.Add("PrioritizeBumpLimit", PrioritizeBumpLimit);
 
             data.Add("ConvertPNGImageWithNoTransparencyToJPG", ConvertPNGImageWithNoTransparencyToJPG);
-           
+
             data.Add("AutoRemoveCompleteFiles", AutoRemoveCompleteFiles);
+
+            data.Add("UseHttps", UseHttps);
 
             string _data = Newtonsoft.Json.JsonConvert.SerializeObject(data, Newtonsoft.Json.Formatting.Indented);
             System.IO.File.WriteAllText(SettingsSaveFile, _data);
@@ -144,6 +148,11 @@ namespace ChanArchiver
                     AutoRemoveCompleteFiles = Convert.ToBoolean(t["AutoRemoveCompleteFiles"]);
                 }
 
+                if (t.ContainsKey("UseHttps"))
+                {
+                    UseHttps = Convert.ToBoolean(t["UseHttps"]);
+                }
+
                 #endregion
             }
             else
@@ -152,7 +161,7 @@ namespace ChanArchiver
                 AutoStartManuallyAddedThreads = true; ThumbnailOnly = false; EnableFileStats = false; ConvertGifsToWebm = false; ConvertWebmToMp4 = true;
                 Convert_Webmgif_To_Target = true; Convert_Webmgif_Target = X_Target.GIF; Convert_Webmgif_only_devices = false;
                 ListThumbsInQueue = false; FilePrioritizeMode = FilePrioritizeModeEnum.SmallerFirst; PrioritizeBumpLimit = false;
-                ConvertPNGImageWithNoTransparencyToJPG = false; AutoRemoveCompleteFiles = true;
+                ConvertPNGImageWithNoTransparencyToJPG = false; AutoRemoveCompleteFiles = true; UseHttps = true;
                 Save();
             }
         }
