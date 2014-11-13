@@ -9,13 +9,13 @@ namespace AniWrap
     public static class Common
     {
         /// <summary>
-        /// {0}: board, {1}: tim, {2}: ext
+        /// {0}: http_prefix, {1}: board, {2}: tim, {3}: ext
         /// </summary>
-        public static readonly string imageLink = HttpPrefix + "://i.4cdn.org/{0}/{1}.{2}";
+        public static readonly string imageLink = "{0}://i.4cdn.org/{1}/{2}.{3}";
         /// <summary>
-        /// {0}:board, {1}: tim
+        /// {0}: http_prefix, {1}:board, {2}: tim
         /// </summary>
-        public static readonly string thumbLink = HttpPrefix + "://t.4cdn.org/{0}/{1}s.jpg";
+        public static readonly string thumbLink = "{0}://t.4cdn.org/{1}/{2}s.jpg";
 
         public static string HttpPrefix
         {

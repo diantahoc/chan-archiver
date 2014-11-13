@@ -202,6 +202,11 @@ namespace AniWrap
                 t.IsClosed = (Convert.ToInt32(data["closed"]) == 1);
             }
 
+            if (data["archived"] != null)
+            {
+                t.IsArchived = (Convert.ToInt32(data["archived"]) == 1);
+            }
+
             if (data["country"] != null)
             {
                 t.country_flag = data["country"].ToString();
@@ -230,7 +235,6 @@ namespace AniWrap
 
             t.text_replies = Convert.ToInt32(data["replies"]);
             t.Time = Common.ParseUTC_Stamp(Convert.ToInt32(data["time"]));
-
 
             return t;
         }

@@ -17,5 +17,6 @@ namespace AniWrap.DataTypes
         public int TotalReplies { get { return image_replies + text_replies; } }
         public bool IsClosed { get; set; }
         public bool IsSticky { get; set; }
+        public bool IsArchived { get; set; }
     }
 }

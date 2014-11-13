@@ -39,6 +39,8 @@ namespace ChanArchiver
         public bool AutoSage { get; private set; }
         public bool ImageLimitReached { get; private set; }
 
+        public bool IsStatic { get; private set; }
+
         public ThreadWorker(BoardWatcher board, int id)
         {
             this.ID = id;
@@ -56,6 +58,25 @@ namespace ChanArchiver
             worker.DoWork += new DoWorkEventHandler(worker_DoWork);
 
             board.FiltersUpdated += this.board_FiltersUpdated;
+        }
+
+        /// <summary>
+        /// This constructor is only used to save dead (from archive) threads
+        /// </summary>
+        /// <param name="board"></param>
+        /// <param name="tc"></param>
+        public ThreadWorker(BoardWatcher board, ThreadContainer tc, bool thumbOnly)
+        {
+            this.ID = tc.Instance.ID;
+            this.Board = board;
+            this.LastUpdated = tc.Instance.Time;
+            this.AddedAutomatically = false;
+            this.IsStatic = true;
+            this.worker = new BackgroundWorker();
+            this.ThumbOnly = thumbOnly;
+            this.ThreadTitle = tc.Title;
+
+            save_thread_container(tc);
         }
 
         private void board_FiltersUpdated()
@@ -220,7 +241,34 @@ namespace ChanArchiver
                         }
                     }
 
+                    
                     if (tc.Instance.IsSticky) { this.UpdateInterval = 5; }
+
+                    if (tc.Instance.IsArchived) 
+                    {
+                        log(new LogEntry()
+                        {
+                            Level = LogEntry.LogLevel.Info,
+                            Message = string.Format("Thread entered archived state."),
+                            Sender = "ThreadWorker",
+                            Title = string.Format("/{0}/ - {1}", this.Board.Board, this.ID)
+                        });
+
+
+                        optimize_thread_file(thread_folder);
+
+                        this.Stop();
+
+                        if (Settings.RemoveThreadsWhenTheyEnterArchivedState && !this.AddedAutomatically) 
+                        {
+                            Thread404(this);
+                        }
+                        else 
+                        {
+                            goto stop;
+                        }
+                    }
+
                     if (this.Board.Mode == BoardWatcher.BoardMode.Harvester) { this.UpdateInterval = 2; }
 
                     System.Threading.Thread.Sleep(Convert.ToInt32(this.UpdateInterval * 60 * 1000));
@@ -257,7 +305,6 @@ namespace ChanArchiver
                         });
                         System.Threading.Thread.Sleep(1000);
                     }
-
                 }
             }
 
@@ -270,7 +317,58 @@ namespace ChanArchiver
                 Sender = "ThreadWorker",
                 Title = string.Format("/{0}/ - {1}", this.Board.Board, this.ID)
             });
+        }
 
+        private void save_thread_container(ThreadContainer tc)
+        {
+            string thread_folder = Path.Combine(Program.post_files_dir, this.Board.Board, this.ID.ToString());
+
+            Directory.CreateDirectory(thread_folder);
+
+            string op = Path.Combine(thread_folder, "op.json");
+
+            if (!File.Exists(op))
+            {
+                string post_data = get_post_string(tc.Instance);
+                File.WriteAllText(op, post_data);
+            }
+
+            if (tc.Instance.File != null) { Program.dump_files(tc.Instance.File, this.ThumbOnly); }
+
+            int count = tc.Replies.Count();
+
+            int with_image = 0;
+
+            for (int i = 0; i < count; i++)
+            {
+                string item_path = Path.Combine(thread_folder, tc.Replies[i].ID.ToString() + ".json");
+
+                if (!File.Exists(item_path))
+                {
+                    string post_data = get_post_string(tc.Replies[i]);
+                    File.WriteAllText(item_path, post_data);
+                }
+
+                if (tc.Replies[i].File != null)
+                {
+                    with_image++;
+                    Program.dump_files(tc.Replies[i].File, this.ThumbOnly);
+                }
+            }
+
+            log(new LogEntry()
+            {
+                Level = LogEntry.LogLevel.Success,
+                Message = string.Format("Static thread {0} was saved successfully.", this.ID),
+                Sender = "ThreadWorker",
+                Title = string.Format("/{0}/ - {1}", this.Board.Board, this.ID)
+            });
+
+            log(new LogEntry() { Level = LogEntry.LogLevel.Info, Message = "Optimizing thread data." });
+            
+            optimize_thread_file(thread_folder);
+
+            log(new LogEntry() { Level = LogEntry.LogLevel.Success, Message = "Optimisation done." });
         }
 
         public static void optimize_thread_file(string thread_folder)
@@ -321,6 +419,8 @@ namespace ChanArchiver
 
         public void Stop()
         {
+            if (this.IsStatic) { return; }
+
             running = false;
             worker.CancelAsync();
 
@@ -422,6 +522,8 @@ namespace ChanArchiver
 
         public void Start()
         {
+            if (this.IsStatic) { return; }
+
             if (!worker.IsBusy)
             {
                 running = true;
@@ -435,6 +537,11 @@ namespace ChanArchiver
 
         public void Dispose()
         {
+            if (this.IsStatic)
+            {
+                this.worker.Dispose();
+                return;
+            }
             this.Board.FiltersUpdated -= this.board_FiltersUpdated;
             this.worker.Dispose();
         }

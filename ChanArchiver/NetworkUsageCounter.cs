@@ -24,8 +24,6 @@ namespace ChanArchiver
 
         private static Dictionary<string, double[]> data_history = new Dictionary<string, double[]>();
 
-
-
         public static double ApiConsumedThisHour { get { return get_today_array()[0]; } }
         public static double FileConsumedThisHour { get { return get_today_array()[1]; } }
         public static double ThumbConsumedThisHour { get { return get_today_array()[2]; } }

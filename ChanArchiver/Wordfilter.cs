@@ -58,7 +58,7 @@ namespace ChanArchiver
 
             for (int i = 0; i < words.Count; i++)
             {
-                a.Append(words[i]);
+                a.Append(Regex.Escape(words[i]));
                 if (i < words.Count - 1)
                 {
                     a.Append('|');

@@ -14,43 +14,46 @@ namespace ChanArchiver
         {
             string thread_dir_path = Path.Combine(Program.post_files_dir, board, id);
 
-            if (!Directory.Exists(thread_dir_path)) { return new PostFormatter[] { }; }
+            DirectoryInfo info = new DirectoryInfo(thread_dir_path);
 
+            if (!info.Exists) { return new PostFormatter[] { }; }
+
+            // optimized thread path
             string opt_path = Path.Combine(thread_dir_path, id + "-opt.json");
 
             List<PostFormatter> thread_pf = new List<PostFormatter>();
 
             if (File.Exists(opt_path))
             {
-                Dictionary<string, object> thread_data = JsonConvert.DeserializeObject<Dictionary<string, object>>(File.ReadAllText(opt_path));
-                thread_pf.Add(load_post_data_str(thread_data["op"].ToString(), true)); thread_data.Remove("op");
-                IOrderedEnumerable<string> sorted_keys = thread_data.Keys.OrderBy(x => Convert.ToInt32(x));
-                foreach (string key in sorted_keys)
+                var thread_data = JsonConvert.DeserializeObject<Dictionary<string, object>>(File.ReadAllText(opt_path));
+
+                thread_pf.Add(load_post_data_str(thread_data["op"].ToString(), true));
+                
+                // remove the op post
+                thread_data.Remove("op");
+                
+                // sort the replies by their id
+                foreach (string key in thread_data.Keys.OrderBy(x => Convert.ToInt32(x)))
                 {
                     thread_pf.Add(load_post_data_str(thread_data[key].ToString(), false));
                 }
             }
             else
             {
-                DirectoryInfo info = new DirectoryInfo(thread_dir_path);
-                if (info.Exists)
+                string op = Path.Combine(thread_dir_path, "op.json");
+                if (File.Exists(op))
                 {
-                    FileInfo[] files = info.GetFiles("*.json", SearchOption.TopDirectoryOnly);
+                    thread_pf.Add(load_post_data_str(File.ReadAllText(op), true));
+                }
 
-                    string op = Path.Combine(thread_dir_path, "op.json");
-                    if (File.Exists(op))
+                foreach (var file in info.GetFiles("*.json", SearchOption.TopDirectoryOnly).OrderBy(x => x.Name))
+                {
+                    if (file.Name != "op.json") 
                     {
-                        thread_pf.Add(load_post_data_str(File.ReadAllText(op), true));
-                    }
-
-                    IOrderedEnumerable<FileInfo> sorted = files.OrderBy(x => x.Name);
-                    int cou = sorted.Count();
-                    for (int i = 0; i < cou; i++)
-                    {
-                        if (files[i].Name == "op.json") { continue; }
-                        thread_pf.Add(load_post_data_str(File.ReadAllText(files[i].FullName), false));
+                        thread_pf.Add(load_post_data_str(File.ReadAllText(file.FullName), false));
                     }
                 }
+
             }
             return thread_pf.ToArray();
         }
@@ -69,13 +72,13 @@ namespace ChanArchiver
         {
             string board_folder = Path.Combine(Program.post_files_dir, board);
 
-            if (Directory.Exists(board_folder))
-            {
-                DirectoryInfo info = new DirectoryInfo(board_folder);
+            DirectoryInfo info = new DirectoryInfo(board_folder);
 
+            if (info.Exists)
+            {
                 DirectoryInfo[] folders = info.GetDirectories();
 
-                List<string> threads_text = new List<string>();
+                List<PostFormatter> threads_pf = new List<PostFormatter>(folders.Length);
 
                 for (int i = 0; i < folders.Count(); i++)
                 {
@@ -84,9 +87,8 @@ namespace ChanArchiver
 
                     if (File.Exists(op_file))
                     {
-                        threads_text.Add(File.ReadAllText(op_file));
+                        threads_pf.Add(load_post_data_str(File.ReadAllText(op_file), true));
                     }
-
                     else if (File.Exists(optimized))
                     {
                         try
@@ -94,32 +96,13 @@ namespace ChanArchiver
                             Dictionary<string, object> t = JsonConvert.DeserializeObject<Dictionary<string, object>>(File.ReadAllText(optimized));
                             if (t.ContainsKey("op"))
                             {
-                                threads_text.Add(t["op"].ToString());
+                                threads_pf.Add(load_post_data_str(t["op"].ToString(), true));
                             }
                         }
                         catch (Exception ex)
                         {
                             Console.WriteLine("Cannot decode optimized thread file {0}-{1}: {2}", board, folders[i].Name, ex.Message);
                         }
-                    }
-
-                    //else
-                    //{
-                    //    check_thread_folder_sanity(folders[i].FullName);
-                    //}
-                }
-
-                List<PostFormatter> threads_pf = new List<PostFormatter>(threads_text.Count);
-
-                for (int i = 0; i < threads_text.Count; i++)
-                {
-                    try
-                    {
-                        threads_pf.Add(load_post_data_str(threads_text[i], true));
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine("Cannot decode post data: {0} {1}", ex.Message, ex.StackTrace);
                     }
                 }
 
@@ -130,11 +113,6 @@ namespace ChanArchiver
                 return new PostFormatter[] { };
             }
         }
-
-        //private static void check_thread_folder_sanity(string folder)
-        //{
-
-        //}
 
         private static PostFormatter load_post_data_str(string data, bool isop)
         {

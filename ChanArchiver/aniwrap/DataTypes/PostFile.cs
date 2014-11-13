@@ -22,7 +22,10 @@ namespace AniWrap.DataTypes
         public GenericPost owner { get; set; }
 
 
-        public static string NoFile = "NOFILE";
+        public const string NoFile = "NOFILE";
+
+        private string _tl = null;
+        private string _ftl = null;
 
         #region Properties
 
@@ -30,8 +33,12 @@ namespace AniWrap.DataTypes
         {
             get
             {
+                if (_tl != null)
+                {
+                    return _tl;
+                }
                 if (board == "f") { return NoFile; }
-                return string.Format(Common.thumbLink, this.board, this.thumbnail_tim);
+                return string.Format(Common.thumbLink, Common.HttpPrefix, this.board, this.thumbnail_tim);
             }
         }
 
@@ -39,16 +46,27 @@ namespace AniWrap.DataTypes
         {
             get
             {
+                if (_ftl != null) 
+                {
+                    return _ftl;
+                }
                 if (board == "f")
                 {
-                    return string.Format(Common.imageLink, this.board, this.filename, this.ext);
+                    return string.Format(Common.imageLink, Common.HttpPrefix, this.board, this.filename, this.ext);
                 }
-                else 
+                else
                 {
-                    return string.Format(Common.imageLink, this.board, this.thumbnail_tim, this.ext);
+                    return string.Format(Common.imageLink, Common.HttpPrefix, this.board, this.thumbnail_tim, this.ext);
                 }
             }
         }
+
+        public void OverrideFileLinks(string thumb_link, string full_file_link) 
+        {
+            this._ftl = full_file_link;
+            this._tl = thumb_link;
+        }
+
         #endregion
     }
 }

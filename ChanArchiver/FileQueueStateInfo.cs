@@ -28,11 +28,26 @@ namespace ChanArchiver
 
         public FileType Type { get; set; }
 
-        public string Url { get; set; }
+        public string Url
+        {
+            get
+            {
+                if (this.Type == FileType.FullFile)
+                {
+                    return this.PostFile.FullImageLink;
+                }
+                else 
+                {
+                    return this.PostFile.ThumbLink;
+                }
+            }
+        }
 
         public Amib.Threading.WorkItemPriority Priority { get; set; }
 
         public Amib.Threading.IWorkItemResult ThreadBG { get; set; }
+
+        public int HashFailCount { get; set; }
 
         public double Percent()
         {

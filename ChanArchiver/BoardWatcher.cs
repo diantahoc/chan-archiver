@@ -39,9 +39,7 @@ namespace ChanArchiver
         public int BumpLimit { get { return Program.ValidBoards[this.Board].BumpLimit; } }
         
         public int ImageLimit { get { return Program.ValidBoards[this.Board].ImageLimit; } }
-
-        //List<int> rejected_threads_because_of_filters = new List<int>();
-
+    
         public BoardWatcher(string board)
         {
             if (Program.ValidBoards.ContainsKey(board))
@@ -216,6 +214,19 @@ namespace ChanArchiver
             SaveManuallyAddedThreads();
         }
 
+        public void AddStaticThread(ThreadContainer tc, bool thumbOnly) 
+        {
+            if (this.watched_threads.ContainsKey(tc.Instance.ID))
+            {
+                // do nothing
+                return;
+            }
+            else
+            {
+                this.watched_threads.Add(tc.Instance.ID, new ThreadWorker(this, tc, thumbOnly));
+            }
+        }
+
         public void LoadManuallyAddedThreads()
         {
             if (System.IO.File.Exists(this.ManuallyAddedThreadsSaveFilePath))
@@ -277,12 +288,12 @@ namespace ChanArchiver
         {
             Dictionary<int, bool> dic = new Dictionary<int, bool>();
 
-            for (int i = 0; i < watched_threads.Count(); i++)
+            for (int i = 0; i < watched_threads.Count; i++)
             {
                 try
                 {
                     ThreadWorker tw = watched_threads.ElementAt(i).Value;
-                    if (!tw.AddedAutomatically)
+                    if (!tw.AddedAutomatically && !tw.IsStatic)
                     {
                         dic.Add(tw.ID, tw.ThumbOnly);
                     }
@@ -292,7 +303,18 @@ namespace ChanArchiver
                     if (i > watched_threads.Count() - 1) { break; }
                 }
             }
-            System.IO.File.WriteAllText(this.ManuallyAddedThreadsSaveFilePath, Newtonsoft.Json.JsonConvert.SerializeObject(dic));
+
+            if (dic.Count == 0)
+            {
+                if (System.IO.File.Exists(this.ManuallyAddedThreadsSaveFilePath)) 
+                {
+                    System.IO.File.Delete(this.ManuallyAddedThreadsSaveFilePath);
+                }
+            }
+            else
+            {
+                System.IO.File.WriteAllText(this.ManuallyAddedThreadsSaveFilePath, Newtonsoft.Json.JsonConvert.SerializeObject(dic));
+            }
         }
 
         public int ActiveThreadWorkers
@@ -627,6 +649,15 @@ namespace ChanArchiver
 
         public void SaveFilters()
         {
+            if (this.my_filters.Count == 0) 
+            {
+                if (System.IO.File.Exists(this.FilterSaveFilePath)) 
+                {
+                    System.IO.File.Delete(this.FilterSaveFilePath);
+                    return;
+                }
+            }
+
             List<string[]> s = new List<string[]>();
 
             ChanArchiver.Filters.IFilter[] filters = my_filters.ToArray();

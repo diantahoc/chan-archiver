@@ -57,23 +57,13 @@ namespace ChanArchiver
             {
                 try
                 {
-                    DirectoryInfo e = new DirectoryInfo(Program.program_dir);
-
-                    foreach (DriveInfo drive in DriveInfo.GetDrives())
-                    {
-                        if (drive.RootDirectory.FullName == e.Root.FullName)
-                        {
-                            return (drive.AvailableFreeSpace / 1024 / 1024 / 1024) < 1.0;
-                        }
-                    }
-                    return false;
+                    DriveInfo drive = new DriveInfo(Path.GetPathRoot(Program.program_dir));
+                    return drive.AvailableFreeSpace < 1073741824L; // less than 1GB
                 }
                 catch (Exception)
                 {
                     return false;
                 }
-
-
             }
         }
 

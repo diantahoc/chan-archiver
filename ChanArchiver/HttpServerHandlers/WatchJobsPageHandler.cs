@@ -36,15 +36,21 @@ namespace ChanArchiver.HttpServerHandlers
 
                                 sb.AppendFormat("<td><a class=\"btn btn-default\" href='/action/removethreadworker/?board={0}&id={1}' title='Remove'><i class=\"fa fa-trash-o\"></i></a></td>", tw.Board.Board, tw.ID);
 
-                                if (tw.IsActive)
+                                if (tw.IsStatic)
                                 {
-                                    sb.AppendFormat("<td><a class=\"btn btn-warning\" href=\"/cancel/tw/{0}/{1}\">Stop</a></td>", bw.Board, tw.ID);
+                                    sb.Append("<td><a class=\"btn btn-primary\" href='#'>Static</a></td>");
                                 }
                                 else
                                 {
-                                    sb.AppendFormat("<td><a class=\"btn btn-info\" href=\"/cancel/twr/{0}/{1}\">Start</a></td>", bw.Board, tw.ID);
+                                    if (tw.IsActive)
+                                    {
+                                        sb.AppendFormat("<td><a class=\"btn btn-warning\" href=\"/cancel/tw/{0}/{1}\">Stop</a></td>", bw.Board, tw.ID);
+                                    }
+                                    else
+                                    {
+                                        sb.AppendFormat("<td><a class=\"btn btn-info\" href=\"/cancel/twr/{0}/{1}\">Start</a></td>", bw.Board, tw.ID);
+                                    }
                                 }
-
                                 sb.AppendFormat("<td>{0}</td>", string.Format("/{0}/", bw.Board));
                                 sb.AppendFormat("<td>{0}</td>", tw.ID);
 

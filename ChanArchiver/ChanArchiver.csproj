@@ -119,6 +119,7 @@
     <Compile Include="FileSystemStats.cs" />
     <Compile Include="Filters\Filters.cs" />
     <Compile Include="Filters\IFilter.cs" />
+    <Compile Include="FoolFuukaParser.cs" />
     <Compile Include="HMSFormatter.cs" />
     <Compile Include="HttpServerHandlers\BannedFilesPageHandler.cs" />
     <Compile Include="HttpServerHandlers\FileBrowserPageHandler.cs" />

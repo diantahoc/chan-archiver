@@ -18,6 +18,8 @@ namespace ChanArchiver
 
         public static bool ConvertWebmToMp4 { get; set; }
 
+        public static bool RemoveThreadsWhenTheyEnterArchivedState { get; set; }
+
         /// <summary>
         /// X can be MP4 or GIF
         /// </summary>
@@ -153,6 +155,12 @@ namespace ChanArchiver
                     UseHttps = Convert.ToBoolean(t["UseHttps"]);
                 }
 
+
+                if (t.ContainsKey("RemoveThreadsWhenTheyEnterArchivedState"))
+                {
+                    RemoveThreadsWhenTheyEnterArchivedState = Convert.ToBoolean(t["RemoveThreadsWhenTheyEnterArchivedState"]);
+                }
+
                 #endregion
             }
             else
@@ -161,7 +169,7 @@ namespace ChanArchiver
                 AutoStartManuallyAddedThreads = true; ThumbnailOnly = false; EnableFileStats = false; ConvertGifsToWebm = false; ConvertWebmToMp4 = true;
                 Convert_Webmgif_To_Target = true; Convert_Webmgif_Target = X_Target.GIF; Convert_Webmgif_only_devices = false;
                 ListThumbsInQueue = false; FilePrioritizeMode = FilePrioritizeModeEnum.SmallerFirst; PrioritizeBumpLimit = false;
-                ConvertPNGImageWithNoTransparencyToJPG = false; AutoRemoveCompleteFiles = true; UseHttps = true;
+                ConvertPNGImageWithNoTransparencyToJPG = false; AutoRemoveCompleteFiles = true; UseHttps = true; RemoveThreadsWhenTheyEnterArchivedState = true;
                 Save();
             }
         }

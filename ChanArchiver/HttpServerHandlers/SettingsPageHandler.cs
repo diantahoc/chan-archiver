@@ -49,6 +49,24 @@ namespace ChanArchiver.HttpServerHandlers
                     page.Replace("{gs2c}", "");
                 }
 
+                if (Settings.UseHttps) 
+                {
+                    page.Replace("{gs3c}", Checked);
+                }
+                else 
+                {
+                    page.Replace("{gs3c}", "");
+                }
+
+                if (Settings.RemoveThreadsWhenTheyEnterArchivedState)
+                {
+                    page.Replace("{gs4c}", Checked);
+                }
+                else
+                {
+                    page.Replace("{gs4c}", "");
+                }
+
                 //-------------------- FFMPEG Settings --------------------------
 
                 page.Replace("{ffpath}", Program.ffmpeg_path);
@@ -173,6 +191,8 @@ namespace ChanArchiver.HttpServerHandlers
                 Settings.AutoStartManuallyAddedThreads = request.QueryString["gs0"].Value == "1";
                 Settings.ThumbnailOnly = request.QueryString["gs1"].Value == "1";
                 Settings.EnableFileStats = request.QueryString["gs2"].Value == "1";
+                Settings.UseHttps = request.QueryString["gs3"].Value == "1";
+                Settings.RemoveThreadsWhenTheyEnterArchivedState = request.QueryString["gs4"].Value == "1";
 
                 if (Settings.EnableFileStats) { FileSystemStats.Init(); }
 
