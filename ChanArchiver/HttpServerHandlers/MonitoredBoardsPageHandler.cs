@@ -39,6 +39,8 @@ namespace ChanArchiver.HttpServerHandlers
 
                         sb.AppendFormat("<td>{0}</td>", bw.ActiveThreadWorkers);
 
+                        sb.AppendFormat("<td><a class=\"btn btn-default\" href=\"/stopallmat/?b={0}\">Stop all manually added threads</a></td>", bw.Board);
+
                         sb.AppendFormat("<td><a href='/boards/{0}' class='label label-danger'>*click*</a></td>", bw.Board);
 
                         sb.AppendFormat("<td> <a href='/logs/{0}/{1}' class='label label-primary'>Logs</a> </td>", "boardwatcher", bw.Board);

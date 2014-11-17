@@ -8,7 +8,7 @@ namespace ChanArchiver
 {
     public class ThreadServerModule : HttpServer.HttpModules.HttpModule
     {
-        private const double ThreadPerPage = 15.0;
+        private const int ThreadPerPage = 15;
 
         public override bool Process(HttpServer.IHttpRequest request, HttpServer.IHttpResponse response, HttpServer.Sessions.IHttpSession session)
         {
@@ -25,28 +25,38 @@ namespace ChanArchiver
                 if (parame.Length == 3)
                 {
                     //board index view mode
-                    string board = parame[2]; if (string.IsNullOrEmpty(board)) { _404(response); return true; }
+                    string board = parame[2]; if (string.IsNullOrEmpty(board))
+                    {
+                        response.Redirect("/boards");
+                        return true;
+                    }
 
-                    PostFormatter[] board_index = ThreadStore.GetIndex(board); if (board_index.Length == 0) { _404(response); return true; }
+                    int board_thread_count = ThreadStore.CountThreads(board);
 
-                    int page_count = Convert.ToInt32(Math.Round(Convert.ToDouble(board_index.Length) / ThreadPerPage, MidpointRounding.AwayFromZero));
+                    if (board_thread_count == 0)
+                    {
+                        response.Redirect("/boards");
+                        return true;
+                    }
+
+                    int rem = (board_thread_count % ThreadPerPage);
+
+                    int page_count = ((board_thread_count - rem) / ThreadPerPage) + (rem > 0 ? 1 : 0);
 
                     if (page_count <= 0) { page_count = 1; }
 
                     int page_offset = 0;
 
-                    Int32.TryParse(request.QueryString["pn"].Value, out page_offset);
+                    Int32.TryParse(request.QueryString["pn"].Value, out page_offset); page_offset = Math.Abs(page_offset);
 
-                    page_offset = Math.Abs(page_offset);
+                    int start = page_offset * (ThreadPerPage);
+
+                    PostFormatter[] board_index = ThreadStore.GetIndex(board, start, ThreadPerPage);
 
                     StringBuilder s = new StringBuilder();
 
-                    int start = Convert.ToInt32(page_offset * (ThreadPerPage - 1));
-                    int end = Convert.ToInt32(start + ThreadPerPage);
-
-                    for (int i = start; i < end && i < board_index.Length; i++)
+                    foreach (var pf in board_index)
                     {
-                        PostFormatter pf = board_index[i];
                         s.Append("<div class='row'>");
                         s.Append
                             (
@@ -58,7 +68,7 @@ namespace ChanArchiver
 
                     StringBuilder page_numbers = new StringBuilder();
 
-                    for (int i = 0; i < page_count + 3; i++)
+                    for (int i = 0; i < page_count; i++)
                     {
                         if (i == page_offset)
                         {
@@ -72,8 +82,8 @@ namespace ChanArchiver
 
                     byte[] data = Encoding.UTF8.GetBytes(
                         Properties.Resources.board_index_page
-                        .Replace("{po}", Convert.ToString(page_offset - 1))
-                        .Replace("{no}", Convert.ToString(page_offset + 1))
+                        .Replace("{po}", Convert.ToString(page_offset == 0 ? 0 : page_offset - 1))
+                        .Replace("{no}", Convert.ToString(page_offset == page_count - 1 ? page_count : page_offset + 1))
                         .Replace("{pagen}", page_numbers.ToString())
                         .Replace("{Items}", s.ToString()));
 
@@ -211,41 +221,36 @@ namespace ChanArchiver
 
             if (command == "/boards" || command == "/boards/")
             {
-                response.Encoding = System.Text.Encoding.UTF8;
-
                 if (Directory.Exists(Program.post_files_dir))
                 {
-                    response.ContentType = "text/html; charset=utf-8";
-                    response.Status = System.Net.HttpStatusCode.OK;
-
-                    DirectoryInfo info = new DirectoryInfo(Program.post_files_dir);
-
-                    DirectoryInfo[] folders = info.GetDirectories();
-
                     StringBuilder s = new StringBuilder();
 
-                    for (int i = 0; i < folders.Length; i++)
+                    foreach (string folder_path in Directory.EnumerateDirectories(Program.post_files_dir))
                     {
+                        string folder_name = Path.GetFileName(folder_path);
+
                         s.Append("<div class=\"col-6 col-sm-6 col-lg-4\">");
 
-                        s.AppendFormat("<h2>/{0}/</h2>", folders[i].Name);
-                        s.AppendFormat("<p>Thread Count: {0}</p>", folders[i].GetDirectories().Count());
+                        s.AppendFormat("<h2>/{0}/</h2>", folder_name);
+                        s.AppendFormat("<p>Thread Count: {0}</p>", ThreadStore.CountThreads(folder_name));
 
-                        s.AppendFormat("<p><a class=\"btn btn-default\" href=\"/boards/{0}\" role=\"button\">browse »</a></p>", folders[i].Name);
+                        s.AppendFormat("<p><a class=\"btn btn-default\" href=\"/boards/{0}\" role=\"button\">browse »</a></p>", folder_name);
 
                         s.Append("</div>");
                     }
 
-                    byte[] data = System.Text.Encoding.UTF8.GetBytes(Properties.Resources.archivedboard_page.Replace("{Items}", s.ToString()));
+                    byte[] data = Encoding.UTF8.GetBytes(Properties.Resources.archivedboard_page.Replace("{Items}", s.ToString()));
 
+                    response.Encoding = System.Text.Encoding.UTF8;
+                    response.ContentType = "text/html; charset=utf-8";
+                    response.Status = System.Net.HttpStatusCode.OK;
                     response.ContentLength = data.Length;
                     response.SendHeaders();
                     response.SendBody(data);
-
                 }
                 else
                 {
-                    _404(response);
+                    response.Redirect("/");
                 }
 
                 return true;
@@ -767,11 +772,42 @@ namespace ChanArchiver
                 return true;
             }
 
-            if (command == "/ua") 
+            if (command == "/ua")
             {
                 string ua = request.Headers["User-Agent"].ToLower();
-                write_text(string.Format("Your user agent: {0} <br/> Device support webm {1}", ua, 
+                write_text(string.Format("Your user agent: {0} <br/> Device support webm {1}", ua,
                     ChanArchiver.HttpServerHandlers.FileHandler.device_not_support_webm(ua)), response);
+                return true;
+            }
+
+            if (command.StartsWith("/stopallmat/"))
+            {
+                string board = request.QueryString["b"].Value;
+                if (!string.IsNullOrWhiteSpace(board))
+                {
+                    if (Program.active_dumpers.ContainsKey(board))
+                    {
+                        var bw = Program.active_dumpers[board];
+
+                        for (int i = 0; i < bw.watched_threads.Count; i++)
+                        {
+                            try
+                            {
+                                ThreadWorker tw = bw.watched_threads.ElementAt(i).Value;
+                                if (!tw.AddedAutomatically)
+                                {
+                                    tw.Stop();
+                                }
+                            }
+                            catch (System.IndexOutOfRangeException)
+                            {
+                                break;
+                            }
+                            catch { }
+                        }
+                    }
+                }
+                response.Redirect("/monboards");
                 return true;
             }
 

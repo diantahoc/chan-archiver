@@ -28,10 +28,10 @@ namespace ChanArchiver
                 var thread_data = JsonConvert.DeserializeObject<Dictionary<string, object>>(File.ReadAllText(opt_path));
 
                 thread_pf.Add(load_post_data_str(thread_data["op"].ToString(), true));
-                
+
                 // remove the op post
                 thread_data.Remove("op");
-                
+
                 // sort the replies by their id
                 foreach (string key in thread_data.Keys.OrderBy(x => Convert.ToInt32(x)))
                 {
@@ -48,7 +48,7 @@ namespace ChanArchiver
 
                 foreach (var file in info.GetFiles("*.json", SearchOption.TopDirectoryOnly).OrderBy(x => x.Name))
                 {
-                    if (file.Name != "op.json") 
+                    if (file.Name != "op.json")
                     {
                         thread_pf.Add(load_post_data_str(File.ReadAllText(file.FullName), false));
                     }
@@ -68,32 +68,68 @@ namespace ChanArchiver
             }
         }
 
-        public static PostFormatter[] GetIndex(string board)
+        public static PostFormatter[] GetIndex(string board, int start = -1, int count = -1)
         {
             string board_folder = Path.Combine(Program.post_files_dir, board);
 
-            DirectoryInfo info = new DirectoryInfo(board_folder);
-
-            if (info.Exists)
+            if (Directory.Exists(board_folder))
             {
-                DirectoryInfo[] folders = info.GetDirectories();
+                IEnumerable<string> folders = null;
 
-                List<PostFormatter> threads_pf = new List<PostFormatter>(folders.Length);
-
-                for (int i = 0; i < folders.Count(); i++)
+                if (start == -1)
                 {
-                    string op_file = Path.Combine(folders[i].FullName, "op.json");
-                    string optimized = Path.Combine(folders[i].FullName, folders[i].Name + "-opt.json");
+                    folders = Directory.EnumerateDirectories(board_folder).OrderByDescending(x => Path.GetFileName(x));
+                }
+                else
+                {
+                    var folders_names_ordered = Directory.EnumerateDirectories(board_folder).OrderByDescending(x => Path.GetFileName(x));
+
+                    if (count == -1)
+                    {
+                        // skip n elements till the end
+                        folders = folders_names_ordered.Skip(start);
+                    }
+                    else
+                    {
+                        // skip n elements till we have count items
+                        List<string> list = new List<string>();
+                        int index = 0;
+                        foreach (string path in folders_names_ordered)
+                        {
+                            if (list.Count == count)
+                            {
+                                break;
+                            }
+                            if (index >= start)
+                            {
+                                list.Add(path);
+                            }
+                            index++;
+                        }
+                        folders = list;
+                    }
+                }
+
+                List<PostFormatter> threads_pf = new List<PostFormatter>(folders.Count());
+
+                foreach (string thread_folder in folders)
+                {
+                    string op_file = Path.Combine(thread_folder, "op.json");
 
                     if (File.Exists(op_file))
                     {
                         threads_pf.Add(load_post_data_str(File.ReadAllText(op_file), true));
+                        continue;
                     }
-                    else if (File.Exists(optimized))
+
+                    string dir_name = Path.GetFileName(thread_folder);
+                    string optimized = Path.Combine(thread_folder, dir_name + "-opt.json");
+
+                    if (File.Exists(optimized))
                     {
                         try
                         {
-                            Dictionary<string, object> t = JsonConvert.DeserializeObject<Dictionary<string, object>>(File.ReadAllText(optimized));
+                            var t = JsonConvert.DeserializeObject<Dictionary<string, object>>(File.ReadAllText(optimized));
                             if (t.ContainsKey("op"))
                             {
                                 threads_pf.Add(load_post_data_str(t["op"].ToString(), true));
@@ -101,16 +137,30 @@ namespace ChanArchiver
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine("Cannot decode optimized thread file {0}-{1}: {2}", board, folders[i].Name, ex.Message);
+                            Console.WriteLine("Cannot decode optimized thread file {0}-{1}: {2}", board, dir_name, ex.Message);
                         }
                     }
                 }
 
-                return threads_pf.OrderByDescending(x => x.PostID).ToArray();
+                return threads_pf.ToArray();
             }
             else
             {
-                return new PostFormatter[] { };
+                return new PostFormatter[0];
+            }
+        }
+
+        public static int CountThreads(string board)
+        {
+            string board_folder = Path.Combine(Program.post_files_dir, board);
+
+            if (Directory.Exists(board_folder))
+            {
+                return Directory.EnumerateDirectories(board_folder).Count();
+            }
+            else
+            {
+                return 0;
             }
         }
 
