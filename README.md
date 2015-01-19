@@ -38,9 +38,9 @@ By default, ChanArchiver start the http server (listen on port `8787`). You can 
 
 ### Integration with 4chan
 
-ChanArchiver can be integrated with 4chan pages by adding an `[Archive] [Archive TO]` buttons next to the op post, as shown in the picture below:
+ChanArchiver can be integrated with 4chan pages by adding an `[Archive] [Archive TO]` buttons next to the op post and in the catalog, as shown in the picture below:
 
-![preview](https://cdn.mediacru.sh/2kyg9wLrrWOv.png "Archive button in the OP post")
+![preview](http://i.imgur.com/L7g8eP5.png "4chan integration")
 
 The `[Archive TO]` button stand for `Archive Thumbnail Only`.
 
