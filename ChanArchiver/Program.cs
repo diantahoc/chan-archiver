@@ -8,6 +8,9 @@ using System.Threading;
 using System.IO;
 using System.Net;
 using System.Diagnostics;
+using HttpServer;
+using HttpServer.Authentication;
+using HttpServer.HttpModules;
 
 namespace ChanArchiver
 {
@@ -19,7 +22,7 @@ namespace ChanArchiver
         public static string post_files_dir = "";
         public static string temp_files_dir = "";
         public static string board_settings_dir = "";
-
+        public static string invalid_files_dir = "";
 
         public static string program_dir;
         public static string ffmpeg_path;
@@ -122,6 +125,7 @@ namespace ChanArchiver
             api_cache_dir = Path.Combine(program_dir, "aniwrap_cache"); Directory.CreateDirectory(api_cache_dir);
             temp_files_dir = Path.Combine(program_dir, "temp"); Directory.CreateDirectory(temp_files_dir);
             board_settings_dir = Path.Combine(program_dir, "settings"); Directory.CreateDirectory(board_settings_dir);
+            invalid_files_dir = Path.Combine(program_dir, "invalid_files"); Directory.CreateDirectory(invalid_files_dir);
 
             Settings.Load();
 
@@ -132,7 +136,7 @@ namespace ChanArchiver
             Console.Title = "ChanArchiver";
 
             print("ChanArchiver", ConsoleColor.Cyan);
-            Console.WriteLine(" v1.0 stable");
+            Console.WriteLine(" v1.1 stable");
 
 
             if (Environment.OSVersion.Platform == PlatformID.Unix)
@@ -161,7 +165,7 @@ namespace ChanArchiver
             swf_watch.Filter = "*.swf";
             swf_watch.IncludeSubdirectories = false;
             swf_watch.Created += new FileSystemEventHandler(handle_new_swf_file);
-            
+
             Console.Write("Downloading board data...");
             ValidBoards = aw.GetAvailableBoards();
             Console.Write("loaded {0} board.\n", ValidBoards.Count);
@@ -211,6 +215,7 @@ namespace ChanArchiver
             //catch (Exception) { }
 
             optimize_directory_struct(thumb_save_dir);
+            optimize_directory_struct(file_save_dir);
 
             interactive_console();
 
@@ -292,17 +297,22 @@ namespace ChanArchiver
 
         private static void build_file_index()
         {
-            if (is_index_building) { return; }
-            is_index_building = true;
-            foreach (var board in ValidBoards)
+            try
             {
-                var threads = ThreadStore.GetIndex(board.Key);
+                if (is_index_building) { return; }
+                is_index_building = true;
 
-                if (threads.Length > 0)
+                foreach (string board in ThreadStore.GetExistingBoards())
                 {
-                    for (int t_index = 0; t_index < threads.Length; t_index++)
+                    var threads = ThreadStore.GetIndexIDOnly(board);
+
+                    foreach (string thread_id in threads)
                     {
-                        var thread_data = ThreadStore.GetThread(board.Key, threads[t_index].PostID.ToString());
+                        if (thread_id == null) { continue; }
+
+                        var thread_data = ThreadStore.GetThread(board, thread_id);
+
+                        int tid = Convert.ToInt32(thread_id);
 
                         foreach (var post in thread_data)
                         {
@@ -320,13 +330,19 @@ namespace ChanArchiver
                                     file_index.Add(post.MyFile.Hash, w);
                                 }
 
-                                w.MarkPost(board.Key, threads[t_index].PostID, post.PostID, post.MyFile.FileName);
+                                w.MarkPost(board, tid, post.PostID, post.MyFile.FileName);
                             }
                         }
                     }
                 }
+                is_index_building = false;
             }
-            is_index_building = false;
+            catch (Exception ex)
+            {
+                is_index_building = false;
+                Console.WriteLine("Error occured while building file index:\n{0}\n{1}", ex.Message, ex.StackTrace);
+                Console.Beep();
+            }
         }
 
         public static void update_file_index()
@@ -338,13 +354,32 @@ namespace ChanArchiver
 
         public static FileIndexInfo get_file_index_state(string hash)
         {
-            if (file_index.ContainsKey(hash)) { return file_index[hash]; }
-            return null;
+            if (file_index.ContainsKey(hash))
+                return file_index[hash];
+            else
+                return null;
         }
 
         private static void optimize_directory_struct(string dir)
         {
             DirectoryInfo dirInfo = new DirectoryInfo(dir);
+
+            string[] letters = 
+            {
+                "0", "1", "2", "3", "4", "5", "6", "7","8", "9", "A", "B", "C","D","E", "F"
+            };
+
+            // Make the directories if they don't exist
+
+            foreach (var a in letters)
+                foreach (var b in letters)
+                    Directory.CreateDirectory(Path.Combine(dirInfo.FullName, a, b));
+
+            foreach (string path in Directory.EnumerateFiles(dir))
+            {
+                Console.WriteLine("Optimizing directory structure, this might take a while.");
+                break;
+            }
 
             foreach (var f in dirInfo.GetFiles())
             {
@@ -381,25 +416,57 @@ namespace ChanArchiver
                         break;
                     case "swf-gen":
                         {
-                            FileInfo[] swfs = (new DirectoryInfo(file_save_dir)).GetFiles("*.swf");
-
-                            foreach (FileInfo swf in swfs)
+                            foreach (string file in Directory.EnumerateFiles(file_save_dir, "*.swf", SearchOption.AllDirectories))
                             {
-                                make_swf_thumb(swf.FullName);
+                                make_swf_thumb(file);
                             }
                         }
                         break;
+                    case "reset-creds":
+                        {
+                            Settings.EnableAuthentication = true;
+                            Settings.AllowGuestAccess = false;
+
+                            byte[] data = new byte[6];
+
+                            for (int i = 0; i < 6; i++)
+                            {
+                                Random r = new Random((new Random()).Next() + i);
+                                byte t = (byte)r.Next(48, 91);
+                                data[i] = t;
+                            }
+
+                            string cre = Encoding.ASCII.GetString(data);
+
+                            Settings.AuthPassword = cre; Settings.AuthUsername = cre;
+
+                            Settings.Save();
+
+                            Console.WriteLine("New credentials set:\nUsername: {0}\nPassword: {0}", cre);
+
+                            break;
+                        }
                     case "help":
                         Console.WriteLine("- help: view this text");
                         Console.WriteLine("- save: save settings");
-                        Console.WriteLine("- optimize-all: optimize all non-active threads");
-                        Console.WriteLine("- swf-gen: generate thumbnails for .swf files using ffmpeg");
-                        Console.WriteLine("- exit: save settings and exit the program");
+                        Console.WriteLine("- exit: save settings and exit the program"); Console.WriteLine();
+
+                        Console.WriteLine("- swf-gen: generate thumbnails for .swf files using ffmpeg"); Console.WriteLine();
+
                         Console.WriteLine("- toggle-ff: Enable or disable full file saving.");
+                        Console.WriteLine("- reset-creds: Enable HTTP server authentication and set the credentials to random values"); Console.WriteLine();
+
                         Console.WriteLine("- optimize-gif: Convert all gifs files to .webm to save disk space. This action is not reversible");
+                        Console.WriteLine("- optimize-all: optimize all non-active threads");
+
+                        Console.WriteLine();
+
                         Console.WriteLine("- wordfilter-add [word1] [word2]...: Add words to the wordfilter. Please include the [brackets]");
-                        Console.WriteLine("- wordfilter-remove [word1] [word2]...: Add words from the wordfilter.");
-                        Console.WriteLine("- add-fuuka HOST BOARD ID. Add a dead thread from a FoolFuuka archive. Type add-fuuka for help.");
+                        Console.WriteLine("- wordfilter-remove [word1] [word2]...: Add words from the wordfilter");
+
+                        Console.WriteLine();
+
+                        Console.WriteLine("- add-fuuka HOST BOARD ID. Add a dead thread from a FoolFuuka archive. Type add-fuuka for help");
                         break;
                     case "bench":
                         Stopwatch sw = new Stopwatch();
@@ -410,23 +477,25 @@ namespace ChanArchiver
                         break;
                     case "sanitize-files":
                         {
+                            Console.WriteLine("Updating file index...");
+
                             update_file_index();
 
-                            var files = Directory.EnumerateFiles(file_save_dir);
                             int i = 0;
-                            foreach (var file in files)
+                            foreach (var file in Directory.EnumerateFiles(file_save_dir))
                             {
-                                string file_hash = file.Split(Path.DirectorySeparatorChar).Last().Split('.').First();
-                                if (!file_index.ContainsKey(file_hash))
+                                string hash = Path.GetFileNameWithoutExtension(file).Split('.').First();
+                                if (!file_index.ContainsKey(hash))
                                 {
                                     i++;
-                                    //File.Delete(file);
-                                    Console.WriteLine("Simulated delete of '{0}'", file);
+
+                                    string filename = Path.GetFileName(file);
+
+                                    File.Move(file, Path.Combine(invalid_files_dir, filename));
+                                    Console.WriteLine("Simulated delete of '{0}'", filename);
                                 }
                             }
                             Console.WriteLine("Removed {0} file", i);
-
-                            update_file_index();
                             break;
                         }
                     case "optimize-gif":
@@ -436,7 +505,6 @@ namespace ChanArchiver
                         Console.WriteLine(Settings.UseHttps ? "https" : "http");
                         break;
                     case "":
-                        //Console.WriteLine(":^)");
                         break;
                     default:
                         if (command.StartsWith("wordfilter-"))
@@ -492,29 +560,29 @@ namespace ChanArchiver
                                             bw = new BoardWatcher(a.BOARD);
                                             active_dumpers.Add(a.BOARD, bw);
                                         }
-                                        
+
                                         Console.WriteLine("Adding thread {0} from board {1}...", a.ThreadID, a.BOARD);
 
                                         ThreadContainer tc = FoolFuukaParser.Parse(a);
 
-                                        if (tc != null) 
+                                        if (tc != null)
                                         {
                                             bw.AddStaticThread(tc, Settings.ThumbnailOnly);
                                             Console.WriteLine("Thread {0} from board {1} added.", a.ThreadID, a.BOARD);
                                         }
-                                        else 
+                                        else
                                         {
                                             Console.WriteLine("Cannot add this thread. Possible reasons:\n"
-                                                + "- The thread ID is invalid" 
+                                                + "- The thread ID is invalid"
                                                 + "- The archive no longer archive this board.\n"
                                                 + "- The archive software isn't FoolFuuka. FoolFuuka-based archives are simliar to (archive.foolz.us)"
                                                 + "- The archive has no JSON API support");
                                         }
-                                      
+
                                     }
                                 }
                             }
-                            catch (Exception ex) 
+                            catch (Exception ex)
                             {
                                 Console.WriteLine("Error occured: {0}", ex.Message);
                             }
@@ -535,7 +603,7 @@ namespace ChanArchiver
 
                 DirectoryInfo in_info = new DirectoryInfo(file_save_dir);
 
-                FileInfo[] files = in_info.GetFiles("*.gif", SearchOption.TopDirectoryOnly);
+                FileInfo[] files = in_info.GetFiles("*.gif", SearchOption.AllDirectories);
                 Console.WriteLine("Total GIFS found: {0}", files.Length);
                 int kb = 200 * 1024;
 
@@ -583,7 +651,8 @@ namespace ChanArchiver
                     }
                     else
                     {
-                        Console.WriteLine("Not converting {0}, file size is less than 200KB", fifo.Name);
+                        Console.WriteLine("Skipping file {0} (size < 200 KB)", index + 1);
+                        //Console.WriteLine("Not converting {0}, file size is less than 200KB", fifo.Name);
                     }
 
                 }
@@ -642,32 +711,23 @@ namespace ChanArchiver
 
         private static void load_settings()
         {
-            Console.WriteLine("Loading banned files list...");
             load_banned_files_list();
-
-            Console.WriteLine("Loading network statistics...");
             NetworkUsageCounter.LoadStats();
-
-            Console.WriteLine("Loading manually added threads...");
             load_boards();
-
             Wordfilter.Load();
         }
 
         private static void save_settings()
         {
-            Console.WriteLine("Saving network statistics...");
+            Console.Write("Saving ...");
+
+            save_boards();
+            save_banned_files_list();
+            Settings.Save();
+            Wordfilter.Save();
             NetworkUsageCounter.SaveStats();
 
-            Console.WriteLine("Saving manually added threads...");
-            save_boards();
-
-            Console.WriteLine("Saving banned files list...");
-            save_banned_files_list();
-
-            Settings.Save();
-
-            Wordfilter.Save();
+            Console.WriteLine(" done");
         }
 
         private static void save_boards()
@@ -676,6 +736,9 @@ namespace ChanArchiver
 
             foreach (KeyValuePair<string, BoardWatcher> bw in active_dumpers)
             {
+                //  if (bw.Value.Mode == BoardWatcher.BoardMode.None && bw.Value.ActiveThreadWorkers == 0)
+                //     continue;
+
                 bw.Value.SaveManuallyAddedThreads();
                 bw.Value.SaveFilters();
                 boards.Add(string.Format("{0}:{1}", bw.Key, Convert.ToInt32(bw.Value.Mode)));
@@ -807,6 +870,10 @@ namespace ChanArchiver
 
                 server.ServerName = "ChanArchiver";
 
+                server.AuthenticationModules.Add(
+                    new BasicAuthentication(new AuthenticationHandler(authenticate),
+                        new AuthenticationRequiredHandler(check_authenticate)));
+
                 server.Add(new ChanArchiver.HttpServerHandlers.OverviewPageHandler());
                 server.Add(new ChanArchiver.HttpServerHandlers.LogPageHandler());
                 server.Add(new ChanArchiver.HttpServerHandlers.FileQueuePageHandler());
@@ -820,11 +887,13 @@ namespace ChanArchiver
                 server.Add(new ChanArchiver.HttpServerHandlers.SettingsPageHandler());
                 server.Add(new ChanArchiver.HttpServerHandlers.ThreadJobInfoPageHandler());
                 server.Add(new ChanArchiver.HttpServerHandlers.FileBrowserPageHandler());
-
                 server.Add(new ThreadServerModule());
+
+                server.ExceptionThrown += server_ExceptionThrown;
+
                 Console.WriteLine("Starting HTTP server...");
                 server.Start(IPAddress.Any, port);
-                Console.WriteLine("Listening on port {0}.\nWebsite is accessible at (http://*:{0})", port);
+                Console.WriteLine("Website is accessible at (http://*:{0})", port);
             }
             catch (Exception ex)
             {
@@ -833,19 +902,69 @@ namespace ChanArchiver
             }
         }
 
+        static void server_ExceptionThrown(object source, Exception exception)
+        {
+            Console.WriteLine("HTTP Server Exception: \n {0} \n {1}", exception.Message, exception.StackTrace);
+            Console.Beep();
+        }
+
+        static bool check_authenticate(IHttpRequest e)
+        {
+            if (Settings.EnableAuthentication)
+            {
+                if (Settings.AllowGuestAccess)
+                {
+                    string command = e.Uri.PathAndQuery;
+
+                    return !(command.StartsWith("/boards")
+                        || command.StartsWith("/getfilelist?")
+                        || command.StartsWith("/thumb/")
+                        || command.StartsWith("/file/")
+                        || command.StartsWith("/action/showfilereposts?")
+                        || command.StartsWith("/res/")
+                        || command.StartsWith("/favicon.ico")
+                        || command.StartsWith("/filetree"));
+                }
+
+                return true;
+            }
+            return false;
+        }
+
+        static void authenticate(string a, string b, ref string c, out object d)
+        {
+            if (Settings.EnableAuthentication)
+            {
+                if (b == Settings.AuthUsername && c == Settings.AuthPassword)
+                    d = true;
+                else
+                    d = null;
+
+                return;
+            }
+
+            d = true;
+        }
+
         #region File Downloader Logic
 
         public static void dump_files(PostFile pf, bool thumbonly)
         {
             string md5 = base64tostring(pf.hash);
-            string file_path = Path.Combine(file_save_dir, md5 + "." + pf.ext);
-            string thumb_path = Path.Combine(thumb_save_dir, md5[0].ToString().ToUpper(), md5[1].ToString().ToUpper(), md5 + ".jpg");
+
+            //string file_path = Path.Combine(file_save_dir, md5 + "." + pf.ext);
 
             string reff = string.Format("http://boards.4chan.org/{0}/res/{1}", pf.board, pf.owner);
 
+            #region thumb
             if (pf.ThumbLink != PostFile.NoFile)
             {
-                if (!File.Exists(thumb_path))
+                if (is_file_banned(md5) && !Settings.SaveBannedFileThumbnail)
+                    goto skip;
+
+                string thumb_path;
+
+                if (!FileOperations.CheckThumbFileExist(md5, out thumb_path))
                 {
                     string thumb_key = "thumb" + md5;
 
@@ -863,12 +982,17 @@ namespace ChanArchiver
                     }
                 }
             }
+        skip:
+            #endregion
 
             if (!thumbonly)
             {
                 if (!is_file_banned(md5))
                 {
-                    bool file_no_exist = !File.Exists(file_path);
+                    string file_name = md5 + "." + pf.ext;
+                    string file_path;
+
+                    bool file_no_exist = !FileOperations.CheckFullFileExist(file_name, out file_path);
 
                     if (pf.ext == "gif")
                     {
@@ -902,45 +1026,6 @@ namespace ChanArchiver
                 }
             }
         }
-
-        /*
-        private static bool test_pr()
-        {
-            const int kb = 1024;
-            const int mb = 1048576;
-            Func<bool>[] tests = new Func<bool>[]
-            {
-                new Func<bool>( () => {    return 2300 * kb == 2.3 * mb;  }  ),
-                new Func<bool>( () => {    return get_file_p(49 * kb) == Amib.Threading.WorkItemPriority.Level14;  }  ),
-                new Func<bool>( () => {    return get_file_p(60 * kb) == Amib.Threading.WorkItemPriority.Level13;  }  ),
-                new Func<bool>( () => {    return get_file_p(350 * kb) == Amib.Threading.WorkItemPriority.Level12;  }  ),
-                new Func<bool>( () => {    return get_file_p(700 * kb) == Amib.Threading.WorkItemPriority.Level11;  }  ),
-                new Func<bool>( () => {    return get_file_p(1000 * kb) == Amib.Threading.WorkItemPriority.Level10;  }  ),
-                new Func<bool>( () => {    return get_file_p(1300 * kb) == Amib.Threading.WorkItemPriority.Level9;  }  ),
-                new Func<bool>( () => {    return get_file_p(1600 * kb) == Amib.Threading.WorkItemPriority.Level8;  }  ),
-                new Func<bool>( () => {    return get_file_p(1900 * kb) == Amib.Threading.WorkItemPriority.Level7;  }  ),
-                new Func<bool>( () => {    return get_file_p(2150 * kb) == Amib.Threading.WorkItemPriority.Level6;  }  ),
-                new Func<bool>( () => {    return get_file_p(2450 * kb) == Amib.Threading.WorkItemPriority.Level5;  }  ),
-                new Func<bool>( () => {    return get_file_p(3000 * kb) == Amib.Threading.WorkItemPriority.Level4;  }  ),
-                new Func<bool>( () => {    return get_file_p(3500 * kb) == Amib.Threading.WorkItemPriority.Level3;  }  ),
-                new Func<bool>( () => {    return get_file_p(5000 * kb) == Amib.Threading.WorkItemPriority.Level2;  }  ),
-                new Func<bool>( () => {    return get_file_p(8000 * kb) == Amib.Threading.WorkItemPriority.Level1;  }  )
-            };
-
-            for(int i =0; i < tests.Length; i++)
-            {
-                if (!tests[i]()) 
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
-        private static Amib.Threading.WorkItemPriority get_file_p(int i)
-        {
-            return get_file_priority(new PostFile() { size = i });
-        }
-        */
 
         private static Amib.Threading.WorkItemPriority get_file_priority(PostFile pf)
         {
@@ -1058,7 +1143,12 @@ namespace ChanArchiver
             //}
         }
 
-        const string user_agent = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:33.0) Gecko/20100101 Firefox/33.0";
+        static string[] user_agent_list = Properties.Resources.UserAgentList.Split(new char[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+
+        public static string get_random_user_agent()
+        {
+            return user_agent_list[(new Random()).Next(0, user_agent_list.Length)];
+        }
 
         private static void download_file(string save_path, string referer, FileQueueStateInfo f)
         {
@@ -1066,11 +1156,13 @@ namespace ChanArchiver
 
             string temp_file_path = Path.Combine(temp_files_dir, f.Hash + f.Type.ToString());
 
+            string choosen_agent = get_random_user_agent();
+
             while (true)
             {
                 HttpWebRequest nc = (HttpWebRequest)(WebRequest.Create(f.Url));
 
-                nc.UserAgent = user_agent;
+                nc.UserAgent = choosen_agent;
                 nc.Referer = referer;
 
                 if (f.RetryCount > 35)
@@ -1188,7 +1280,14 @@ namespace ChanArchiver
                         //don't check hashes for thumbnails
                         if (f.Type == FileQueueStateInfo.FileType.Thumbnail || verify_file_checksums(temp_file_path, f.Hash, f.PostFile.size))
                         {
-                            File.Move(temp_file_path, save_path);
+                            try
+                            {
+                                File.Move(temp_file_path, save_path);
+                            }
+                            catch (System.IO.DirectoryNotFoundException)
+                            {
+                                Directory.CreateDirectory(Path.GetDirectoryName(save_path));
+                            }
 
                             f.Log(new LogEntry()
                             {
@@ -1204,6 +1303,11 @@ namespace ChanArchiver
                             {
                                 queued_files.Remove((f.Type == FileQueueStateInfo.FileType.FullFile ? "file" : "thumb") + f.Hash);
                             }
+
+                            //if (Settings.ConvertGifsToWebm && f.Ext == "gif") 
+                            //{
+
+                            //}
                         }
                         else
                         {
@@ -1392,9 +1496,9 @@ namespace ChanArchiver
 
         public static string format_size_string(double size)
         {
-            double KB = 1024;
-            double MB = 1048576;
-            double GB = 1073741824;
+            const double KB = 1024;
+            const double MB = 1048576;
+            const double GB = 1073741824;
 
             if (size < KB)
             {

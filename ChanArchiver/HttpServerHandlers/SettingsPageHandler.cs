@@ -67,6 +67,41 @@ namespace ChanArchiver.HttpServerHandlers
                     page.Replace("{gs4c}", "");
                 }
 
+                if (Settings.SaveBannedFileThumbnail)
+                {
+                    page.Replace("{gs5c}", Checked);
+                }
+                else
+                {
+                    page.Replace("{gs5c}", "");
+                }
+
+
+
+                //-------------------- Security Settings --------------------------
+
+                if (Settings.EnableAuthentication)
+                {
+                    page.Replace("{ss0c}", Checked);
+                }
+                else 
+                {
+                    page.Replace("{ss0c}", "");
+                }
+
+                if (Settings.AllowGuestAccess)
+                {
+                    page.Replace("{ss1c}", Checked);
+                }
+                else
+                {
+                    page.Replace("{ss1c}", "");
+                }
+
+                page.Replace("{bauser}", string.IsNullOrEmpty(Settings.AuthUsername) ? "" : Settings.AuthUsername);
+
+                page.Replace("{bapass}", string.IsNullOrEmpty(Settings.AuthPassword) ? "" : Settings.AuthPassword);
+
                 //-------------------- FFMPEG Settings --------------------------
 
                 page.Replace("{ffpath}", Program.ffmpeg_path);
@@ -193,9 +228,16 @@ namespace ChanArchiver.HttpServerHandlers
                 Settings.EnableFileStats = request.QueryString["gs2"].Value == "1";
                 Settings.UseHttps = request.QueryString["gs3"].Value == "1";
                 Settings.RemoveThreadsWhenTheyEnterArchivedState = request.QueryString["gs4"].Value == "1";
+                Settings.SaveBannedFileThumbnail = request.QueryString["gs5"].Value == "1";
 
                 if (Settings.EnableFileStats) { FileSystemStats.Init(); }
 
+
+                // -------------- Security Settings ------------
+                Settings.EnableAuthentication = request.QueryString["ss0"].Value == "1";
+                Settings.AllowGuestAccess = request.QueryString["ss1"].Value == "1";
+                Settings.AuthUsername = request.QueryString["ba_user"].Value;
+                Settings.AuthPassword = request.QueryString["ba_pass"].Value;
 
                 // -------------- FFMPEG Settings ------------
 
@@ -243,10 +285,16 @@ namespace ChanArchiver.HttpServerHandlers
                 Settings.AutoRemoveCompleteFiles = request.QueryString["fq3"].Value == "1";
 
                 Settings.Save();
+
+                if (!Settings.EnableAuthentication)
+                {
+                    session.Clear();
+                    response.Cookies.Clear();
+                }
+
                 response.Redirect("/settings");
                 return true;
             }
-
 
             return false;
         }

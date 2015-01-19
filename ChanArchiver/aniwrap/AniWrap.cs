@@ -194,17 +194,17 @@ namespace AniWrap
 
             if (data["sticky"] != null)
             {
-                t.IsSticky = (Convert.ToInt32(data["sticky"]) == 1);
+                t.IsSticky = data["sticky"].Value<int>() == 1;
             }
 
             if (data["closed"] != null)
             {
-                t.IsClosed = (Convert.ToInt32(data["closed"]) == 1);
+                t.IsClosed = data["closed"].Value<int>() == 1;
             }
 
             if (data["archived"] != null)
             {
-                t.IsArchived = (Convert.ToInt32(data["archived"]) == 1);
+                t.IsArchived = data["archived"].Value<int>() == 1;
             }
 
             if (data["country"] != null)
@@ -229,12 +229,12 @@ namespace AniWrap
 
             if (t.File != null) { t.File.owner = t; }
 
-            t.image_replies = Convert.ToInt32(data["images"]); ;
+            t.image_replies = data["images"].Value<int>();
 
-            t.ID = Convert.ToInt32(data["no"]); ;
+            t.ID = data["no"].Value<int>();
 
-            t.text_replies = Convert.ToInt32(data["replies"]);
-            t.Time = Common.ParseUTC_Stamp(Convert.ToInt32(data["time"]));
+            t.text_replies = data["replies"].Value<int>();
+            t.Time = Common.ParseUTC_Stamp(data["time"].Value<int>());
 
             return t;
         }
@@ -245,19 +245,18 @@ namespace AniWrap
             {
                 PostFile pf = new PostFile();
                 pf.filename = HttpUtility.HtmlDecode(data["filename"].ToString());
-                pf.ext = data["ext"].ToString().Replace(".", "");
-                pf.height = Convert.ToInt32(data["h"]);
-                pf.width = Convert.ToInt32(data["w"]);
-                pf.thumbW = Convert.ToInt32(data["tn_w"]);
-                pf.thumbH = Convert.ToInt32(data["tn_h"]);
-                // pf.owner = Convert.ToInt32(data["no"]);
+                pf.ext = data["ext"].ToString().Substring(1);
+                pf.height = data["h"].Value<int>();
+                pf.width = data["w"].Value<int>();
+                pf.thumbW = data["tn_w"].Value<int>();
+                pf.thumbH = data["tn_h"].Value<int>();
                 pf.thumbnail_tim = data["tim"].ToString();
                 pf.board = board;
                 pf.hash = data["md5"].ToString();
-                pf.size = Convert.ToInt32(data["fsize"]);
+                pf.size = data["fsize"].Value<int>();
                 if (data["spoiler"] != null)
                 {
-                    pf.IsSpoiler = (Convert.ToInt32(data["spoiler"]) == 1);
+                    pf.IsSpoiler = data["spoiler"].Value<int>() == 1;
                 }
                 return pf;
             }
@@ -358,9 +357,9 @@ namespace AniWrap
 
             if (t.File != null) { t.File.owner = t; }
 
-            t.ID = Convert.ToInt32(data["no"]); ;
+            t.ID =(data["no"].Value<int>()); ;
 
-            t.Time = Common.ParseUTC_Stamp(Convert.ToInt32(data["time"]));
+            t.Time = Common.ParseUTC_Stamp((data["time"].Value<int>()));
 
             return t;
         }
@@ -387,10 +386,10 @@ namespace AniWrap
             CatalogItem ci = new CatalogItem();
 
             //post number - no
-            ci.ID = Convert.ToInt32(thread["no"]);
+            ci.ID = thread["no"].Value<int>();
 
             // post time - now
-            ci.Time = Common.ParseUTC_Stamp(Convert.ToInt32(thread["time"]));
+            ci.Time = Common.ParseUTC_Stamp(thread["time"].Value<int>());
 
             //name 
             if (thread["name"] != null)
@@ -434,16 +433,16 @@ namespace AniWrap
                 PostFile pf = new PostFile();
                 pf.filename = thread["filename"].ToString();
                 pf.ext = thread["ext"].ToString().Replace(".", "");
-                pf.height = Convert.ToInt32(thread["h"]);
-                pf.width = Convert.ToInt32(thread["w"]);
-                pf.thumbW = Convert.ToInt32(thread["tn_w"]);
-                pf.thumbH = Convert.ToInt32(thread["tn_h"]);
+                pf.height = thread["h"].Value<int>();
+                pf.width = (thread["w"].Value<int>());
+                pf.thumbW =(thread["tn_w"].Value<int>());
+                pf.thumbH = (thread["tn_h"].Value<int>());
                 pf.owner = ci;
                 pf.thumbnail_tim = thread["tim"].ToString();
                 pf.board = board;
 
                 pf.hash = thread["md5"].ToString();
-                pf.size = Convert.ToInt32(thread["fsize"]);
+                pf.size = (thread["fsize"].Value<int>());
 
                 ci.File = pf;
             }
@@ -464,7 +463,7 @@ namespace AniWrap
 
             if (thread["bumplimit"] != null)
             {
-                ci.BumpLimit = Convert.ToInt32(thread["bumplimit"]);
+                ci.BumpLimit = (thread["bumplimit"].Value<int>());
             }
             else
             {
@@ -473,15 +472,15 @@ namespace AniWrap
 
             if (thread["imagelimit"] != null)
             {
-                ci.ImageLimit = Convert.ToInt32(thread["imagelimit"]);
+                ci.ImageLimit = (thread["imagelimit"].Value<int>());
             }
             else
             {
                 ci.ImageLimit = 150;
             }
 
-            ci.image_replies = Convert.ToInt32(thread["images"]);
-            ci.text_replies = Convert.ToInt32(thread["replies"]);
+            ci.image_replies = (thread["images"].Value<int>());
+            ci.text_replies = (thread["replies"].Value<int>());
             ci.page_number = pagenumber;
 
             return ci;
@@ -515,7 +514,8 @@ namespace AniWrap
 
                         foreach (Newtonsoft.Json.Linq.JObject threadinfo in threads)
                         {
-                            dic.Add(Convert.ToInt32(threadinfo["no"]), Common.ParseUTC_Stamp(Convert.ToInt32(threadinfo["last_modified"])));
+                            dic.Add(threadinfo["no"].Value<int>(),
+                                Common.ParseUTC_Stamp(threadinfo["last_modified"].Value<int>()));
                         }
                     }
 
@@ -581,9 +581,16 @@ namespace AniWrap
 
                 string letter = Convert.ToString(board["board"]);
                 string desc = Convert.ToString(board["title"]);
-                int bl = Convert.ToInt32(board["bump_limit"]);
-                int iml = Convert.ToInt32(board["image_limit"]);
-
+                int bl; int iml;
+                if (letter == "f")
+                {
+                    bl = 300; iml = 150;
+                }
+                else
+                {
+                     bl = board["bump_limit"].Value<int>();
+                     iml = board["image_limit"].Value<int>();
+                }
                 dic.Add(letter, new BoardInfo()
                 {
                     Title = desc,
@@ -619,7 +626,7 @@ namespace AniWrap
 
             wr.IfModifiedSince = d;
 
-            wr.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:26.0) Gecko/20100101 Firefox/26.0";
+            wr.UserAgent = ChanArchiver.Program.get_random_user_agent();
 
             WebResponse wbr = null;
 

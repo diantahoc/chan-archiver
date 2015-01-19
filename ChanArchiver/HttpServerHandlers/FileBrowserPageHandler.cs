@@ -69,16 +69,15 @@ namespace ChanArchiver.HttpServerHandlers
 
                     var fc = Selectors[selector_index];
 
-                    DirectoryInfo dir = new DirectoryInfo(Program.file_save_dir);
-
                     int counter = 0;
 
                     bool has_reached_next_page = false;
 
                     has_reached_next_page = string.IsNullOrEmpty(prev_value);
 
-                    foreach (FileInfo fi in dir.GetFiles(filter))
+                    foreach (string path in FileOperations.EnumerateOptimizedDirectory(Program.file_save_dir))
                     {
+                        FileInfo fi = new FileInfo(path);
                         if (has_reached_next_page)
                         {
                             if (counter > limit) { next_value = fi.Name; break; }

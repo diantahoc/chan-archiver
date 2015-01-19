@@ -265,4 +265,7 @@
   <data name="file_list_page" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\html\file_list_page.html;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>
+  <data name="UserAgentList" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\useragentlist.txt;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
 </root>

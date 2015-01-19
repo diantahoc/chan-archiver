@@ -26,34 +26,57 @@ namespace ChanArchiver
             if (File.Exists(opt_path))
             {
                 var thread_data = JsonConvert.DeserializeObject<Dictionary<string, object>>(File.ReadAllText(opt_path));
+                
+                string data;
 
-                thread_pf.Add(load_post_data_str(thread_data["op"].ToString(), true));
+                if (thread_data.ContainsKey("op"))
+                {
+                    data = thread_data["op"].ToString();
 
-                // remove the op post
-                thread_data.Remove("op");
+                    if (!string.IsNullOrEmpty(data)) 
+                    {
+                        thread_pf.Add(load_post_data_str(data, true));           
+                        // remove the op post
+                        thread_data.Remove("op");
+                    }
+                }
 
                 // sort the replies by their id
                 foreach (string key in thread_data.Keys.OrderBy(x => Convert.ToInt32(x)))
                 {
-                    thread_pf.Add(load_post_data_str(thread_data[key].ToString(), false));
+                    data = thread_data[key].ToString();
+
+                    if (!string.IsNullOrEmpty(data))
+                    {
+                        thread_pf.Add(load_post_data_str(data, false));
+                    }
                 }
             }
             else
             {
+                string data;
                 string op = Path.Combine(thread_dir_path, "op.json");
                 if (File.Exists(op))
                 {
-                    thread_pf.Add(load_post_data_str(File.ReadAllText(op), true));
-                }
-
-                foreach (var file in info.GetFiles("*.json", SearchOption.TopDirectoryOnly).OrderBy(x => x.Name))
-                {
-                    if (file.Name != "op.json")
+                    data = File.ReadAllText(op);
+                    if (!string.IsNullOrEmpty(data))
                     {
-                        thread_pf.Add(load_post_data_str(File.ReadAllText(file.FullName), false));
+                        thread_pf.Add(load_post_data_str(data, true));
                     }
                 }
-
+                
+                foreach (string file in
+                    Directory.EnumerateFiles(thread_dir_path, "*.json", SearchOption.TopDirectoryOnly).OrderBy(x => Path.GetFileNameWithoutExtension(x)))
+                {
+                    if (!file.EndsWith("op.json"))
+                    {
+                        data = File.ReadAllText(file);
+                        if (!string.IsNullOrEmpty(data))
+                        {
+                            thread_pf.Add(load_post_data_str(data, false));
+                        }
+                    }
+                }
             }
             return thread_pf.ToArray();
         }
@@ -65,6 +88,38 @@ namespace ChanArchiver
             if (Directory.Exists(thread_dir_path))
             {
                 Directory.Delete(thread_dir_path, true);
+            }
+        }
+
+        public static IEnumerable<string> GetIndexIDOnly(string board) 
+        {
+             string board_folder = Path.Combine(Program.post_files_dir, board);
+
+             if (Directory.Exists(board_folder))
+             {
+                 foreach (string dir in Directory.EnumerateDirectories(board_folder))
+                 {
+                     yield return Path.GetFileName(dir);
+                 }
+             }
+             else
+             {
+                 yield return null;
+             }
+        }
+
+        public static IEnumerable<string> GetExistingBoards()
+        {
+            if (Directory.Exists(Program.post_files_dir))
+            {
+                foreach (string dir in Directory.EnumerateDirectories(Program.post_files_dir))
+                {
+                    yield return Path.GetFileName(dir);
+                }
+            }
+            else
+            {
+                yield return null;
             }
         }
 

@@ -115,6 +115,7 @@
     <Compile Include="aniwrap\libs\hap\1_4_0\HtmlAgilityPack\NameValuePairList.cs" />
     <Compile Include="BoardWatcher.cs" />
     <Compile Include="FileFormatter.cs" />
+    <Compile Include="FileOperations.cs" />
     <Compile Include="FileQueueStateInfo.cs" />
     <Compile Include="FileSystemStats.cs" />
     <Compile Include="Filters\Filters.cs" />
@@ -211,6 +212,7 @@
     </Content>
     <Content Include="html\chan-templates\reply_template.htm" />
     <Content Include="html\file_list_page.html" />
+    <Content Include="Resources\UserAgentList.txt" />
     <None Include="Resources\cached_boards.txt" />
     <None Include="html\4" />
     <None Include="html\full_page.html">

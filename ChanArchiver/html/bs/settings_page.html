@@ -95,7 +95,7 @@
 
           <form action="/settings/">
 
-            <h2 class="sub-header">General Settings</h2>
+            <h3 class="sub-header">General Settings</h3>
             <div class="input-group">
 
 
@@ -120,14 +120,42 @@
               <br />
 
               <input id="gs4" type="checkbox" name="gs4" value="1" {gs4c}/>
-              <label for="gs4">Remove threads when they enter "Archived" state.</label>
+              <label for="gs4">Remove threads when they enter "Archived" state</label>
 
               <!--<input id="gs3" type="checkbox" name="gs3" value="1" {gs3c}/>
               <label for="gs3">Convert PNG image with no transparent pixels to JPG (you might loose embedded files if any)</label>-->
+                
+              <br/>
+
+              <input id="gs5" type="checkbox" name="gs5" value="1" {gs5c}/>
+              <label for="gs5">Save banned files thumbnails</label>
 
             </div>
 
-            <h2 class="sub-header">FFMpeg Settings</h2>
+            <h3 class="sub-header">Security Settings</h3>
+              <div class="input-group">
+
+               <input id="ss0" type="checkbox" name="ss0" value="1" {ss0c}/>
+               <label for="ss0">Enable HTTP Basic Authentication</label>
+
+              <br/>
+
+              <input id="ss1" type="checkbox" name="ss1" value="1" {ss1c}/>
+              <label for="ss1">Allow guest access for archived threads</label>
+
+              <br/>
+
+               <label for="bauser">Username: </label>
+               <input id="bauser" type="text" name="ba_user" value="{bauser}" class="form-control"/>
+
+              <br/>
+
+              <label for="bapass">Password: </label>
+              <input id="bapass" type="text" name="ba_pass" value="{bapass}" class="form-control"/>
+
+              </div>
+
+            <h3 class="sub-header">FFMpeg Settings</h3>
             <div class="input-group">
 
               <input type="text" name="ffmpeg_path" value="{ffpath}" placeholder="enter ffmpeg path" class="form-control"/>
@@ -160,7 +188,7 @@
             </div>
 
 
-            <h2 class="sub-header">File Queue Settings</h2>
+            <h3 class="sub-header">File Queue Settings</h3>
             <div class="input-group">
 
               <input id="fq0" type="checkbox" name="fq0" value="1" {fq0c}/>
@@ -188,7 +216,7 @@
             </div>
 
 
-            <h2 class="sub-header">Misc actions</h2>
+            <h3 class="sub-header">Misc actions</h3>
             <div>
               <a href="/action/clearapicache" class="btn btn-default">Clear API files cache</a>
               <a href="/action/resetnetstats" class="btn btn-default">Reset network statistics</a>

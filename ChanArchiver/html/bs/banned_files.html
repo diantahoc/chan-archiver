@@ -90,25 +90,28 @@
 
         <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
           <h1 class="page-header">Banned Files</h1>
+            <div class="container">
+                <ul class="pagination">
+                    {pagenumbers}
+                </ul>
 
-          <div class="table-responsive">
-            <table class="table table-striped">
-              <thead>
-                <tr>
-                  <th>Thumbnail (if available)</th>
-                  <th>File Hash</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Thumbnail (if available)</th>
+                                <th>File Hash</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
 
-                {Items}
+                            {Items}
 
-              </tbody>
-            </table>
-          </div>
-
-
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
       </div>
     </div>

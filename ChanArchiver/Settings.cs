@@ -45,6 +45,16 @@ namespace ChanArchiver
 
         public static bool UseHttps { get; set; }
 
+        public static bool EnableAuthentication { get; set; }
+
+        public static string AuthUsername { get; set; }
+
+        public static string AuthPassword { get; set; }
+
+        public static bool AllowGuestAccess { get; set; }
+
+        public static bool SaveBannedFileThumbnail { get; set; }
+
         public static void Save()
         {
             Dictionary<string, object> data = new Dictionary<string, object>(11);
@@ -76,6 +86,16 @@ namespace ChanArchiver
             data.Add("AutoRemoveCompleteFiles", AutoRemoveCompleteFiles);
 
             data.Add("UseHttps", UseHttps);
+
+            data.Add("EnableAuthentication", EnableAuthentication);
+
+            data.Add("AuthUsername", AuthUsername);
+
+            data.Add("AuthPassword", AuthPassword);
+
+            data.Add("AllowGuestAccess", AllowGuestAccess);
+
+            data.Add("SaveBannedFileThumbnail", SaveBannedFileThumbnail);
 
             string _data = Newtonsoft.Json.JsonConvert.SerializeObject(data, Newtonsoft.Json.Formatting.Indented);
             System.IO.File.WriteAllText(SettingsSaveFile, _data);
@@ -155,10 +175,34 @@ namespace ChanArchiver
                     UseHttps = Convert.ToBoolean(t["UseHttps"]);
                 }
 
-
                 if (t.ContainsKey("RemoveThreadsWhenTheyEnterArchivedState"))
                 {
                     RemoveThreadsWhenTheyEnterArchivedState = Convert.ToBoolean(t["RemoveThreadsWhenTheyEnterArchivedState"]);
+                }
+
+                if (t.ContainsKey("EnableAuthentication"))
+                {
+                    EnableAuthentication = Convert.ToBoolean(t["EnableAuthentication"]);
+                }
+
+                if (t.ContainsKey("AuthUsername"))
+                {
+                    AuthUsername = Convert.ToString(t["AuthUsername"]);
+                }
+
+                if (t.ContainsKey("AuthPassword"))
+                {
+                    AuthPassword = Convert.ToString(t["AuthPassword"]);
+                }
+
+                if (t.ContainsKey("AllowGuestAccess"))
+                {
+                    AllowGuestAccess = Convert.ToBoolean(t["AllowGuestAccess"]);
+                }
+
+                if (t.ContainsKey("SaveBannedFileThumbnail"))
+                {
+                    SaveBannedFileThumbnail = Convert.ToBoolean(t["SaveBannedFileThumbnail"]);
                 }
 
                 #endregion
@@ -170,6 +214,7 @@ namespace ChanArchiver
                 Convert_Webmgif_To_Target = true; Convert_Webmgif_Target = X_Target.GIF; Convert_Webmgif_only_devices = false;
                 ListThumbsInQueue = false; FilePrioritizeMode = FilePrioritizeModeEnum.SmallerFirst; PrioritizeBumpLimit = false;
                 ConvertPNGImageWithNoTransparencyToJPG = false; AutoRemoveCompleteFiles = true; UseHttps = true; RemoveThreadsWhenTheyEnterArchivedState = true;
+                EnableAuthentication = true; AuthPassword = "admin"; AuthUsername = "admin"; AllowGuestAccess = false; SaveBannedFileThumbnail = true;
                 Save();
             }
         }

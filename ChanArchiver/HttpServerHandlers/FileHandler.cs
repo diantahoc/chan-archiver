@@ -14,19 +14,25 @@ namespace ChanArchiver.HttpServerHandlers
 
             if (command.StartsWith("/file/"))
             {
-                string hash = command.Split('/').Last();
-                string path = Path.Combine(Program.file_save_dir, hash);
-                string extension = command.Split('.').Last().ToLower();
+                string[] e = command.Split('/').Last().Split('.');
+
+                if (e.Length != 2)
+                    return false;
+
+                string hash = e[0];
+
+                string extension = e[1];
+
+                string path = FileOperations.MapFullFile(hash, extension);
 
                 string ua = request.Headers["User-Agent"].ToLower();
+
                 bool no_webm = device_not_support_webm(ua);
 
                 FileInfo fi = new FileInfo(path);
 
-
-                if (fi.Exists && fi.DirectoryName == Program.file_save_dir)
+                if (fi.Exists && fi.DirectoryName.Contains(Program.file_save_dir))
                 {
-
                     #region WebM to MP4
 
                     if (extension == "webm" && Settings.ConvertWebmToMp4)
@@ -82,7 +88,7 @@ namespace ChanArchiver.HttpServerHandlers
                     return true;
                 }
                 // probably this gif file has been converted to a webm
-                else if (fi.DirectoryName == Program.file_save_dir && File.Exists(path + ".webm"))
+                else if (File.Exists(path + ".webm") && fi.DirectoryName.Contains(Program.file_save_dir))
                 {
                     string was_gif_path = path + ".webm";
 
@@ -182,15 +188,19 @@ namespace ChanArchiver.HttpServerHandlers
 
             if (command.StartsWith("/filecn/"))
             {
-                string hash = command.Split('?').First().Split('/').Last();
-                string path = Path.Combine(Program.file_save_dir, hash);
+                string[] e = command.Split('?').First().Split('/').Last().Split('.');
+
+                if (e.Length != 2)
+                    return false;
+
+                string path = FileOperations.MapFullFile(e[0], e[1]);
                 if (File.Exists(path))
                 {
                     string custom_name = request.QueryString["cn"].Value;
 
                     if (!string.IsNullOrEmpty(custom_name))
                     {
-                        response.AddHeader("content-disposition", string.Format("attachment; filename=\"{0}\"", custom_name));
+                        response.AddHeader("content-disposition", string.Format("attachment; filename=\"{0}\"", custom_name.Replace("\"", "")));
                     }
 
                     response.ContentType = get_mime(command.Split('.').Last().ToLower());
