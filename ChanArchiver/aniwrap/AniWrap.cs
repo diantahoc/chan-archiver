@@ -8,24 +8,35 @@ using System.Web;
 using System.Xml;
 using AniWrap.DataTypes;
 using AniWrap.Helpers;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using Jayrock.Json;
+using Jayrock.Json.Conversion;
+
 namespace AniWrap
 {
     public class AniWrap
     {
-        private string _cache_dir;
+        private CacheProvider cache;
 
         public AniWrap()
         {
-            _cache_dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.InternetCache), "aniwrap_cache");
-            check_dir(_cache_dir);
+            cache = new MemoryCacheProvdier();
         }
 
         public AniWrap(string cache_dir)
         {
-            _cache_dir = cache_dir;
-            check_dir(_cache_dir);
+            cache = new DiskCacheProvider(cache_dir);
+        }
+
+        public AniWrap(CacheProvider cache)
+        {
+            if (cache != null)
+            {
+                this.cache = cache;
+            }
+            else
+            {
+                this.cache = new MemoryCacheProvdier();
+            }
         }
 
         #region Data Parsers
@@ -47,19 +58,21 @@ namespace AniWrap
 
                     List<CatalogItem[]> il = new List<CatalogItem[]>();
 
-                    List<Dictionary<string, object>> list = (List<Dictionary<string, object>>)Newtonsoft.Json.JsonConvert.DeserializeObject(response.Data, typeof(List<Dictionary<string, object>>));
+                    JsonArray list = JsonConvert.Import<JsonArray>(response.Data);
+
                     //p is page index
                     //u is thread index
-                    for (int p = 0; p < list.Count(); p++)
+
+                    for (int p = 0; p < list.Count; p++)
                     {
-                        Dictionary<string, object> page = list[p];
+                        JsonObject page = (JsonObject)list[p];
                         List<CatalogItem> Unipage = new List<CatalogItem>();
 
-                        Newtonsoft.Json.Linq.JArray threads = (Newtonsoft.Json.Linq.JArray)page["threads"];
+                        JsonArray threads = (JsonArray)page["threads"];
 
                         for (int u = 0; u < threads.Count; u++)
                         {
-                            Newtonsoft.Json.Linq.JToken thread = threads[u];
+                            JsonObject thread = (JsonObject)threads[u];
                             Unipage.Add(ParseJToken_Catalog(thread, p, board));
                         }
 
@@ -91,7 +104,7 @@ namespace AniWrap
                 case APIResponse.ErrorType.NoError:
                     ThreadContainer tc = null;
 
-                    Dictionary<string, object> list = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(response.Data);
+                    JsonObject list = JsonConvert.Import<JsonObject>(response.Data);
 
                     //if (list == null) 
                     //{
@@ -99,14 +112,15 @@ namespace AniWrap
                     //    return GetThreadData(board, id);
                     //}
 
-                    if (list.ContainsKey("posts"))
+                    if (list.Names.Cast<string>().Contains("posts"))
                     {
-                        Newtonsoft.Json.Linq.JContainer data = (Newtonsoft.Json.Linq.JContainer)list["posts"];
-                        tc = new ThreadContainer(ParseThread(data[0], board));
+                        JsonArray data = list["posts"] as JsonArray;
+
+                        tc = new ThreadContainer(ParseThread((JsonObject)data.First(), board));
 
                         for (int index = 1; index < data.Count; index++)
                         {
-                            tc.AddReply(ParseReply(data[index], board));
+                            tc.AddReply(ParseReply((JsonObject)data[index], board));
                         }
                     }
 
@@ -123,7 +137,7 @@ namespace AniWrap
             }
         }
 
-        private Thread ParseThread(Newtonsoft.Json.Linq.JToken data, string board)
+        private Thread ParseThread(JsonObject data, string board)
         {
             Thread t = new Thread();
 
@@ -194,17 +208,17 @@ namespace AniWrap
 
             if (data["sticky"] != null)
             {
-                t.IsSticky = data["sticky"].Value<int>() == 1;
+                t.IsSticky = Convert.ToInt32(data["sticky"]) == 1;
             }
 
             if (data["closed"] != null)
             {
-                t.IsClosed = data["closed"].Value<int>() == 1;
+                t.IsClosed = Convert.ToInt32(data["closed"]) == 1;
             }
 
             if (data["archived"] != null)
             {
-                t.IsArchived = data["archived"].Value<int>() == 1;
+                t.IsArchived = Convert.ToInt32(data["archived"]) == 1;
             }
 
             if (data["country"] != null)
@@ -229,34 +243,34 @@ namespace AniWrap
 
             if (t.File != null) { t.File.owner = t; }
 
-            t.image_replies = data["images"].Value<int>();
+            t.image_replies = Convert.ToInt32(data["images"]);
 
-            t.ID = data["no"].Value<int>();
+            t.ID = Convert.ToInt32(data["no"]);
 
-            t.text_replies = data["replies"].Value<int>();
-            t.Time = Common.ParseUTC_Stamp(data["time"].Value<int>());
+            t.text_replies = Convert.ToInt32(data["replies"]);
+            t.Time = Common.ParseUTC_Stamp(Convert.ToInt32(data["time"]));
 
             return t;
         }
 
-        private PostFile ParseFile(Newtonsoft.Json.Linq.JToken data, string board)
+        private PostFile ParseFile(JsonObject data, string board)
         {
             if (data["filename"] != null)
             {
                 PostFile pf = new PostFile();
                 pf.filename = HttpUtility.HtmlDecode(data["filename"].ToString());
                 pf.ext = data["ext"].ToString().Substring(1);
-                pf.height = data["h"].Value<int>();
-                pf.width = data["w"].Value<int>();
-                pf.thumbW = data["tn_w"].Value<int>();
-                pf.thumbH = data["tn_h"].Value<int>();
+                pf.height = Convert.ToInt32(data["h"]);
+                pf.width = Convert.ToInt32(data["w"]);
+                pf.thumbW = Convert.ToInt32(data["tn_w"]);
+                pf.thumbH = Convert.ToInt32(data["tn_h"]);
                 pf.thumbnail_tim = data["tim"].ToString();
                 pf.board = board;
                 pf.hash = data["md5"].ToString();
-                pf.size = data["fsize"].Value<int>();
+                pf.size = Convert.ToInt32(data["fsize"]);
                 if (data["spoiler"] != null)
                 {
-                    pf.IsSpoiler = data["spoiler"].Value<int>() == 1;
+                    pf.IsSpoiler = Convert.ToInt32(data["spoiler"]) == 1;
                 }
                 return pf;
             }
@@ -266,7 +280,7 @@ namespace AniWrap
             }
         }
 
-        private GenericPost ParseReply(Newtonsoft.Json.Linq.JToken data, string board)
+        private GenericPost ParseReply(JsonObject data, string board)
         {
             GenericPost t = new GenericPost();
 
@@ -357,9 +371,9 @@ namespace AniWrap
 
             if (t.File != null) { t.File.owner = t; }
 
-            t.ID =(data["no"].Value<int>()); ;
+            t.ID = Convert.ToInt32(data["no"]); ;
 
-            t.Time = Common.ParseUTC_Stamp((data["time"].Value<int>()));
+            t.Time = Common.ParseUTC_Stamp(Convert.ToInt32((data["time"])));
 
             return t;
         }
@@ -381,15 +395,15 @@ namespace AniWrap
             }
         }
 
-        private CatalogItem ParseJToken_Catalog(Newtonsoft.Json.Linq.JToken thread, int pagenumber, string board)
+        private CatalogItem ParseJToken_Catalog(JsonObject thread, int pagenumber, string board)
         {
             CatalogItem ci = new CatalogItem();
 
             //post number - no
-            ci.ID = thread["no"].Value<int>();
+            ci.ID = Convert.ToInt32(thread["no"]);
 
             // post time - now
-            ci.Time = Common.ParseUTC_Stamp(thread["time"].Value<int>());
+            ci.Time = Common.ParseUTC_Stamp(Convert.ToInt32(thread["time"]));
 
             //name 
             if (thread["name"] != null)
@@ -433,27 +447,27 @@ namespace AniWrap
                 PostFile pf = new PostFile();
                 pf.filename = thread["filename"].ToString();
                 pf.ext = thread["ext"].ToString().Replace(".", "");
-                pf.height = thread["h"].Value<int>();
-                pf.width = (thread["w"].Value<int>());
-                pf.thumbW =(thread["tn_w"].Value<int>());
-                pf.thumbH = (thread["tn_h"].Value<int>());
+                pf.height = Convert.ToInt32(thread["h"]);
+                pf.width = Convert.ToInt32(thread["w"]);
+                pf.thumbW = Convert.ToInt32(thread["tn_w"]);
+                pf.thumbH = Convert.ToInt32(thread["tn_h"]);
                 pf.owner = ci;
                 pf.thumbnail_tim = thread["tim"].ToString();
                 pf.board = board;
 
                 pf.hash = thread["md5"].ToString();
-                pf.size = (thread["fsize"].Value<int>());
+                pf.size = Convert.ToInt32(thread["fsize"]);
 
                 ci.File = pf;
             }
 
             if (thread["last_replies"] != null)
             {
-                Newtonsoft.Json.Linq.JContainer li = (Newtonsoft.Json.Linq.JContainer)thread["last_replies"];
+                JsonArray li = (JsonArray)thread["last_replies"];
 
                 List<GenericPost> repl = new List<GenericPost>();
 
-                foreach (Newtonsoft.Json.Linq.JObject j in li)
+                foreach (JsonObject j in li)
                 {
                     repl.Add(ParseReply(j, board)); // HACK: parent must not be null.
                 }
@@ -463,7 +477,7 @@ namespace AniWrap
 
             if (thread["bumplimit"] != null)
             {
-                ci.BumpLimit = (thread["bumplimit"].Value<int>());
+                ci.BumpLimit = Convert.ToInt32(thread["bumplimit"]);
             }
             else
             {
@@ -472,15 +486,15 @@ namespace AniWrap
 
             if (thread["imagelimit"] != null)
             {
-                ci.ImageLimit = (thread["imagelimit"].Value<int>());
+                ci.ImageLimit = Convert.ToInt32(thread["imagelimit"]);
             }
             else
             {
                 ci.ImageLimit = 150;
             }
 
-            ci.image_replies = (thread["images"].Value<int>());
-            ci.text_replies = (thread["replies"].Value<int>());
+            ci.image_replies = Convert.ToInt32(thread["images"]);
+            ci.text_replies = Convert.ToInt32(thread["replies"]);
             ci.page_number = pagenumber;
 
             return ci;
@@ -504,18 +518,17 @@ namespace AniWrap
 
                     Dictionary<int, DateTime> dic = new Dictionary<int, DateTime>();
 
-                    List<object> pages = Newtonsoft.Json.JsonConvert.DeserializeObject<List<object>>(response.Data);
-
+                    JsonArray pages = JsonConvert.Import<JsonArray>(response.Data);
 
                     for (int i = 0; i < pages.Count; i++)
                     {
-                        Newtonsoft.Json.Linq.JObject page = (Newtonsoft.Json.Linq.JObject)pages[i];
-                        Newtonsoft.Json.Linq.JArray threads = (Newtonsoft.Json.Linq.JArray)page["threads"];
+                        JsonObject page = (JsonObject)pages[i];
+                        JsonArray threads = (JsonArray)page["threads"];
 
-                        foreach (Newtonsoft.Json.Linq.JObject threadinfo in threads)
+                        foreach (JsonObject threadinfo in threads)
                         {
-                            dic.Add(threadinfo["no"].Value<int>(),
-                                Common.ParseUTC_Stamp(threadinfo["last_modified"].Value<int>()));
+                            dic.Add(Convert.ToInt32(threadinfo["no"]),
+                                Common.ParseUTC_Stamp(Convert.ToInt32(threadinfo["last_modified"])));
                         }
                     }
 
@@ -533,11 +546,6 @@ namespace AniWrap
             }
         }
 
-        private string LastTimeBoardsWereLoaded
-        {
-            get { return Path.Combine(this._cache_dir, "ltbwl"); }
-        }
-
         public struct BoardInfo
         {
             public string Title { get; set; }
@@ -549,35 +557,33 @@ namespace AniWrap
         {
             string data = ChanArchiver.Properties.Resources.cached_boards;
 
-            string cached_catalog_data = Path.Combine(this._cache_dir, "02d644062150340003abb3f0f427b906_data");
+            StorageEntry cached_catalog_data = cache.GetText("CatalogData");
 
-            if (File.Exists(cached_catalog_data)) { data = File.ReadAllText(cached_catalog_data); }
-
-            DateTime ll = Common.UnixEpoch;
-
-            if (File.Exists(LastTimeBoardsWereLoaded)) { ll = parse_datetime(File.ReadAllText(LastTimeBoardsWereLoaded)); }
-
-            if ((DateTime.Now - ll).Days > 6)
+            if (cached_catalog_data == null || cached_catalog_data != null && (DateTime.Now - cached_catalog_data.LastModified).Days > 6)
             {
                 APIResponse api_r = LoadAPI(string.Format("{0}://a.4cdn.org/boards.json", Common.HttpPrefix));
 
                 if (api_r.Error == APIResponse.ErrorType.NoError)
                 {
                     data = api_r.Data;
-                }
 
-                File.WriteAllText(LastTimeBoardsWereLoaded, datetime_tostring(DateTime.Now));
+                    cache.StoreText("CatalogData", api_r.Data, DateTime.Now);
+                }
+            }
+            else
+            {
+                data = cached_catalog_data.Text;
             }
 
-            JObject json = JsonConvert.DeserializeObject<JObject>(data);
+            JsonObject json = JsonConvert.Import<JsonObject>(data);
 
-            JArray boards = (JArray)json["boards"];
+            JsonArray boards = (JsonArray)json["boards"];
 
             var dic = new Dictionary<string, BoardInfo>();
 
             for (int i = 0; i < boards.Count; i++)
             {
-                JToken board = boards[i];
+                JsonObject board = (JsonObject)boards[i];
 
                 string letter = Convert.ToString(board["board"]);
                 string desc = Convert.ToString(board["title"]);
@@ -588,8 +594,8 @@ namespace AniWrap
                 }
                 else
                 {
-                     bl = board["bump_limit"].Value<int>();
-                     iml = board["image_limit"].Value<int>();
+                    bl = Convert.ToInt32(board["bump_limit"]);
+                    iml = Convert.ToInt32(board["image_limit"]);
                 }
                 dic.Add(letter, new BoardInfo()
                 {
@@ -608,23 +614,20 @@ namespace AniWrap
 
         private APIResponse LoadAPI(string url)
         {
-            string hash = Common.MD5(url);
-
-            string file_path = Path.Combine(_cache_dir, hash); // contain the last fetch date
-            string file_path_data = Path.Combine(_cache_dir, hash + "_data");
-
-            DateTime d = old_date;
+            DateTime lastModified = old_date;
 
             APIResponse result = null;
 
-            if (File.Exists(file_path))
+            StorageEntry se = cache.GetText(url);
+
+            if (se != null)
             {
-                d = parse_datetime(File.ReadAllText(file_path));
+                lastModified = se.LastModified;
             }
 
             HttpWebRequest wr = (HttpWebRequest)HttpWebRequest.Create(url);
 
-            wr.IfModifiedSince = d;
+            wr.IfModifiedSince = lastModified;
 
             wr.UserAgent = ChanArchiver.Program.get_random_user_agent();
 
@@ -659,8 +662,7 @@ namespace AniWrap
 
                 DateTime lmm = DateTime.Parse(lm);
 
-                File.WriteAllText(file_path, datetime_tostring(lmm));
-                File.WriteAllText(file_path_data, text);
+                cache.StoreText(url, text, lmm);
 
                 result = new APIResponse(text, APIResponse.ErrorType.NoError);
 
@@ -672,24 +674,16 @@ namespace AniWrap
                 {
                     if (httpResponse.StatusCode == HttpStatusCode.NotModified)
                     {
-                        if (File.Exists(file_path_data))
+                        if (se != null)
                         {
-                            result = new APIResponse(File.ReadAllText(file_path_data), APIResponse.ErrorType.NoError);
-                        }
-                        else
-                        {
-                            delete_file(file_path);
-                            delete_file(file_path_data);
-                            return LoadAPI(url); //retry fetch
-                            //throw new Exception("Reference to a cached file was not found");
+                            result = new APIResponse(se.Text, APIResponse.ErrorType.NoError);
                         }
                     }
                     else if (httpResponse.StatusCode == HttpStatusCode.NotFound)
                     {
                         result = new APIResponse(null, APIResponse.ErrorType.NotFound);
-                        //delete api files since resource has 404'ed
-                        delete_file(file_path);
-                        delete_file(file_path_data);
+                        //delete cache entry since resource has 404'ed
+                        cache.ClearText(url);
                     }
                     else
                     {
@@ -710,34 +704,6 @@ namespace AniWrap
             }
 
             return result;
-        }
-
-        private void FlushAPI(string url)
-        {
-            string hash = Common.MD5(url);
-
-            delete_file(Path.Combine(_cache_dir, hash));
-            delete_file(Path.Combine(_cache_dir, hash + "_data"));
-        }
-
-        private void delete_file(string s)
-        {
-            if (File.Exists(s)) { File.Delete(s); }
-        }
-
-        private DateTime parse_datetime(string s)
-        {
-            return XmlConvert.ToDateTime(s, XmlDateTimeSerializationMode.Local);
-        }
-
-        private string datetime_tostring(DateTime s)
-        {
-            return XmlConvert.ToString(s, XmlDateTimeSerializationMode.Local);
-        }
-
-        private void check_dir(string path)
-        {
-            if (!Directory.Exists(path)) { Directory.CreateDirectory(path); }
         }
     }
 }

@@ -39,6 +39,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -48,6 +49,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject>ChanArchiver.Program</StartupObject>
@@ -60,13 +62,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\Desktop\New folder\HttpServer.v1.1\HttpServer.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\Desktop\chanb pro\Json50r6\Bin\Net20\Newtonsoft.Json.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Numerics" />
     <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -76,6 +75,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="aniwrap\AniWrap.cs" />
+    <Compile Include="aniwrap\CacheProvider.cs" />
     <Compile Include="aniwrap\DataTypes\APIResponse.cs" />
     <Compile Include="aniwrap\DataTypes\CatalogItem.cs" />
     <Compile Include="aniwrap\DataTypes\GenericPost.cs" />
@@ -115,6 +115,8 @@
     <Compile Include="aniwrap\libs\hap\1_4_0\HtmlAgilityPack\NameValuePairList.cs" />
     <Compile Include="BoardWatcher.cs" />
     <Compile Include="FileFormatter.cs" />
+    <Compile Include="FileIndex.cs" />
+    <Compile Include="FileIndexInfo.cs" />
     <Compile Include="FileOperations.cs" />
     <Compile Include="FileQueueStateInfo.cs" />
     <Compile Include="FileSystemStats.cs" />
@@ -135,6 +137,200 @@
     <Compile Include="HttpServerHandlers\ThreadFiltersPageHandler.cs" />
     <Compile Include="HttpServerHandlers\ThreadJobInfoPageHandler.cs" />
     <Compile Include="HttpServerHandlers\WatchJobsPageHandler.cs" />
+    <Compile Include="Libs\JayrockJSON\Common\Mask.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\BooleanObject.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Collections\KeyedCollection.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Configuration\DictionarySectionHandler.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Configuration\ListSectionHandler.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Configuration\TypeListSectionHandler.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Diagnostics\DebugString.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\DictionaryHelper.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Dynamic\DynamicMetaObject.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\IAttributeAttachment.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\IndentedTextWriter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\InternetDate.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\JsonML\JsonMLCodec.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\JsonML\JsonMLException.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\JsonML\JsonMLForm.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\BufferedCharReader.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\AnyType.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\Converters\AnyImporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\Converters\ArrayImporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\Converters\BooleanExporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\Converters\BooleanImporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\Converters\ByteArrayExporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\Converters\ByteArrayImporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\Converters\ComponentExporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\Converters\ComponentImporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\Converters\ControlExporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\Converters\DataRowExporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\Converters\DataRowViewExporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\Converters\DataSetExporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\Converters\DataTableExporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\Converters\DataViewExporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\Converters\DateTimeExporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\Converters\DateTimeImporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\Converters\DbDataRecordExporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\Converters\DictionaryExporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\Converters\DictionaryImporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\Converters\EnumerableExporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\Converters\EnumImporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\Converters\ExpandoObjectExporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\Converters\ExpandoObjectImporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\Converters\ExportAwareExporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\Converters\ExporterBase.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\Converters\GuidImporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\Converters\ImportAwareImporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\Converters\ImporterBase.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\Converters\JsonBufferExporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\Converters\JsonBufferImporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\Converters\JsonNumberExporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\Converters\ListImporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\Converters\NameValueCollectionExporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\Converters\NameValueCollectionImporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\Converters\NullableExporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\Converters\NullableImporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\Converters\NumberExporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\Converters\NumberImporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\Converters\StringExporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\Converters\StringImporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\Converters\TupleExporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\Converters\TupleImporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\Converters\UriImporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\CustomTypeDescriptor.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\ExportContext.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\ExporterCollection.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\ExporterListSectionHandler.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\IExporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\IImporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\IJsonExportable.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\IJsonImportable.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\ImportContext.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\ImporterCollection.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\ImporterListSectionHandler.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\INonObjectMemberImporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\IObjectMemberExporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\IObjectMemberImporter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\JsonConvert.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\JsonDefaultValueAttribute.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\JsonExportAttribue.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\JsonIgnoreAttribute.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\JsonMemberNameAttribute.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\JsonMemberNamingConventionAttribute.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\Conversion\PropertyCustomization.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\EmptyJsonWriter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\InvalidMemberException.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\JsonArray.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\JsonBoolean.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\JsonBuffer.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\JsonBufferReader.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\JsonBufferStorage.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\JsonBufferWriter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\JsonException.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\JsonImportingWriter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\JsonMember.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\JsonNull.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\JsonNumber.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\JsonObject.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\JsonReader.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\JsonReaderBase.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\JsonRecorder.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\JsonString.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\JsonText.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\JsonTextReader.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\JsonTextWriter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\JsonToken.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\JsonTokenClass.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\JsonTokenWriterBase.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\JsonWriter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\JsonWriterBase.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\JsonWriterBracket.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Json\NamedJsonBuffer.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\Reflection\Reflector.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\TypeResolution.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock.Json\UnixTime.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock\CaselessString.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock\CollectionHelper.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock\InvariantStringArray.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock\JsonRpc\BadRequestException.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock\JsonRpc\JsonRpcDispatcher.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock\JsonRpc\JsonRpcDispatcherFactory.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock\JsonRpc\JsonRpcError.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock\JsonRpc\JsonRpcException.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock\JsonRpc\JsonRpcHelpAttribute.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock\JsonRpc\JsonRpcMethodAttribute.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock\JsonRpc\JsonRpcService.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Libs\JayrockJSON\Jayrock\JsonRpc\JsonRpcServiceAttribute.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock\JsonRpc\JsonRpcServiceReflector.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock\JsonRpc\JsonRpcServices.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock\JsonRpc\JsonRpcTrace.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock\JsonRpc\Web\AppVars.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock\JsonRpc\Web\HttpRequestSecurity.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock\JsonRpc\Web\JsonRpcDispatchScope.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock\JsonRpc\Web\JsonRpcExecutive.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock\JsonRpc\Web\JsonRpcFeaturesSectionHandler.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock\JsonRpc\Web\JsonRpcGetProtocol.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock\JsonRpc\Web\JsonRpcHandler.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Libs\JayrockJSON\Jayrock\JsonRpc\Web\JsonRpcHelp.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Libs\JayrockJSON\Jayrock\JsonRpc\Web\JsonRpcMonadProxyGenerator.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock\JsonRpc\Web\JsonRpcPage.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Libs\JayrockJSON\Jayrock\JsonRpc\Web\JsonRpcProxyGenerator.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock\JsonRpc\Web\JsonRpcProxyGeneratorBase.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock\JsonRpc\Web\JsonRpcPythonProxyGenerator.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock\JsonRpc\Web\JsonRpcServiceFeature.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock\JsonRpc\Web\JsonRpcTester.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Libs\JayrockJSON\Jayrock\JsonRpc\Web\JsonRpcWebTraceAdapter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock\Services\DuplicateMethodException.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock\Services\IMethodImpl.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock\Services\InvocationException.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock\Services\IService.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock\Services\Method.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock\Services\MethodBuilder.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock\Services\MethodNotFoundException.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock\Services\Modifiers.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock\Services\Parameter.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock\Services\ParameterBuilder.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock\Services\Reflectors.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock\Services\ServiceClass.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock\Services\ServiceClassBuilder.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock\Services\SynchronousAsyncResult.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock\Services\TargetMethodException.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock\Services\TypeMethodImpl.cs" />
+    <Compile Include="Libs\JayrockJSON\Jayrock\Services\WarpedMethodImpl.cs" />
+    <Compile Include="Libs\SmartThreadPool\CallerThreadContext.cs" />
+    <Compile Include="Libs\SmartThreadPool\CanceledWorkItemsGroup.cs" />
+    <Compile Include="Libs\SmartThreadPool\EventWaitHandle.cs" />
+    <Compile Include="Libs\SmartThreadPool\EventWaitHandleFactory.cs" />
+    <Compile Include="Libs\SmartThreadPool\Exceptions.cs" />
+    <Compile Include="Libs\SmartThreadPool\Interfaces.cs" />
+    <Compile Include="Libs\SmartThreadPool\InternalInterfaces.cs" />
+    <Compile Include="Libs\SmartThreadPool\PriorityQueue.cs" />
+    <Compile Include="Libs\SmartThreadPool\SmartThreadPool.cs" />
+    <Compile Include="Libs\SmartThreadPool\SmartThreadPool.ThreadEntry.cs" />
+    <Compile Include="Libs\SmartThreadPool\Stopwatch.cs" />
+    <Compile Include="Libs\SmartThreadPool\STPEventWaitHandle.cs" />
+    <Compile Include="Libs\SmartThreadPool\STPPerformanceCounter.cs" />
+    <Compile Include="Libs\SmartThreadPool\STPStartInfo.cs" />
+    <Compile Include="Libs\SmartThreadPool\SynchronizedDictionary.cs" />
+    <Compile Include="Libs\SmartThreadPool\WIGStartInfo.cs" />
+    <Compile Include="Libs\SmartThreadPool\WorkItem.cs" />
+    <Compile Include="Libs\SmartThreadPool\WorkItem.WorkItemResult.cs" />
+    <Compile Include="Libs\SmartThreadPool\WorkItemFactory.cs" />
+    <Compile Include="Libs\SmartThreadPool\WorkItemInfo.cs" />
+    <Compile Include="Libs\SmartThreadPool\WorkItemResultTWrapper.cs" />
+    <Compile Include="Libs\SmartThreadPool\WorkItemsGroup.cs" />
+    <Compile Include="Libs\SmartThreadPool\WorkItemsGroupBase.cs" />
+    <Compile Include="Libs\SmartThreadPool\WorkItemsQueue.cs" />
     <Compile Include="LightWatcher.cs" />
     <Compile Include="LogEntry.cs" />
     <Compile Include="NetworkUsageCounter.cs" />
@@ -147,30 +343,6 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="Settings.cs" />
-    <Compile Include="stp\CallerThreadContext.cs" />
-    <Compile Include="stp\CanceledWorkItemsGroup.cs" />
-    <Compile Include="stp\EventWaitHandle.cs" />
-    <Compile Include="stp\EventWaitHandleFactory.cs" />
-    <Compile Include="stp\Exceptions.cs" />
-    <Compile Include="stp\Interfaces.cs" />
-    <Compile Include="stp\InternalInterfaces.cs" />
-    <Compile Include="stp\PriorityQueue.cs" />
-    <Compile Include="stp\SmartThreadPool.cs" />
-    <Compile Include="stp\SmartThreadPool.ThreadEntry.cs" />
-    <Compile Include="stp\Stopwatch.cs" />
-    <Compile Include="stp\STPEventWaitHandle.cs" />
-    <Compile Include="stp\STPPerformanceCounter.cs" />
-    <Compile Include="stp\STPStartInfo.cs" />
-    <Compile Include="stp\SynchronizedDictionary.cs" />
-    <Compile Include="stp\WIGStartInfo.cs" />
-    <Compile Include="stp\WorkItem.cs" />
-    <Compile Include="stp\WorkItem.WorkItemResult.cs" />
-    <Compile Include="stp\WorkItemFactory.cs" />
-    <Compile Include="stp\WorkItemInfo.cs" />
-    <Compile Include="stp\WorkItemResultTWrapper.cs" />
-    <Compile Include="stp\WorkItemsGroup.cs" />
-    <Compile Include="stp\WorkItemsGroupBase.cs" />
-    <Compile Include="stp\WorkItemsQueue.cs" />
     <Compile Include="HttpServerHandlers\ThreadServerModule.cs" />
     <Compile Include="ThreadStore.cs" />
     <Compile Include="ThreadWorker.cs" />
@@ -212,6 +384,7 @@
     </Content>
     <Content Include="html\chan-templates\reply_template.htm" />
     <Content Include="html\file_list_page.html" />
+    <Content Include="Libs\JayrockJSON\Jayrock\json.js" />
     <Content Include="Resources\UserAgentList.txt" />
     <None Include="Resources\cached_boards.txt" />
     <None Include="html\4" />

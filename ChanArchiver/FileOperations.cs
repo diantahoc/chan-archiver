@@ -54,6 +54,11 @@ namespace ChanArchiver
             return Path.Combine(Program.file_save_dir, hash[0].ToString().ToUpper(), hash[1].ToString().ToUpper(), hash + "." + extension);
         }
 
+        public static string MapThumbFile(string hash)
+        {
+            return Path.Combine(Program.thumb_save_dir, hash[0].ToString().ToUpper(), hash[1].ToString().ToUpper(), hash + ".jpg");
+        }
+
         public static bool CheckThumbFileExist(string hash)
         {
             string p;

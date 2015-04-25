@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
+using Jayrock;
+using Jayrock.Json;
+using Jayrock.Json.Conversion;
 
 namespace ChanArchiver
 {
@@ -25,24 +26,24 @@ namespace ChanArchiver
 
             if (File.Exists(opt_path))
             {
-                var thread_data = JsonConvert.DeserializeObject<Dictionary<string, object>>(File.ReadAllText(opt_path));
-                
+                JsonObject thread_data = JsonConvert.Import<JsonObject>(File.ReadAllText(opt_path));
+
                 string data;
 
-                if (thread_data.ContainsKey("op"))
+                if (thread_data.Names.Cast<string>().Contains("op"))
                 {
                     data = thread_data["op"].ToString();
 
-                    if (!string.IsNullOrEmpty(data)) 
+                    if (!string.IsNullOrEmpty(data))
                     {
-                        thread_pf.Add(load_post_data_str(data, true));           
+                        thread_pf.Add(load_post_data_str(data, true));
                         // remove the op post
                         thread_data.Remove("op");
                     }
                 }
 
                 // sort the replies by their id
-                foreach (string key in thread_data.Keys.OrderBy(x => Convert.ToInt32(x)))
+                foreach (string key in thread_data.Names.Cast<object>().OrderBy(x => Convert.ToInt32(x)))
                 {
                     data = thread_data[key].ToString();
 
@@ -64,16 +65,28 @@ namespace ChanArchiver
                         thread_pf.Add(load_post_data_str(data, true));
                     }
                 }
-                
+
                 foreach (string file in
                     Directory.EnumerateFiles(thread_dir_path, "*.json", SearchOption.TopDirectoryOnly).OrderBy(x => Path.GetFileNameWithoutExtension(x)))
                 {
                     if (!file.EndsWith("op.json"))
                     {
                         data = File.ReadAllText(file);
-                        if (!string.IsNullOrEmpty(data))
+
+                        if (!string.IsNullOrWhiteSpace(data))
                         {
-                            thread_pf.Add(load_post_data_str(data, false));
+                            try
+                            {
+                                PostFormatter post = load_post_data_str(data, false);
+                                thread_pf.Add(post);
+                            }
+                            catch (JsonException)
+                            {
+                                File.Delete(file);
+                            }
+                            catch (Exception)
+                            { }
+
                         }
                     }
                 }
@@ -91,21 +104,17 @@ namespace ChanArchiver
             }
         }
 
-        public static IEnumerable<string> GetIndexIDOnly(string board) 
+        public static IEnumerable<string> GetIndexIDOnly(string board)
         {
-             string board_folder = Path.Combine(Program.post_files_dir, board);
+            string board_folder = Path.Combine(Program.post_files_dir, board);
 
-             if (Directory.Exists(board_folder))
-             {
-                 foreach (string dir in Directory.EnumerateDirectories(board_folder))
-                 {
-                     yield return Path.GetFileName(dir);
-                 }
-             }
-             else
-             {
-                 yield return null;
-             }
+            if (Directory.Exists(board_folder))
+            {
+                foreach (string dir in Directory.EnumerateDirectories(board_folder))
+                {
+                    yield return Path.GetFileName(dir);
+                }
+            }
         }
 
         public static IEnumerable<string> GetExistingBoards()
@@ -184,8 +193,8 @@ namespace ChanArchiver
                     {
                         try
                         {
-                            var t = JsonConvert.DeserializeObject<Dictionary<string, object>>(File.ReadAllText(optimized));
-                            if (t.ContainsKey("op"))
+                            JsonObject t = JsonConvert.Import<JsonObject>(File.ReadAllText(optimized));
+                            if (t.Names.Cast<string>().Contains("op"))
                             {
                                 threads_pf.Add(load_post_data_str(t["op"].ToString(), true));
                             }
@@ -221,105 +230,62 @@ namespace ChanArchiver
 
         private static PostFormatter load_post_data_str(string data, bool isop)
         {
-            Dictionary<string, object> post_data = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(data);
+            JsonObject post_data = JsonConvert.Import<JsonObject>(data);
+
+            string[] keys = post_data.Names.Cast<string>().ToArray();
 
             PostFormatter pf = new PostFormatter();
 
-            if (post_data.ContainsKey("RawComment"))
+            foreach (JsonMember member in post_data)
             {
-                pf.Comment = Convert.ToString(post_data["RawComment"]);
-            }
-
-            if (post_data.ContainsKey("Email"))
-            {
-                pf.Email = Convert.ToString(post_data["Email"]);
-            }
-            if (post_data.ContainsKey("Name"))
-            {
-                pf.Name = Convert.ToString(post_data["Name"]);
-            }
-
-            if (post_data.ContainsKey("PosterID"))
-            {
-                pf.PosterID = Convert.ToString(post_data["PosterID"]);
-            }
-
-            if (post_data.ContainsKey("Subject"))
-            {
-                pf.Subject = Convert.ToString(post_data["Subject"]);
-            }
-            if (post_data.ContainsKey("Trip"))
-            {
-                pf.Trip = Convert.ToString(post_data["Trip"]);
-            }
-
-            if (post_data.ContainsKey("ID"))
-            {
-                pf.PostID = Convert.ToInt32(post_data["ID"]);
-            }
-
-            if (post_data.ContainsKey("Time"))
-            {
-                pf.Time = Convert.ToDateTime(post_data["Time"]);
-            }
-
-            if (post_data.ContainsKey("FileHash"))
-            {
-                FileFormatter f = new FileFormatter();
-
-                f.PostID = pf.PostID;
-
-                if (post_data.ContainsKey("FileName"))
+                switch (member.Name)
                 {
-                    f.FileName = Convert.ToString(post_data["FileName"]);
+                    case "RawComment":
+                        pf.Comment = Convert.ToString(member.Value);
+                        continue;
+                    case "Email":
+                        pf.Email = Convert.ToString(member.Value);
+                        continue;
+                    case "Name":
+                        pf.Name = Convert.ToString(member.Value);
+                        continue;
+                    case "PosterID":
+                        pf.PosterID = Convert.ToString(member.Value);
+                        continue;
+                    case "Subject":
+                        pf.Subject = Convert.ToString(member.Value);
+                        continue;
+                    case "Trip":
+                        pf.Trip = Convert.ToString(member.Value);
+                        continue;
+                    case "ID":
+                        pf.PostID = Convert.ToInt32(member.Value);
+                        continue;
+                    case "Time":
+                        pf.Time = Convert.ToDateTime(member.Value);
+                        continue;
+                    case "FileHash":
+                        {
+                            FileFormatter f = new FileFormatter();
+                            f.PostID = pf.PostID;
+                            f.FileName = Convert.ToString(post_data["FileName"]);
+                            f.Hash = Convert.ToString(post_data["FileHash"]);
+                            f.ThumbName = Convert.ToString(post_data["ThumbTime"]);
+                            f.Height = Convert.ToInt32(post_data["FileHeight"]);
+                            f.Width = Convert.ToInt32(post_data["FileWidth"]);
+                            f.Size = Convert.ToInt32(post_data["FileSize"]);
+                            pf.MyFile = f;
+                            continue;
+                        }
+                    case "Sticky":
+                        pf.IsSticky = Convert.ToBoolean(member.Value);
+                        continue;
+                    case "Closed":
+                        pf.IsLocked = Convert.ToBoolean(member.Value);
+                        continue;
                 }
-
-                if (post_data.ContainsKey("FileHash"))
-                {
-                    f.Hash = Convert.ToString(post_data["FileHash"]);
-                }
-                if (post_data.ContainsKey("ThumbTime"))
-                {
-                    f.ThumbName = Convert.ToString(post_data["ThumbTime"]);
-                }
-
-                if (post_data.ContainsKey("FileHeight"))
-                {
-                    f.Height = Convert.ToInt32(post_data["FileHeight"]);
-                }
-
-                if (post_data.ContainsKey("FileWidth"))
-                {
-                    f.Width = Convert.ToInt32(post_data["FileWidth"]);
-                }
-
-                if (post_data.ContainsKey("FileSize"))
-                {
-                    f.Size = Convert.ToInt32(post_data["FileSize"]);
-                }
-
-                pf.MyFile = f;
             }
-
-            if (isop)
-            {
-                if (post_data.ContainsKey("Closed"))
-                {
-                    pf.IsLocked = Convert.ToBoolean(post_data["Closed"]);
-                }
-
-                if (post_data.ContainsKey("Sticky"))
-                {
-                    pf.IsSticky = Convert.ToBoolean(post_data["Sticky"]);
-                }
-
-                pf.Type = PostFormatter.PostType.OP;
-            }
-            else
-            {
-                pf.Type = PostFormatter.PostType.Reply;
-            }
-
+            pf.Type = isop ? PostFormatter.PostType.OP : PostFormatter.PostType.Reply;
             return pf;
         }
     }

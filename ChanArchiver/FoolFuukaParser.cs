@@ -3,7 +3,8 @@ using System.Linq;
 using System.IO;
 using System.IO.Compression;
 using System.Net;
-using Newtonsoft.Json.Linq;
+using Jayrock.Json;
+using Jayrock.Json.Conversion;
 using AniWrap.DataTypes;
 
 namespace ChanArchiver
@@ -87,7 +88,8 @@ namespace ChanArchiver
             string url = string.Format("http://{0}/_/api/chan/thread/?board={1}&num={2}", ffp_data.HOST, ffp_data.BOARD, ffp_data.ThreadID);
 
             HttpWebRequest wr = (HttpWebRequest)WebRequest.Create(url);
-
+          
+            wr.AllowAutoRedirect = true;
             wr.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:26.0) Gecko/20100101 Firefox/26.0";
             wr.Referer = string.Format("http://boards.4chan.org/{0}/res/{1}", ffp_data.BOARD, ffp_data.ThreadID);
 
@@ -124,26 +126,26 @@ namespace ChanArchiver
 
             string data = fetch_api(ffp_data);
 
-            JObject ob = Newtonsoft.Json.JsonConvert.DeserializeObject<JObject>(data);
+            JsonObject ob = JsonConvert.Import<JsonObject>(data);
 
-            JObject thread_object = (JObject)ob[ffp_data.ThreadID.ToString()];
+            JsonObject thread_object = (JsonObject)ob[ffp_data.ThreadID.ToString()];
 
-            JToken op_post = thread_object["op"];
+            JsonObject op_post = (JsonObject)thread_object["op"];
 
             tc = new ThreadContainer(parse_thread(op_post, ffp_data));
 
-            JToken replies = thread_object["posts"];
+            JsonArray replies = (JsonArray)thread_object["posts"];
 
-            foreach (JProperty t in replies)
+            foreach (object t in replies)
             {
-                JToken a = replies[t.Name];
-                tc.AddReply(parse_reply(a, ffp_data));
+                continue;
+                //tc.AddReply(parse_reply(a, ffp_data));
             }
 
             return tc;
         }
 
-        private static Thread parse_thread(JToken data, FoolFuukaParserData ffp_data)
+        private static Thread parse_thread(JsonObject data, FoolFuukaParserData ffp_data)
         {
             Thread t = new Thread();
 
@@ -206,7 +208,7 @@ namespace ChanArchiver
             return t;
         }
 
-        private static GenericPost parse_reply(JToken data, FoolFuukaParserData ffp_data)
+        private static GenericPost parse_reply(JsonObject data, FoolFuukaParserData ffp_data)
         {
             GenericPost gp = new GenericPost();
 
@@ -262,12 +264,12 @@ namespace ChanArchiver
             return gp;
         }
 
-        private static PostFile parse_file(JToken data, FoolFuukaParserData ffp_data, GenericPost owner)
+        private static PostFile parse_file(JsonObject data, FoolFuukaParserData ffp_data, GenericPost owner)
         {
             if (data["media"] != null)
             {
-                JToken media = data["media"];
-                if (media.Count() == 0) { return null; }
+                JsonObject media = (JsonObject)data["media"];
+                if (media.Count == 0) { return null; }
                 if (media["banned"].ToString() != "0") { return null; }
                 if (media["media_status"].ToString() == "not-available") { return null; }
 

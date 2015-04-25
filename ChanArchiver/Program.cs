@@ -11,6 +11,8 @@ using System.Diagnostics;
 using HttpServer;
 using HttpServer.Authentication;
 using HttpServer.HttpModules;
+using Jayrock.Json;
+using Jayrock.Json.Conversion;
 
 namespace ChanArchiver
 {
@@ -131,8 +133,14 @@ namespace ChanArchiver
 
             Settings.ThumbnailOnly = is_t;
 
-            aw = new AniWrap.AniWrap(api_cache_dir);
-
+            if (Settings.CacheAPIFilesInMemory)
+            {
+                aw = new AniWrap.AniWrap();
+            }
+            else
+            {
+                aw = new AniWrap.AniWrap(api_cache_dir);
+            }
             Console.Title = "ChanArchiver";
 
             print("ChanArchiver", ConsoleColor.Cyan);
@@ -199,6 +207,8 @@ namespace ChanArchiver
                 }
             }
 
+            FileIndex.Load();
+
             //Task.Factory.StartNew((Action)delegate { try { build_file_index(); } catch (Exception) { } });
 
             //Console.WriteLine("Building file index...");
@@ -237,129 +247,6 @@ namespace ChanArchiver
             }
         }
 
-        private static Dictionary<string, FileIndexInfo> file_index = new Dictionary<string, FileIndexInfo>();
-
-        public class FileIndexInfo
-        {
-            public FileIndexInfo(string hash)
-            {
-                this.Hash = hash;
-            }
-
-            public string Hash { get; private set; }
-
-            public struct Post
-            {
-                public string Board;
-                public int ThreadID;
-                public int PostID;
-                public string FileName;
-                //public string ToString()
-                //{
-                //    return string.Format("{0}-{1}-{2}", this.Board, this.ThreadID, this.PostID);
-                //}
-            }
-
-            private string get_post_hash(string board, int threadid, int postid)
-            {
-                return string.Format("{0}-{1}-{2}", board, threadid, postid);
-            }
-
-            private Dictionary<string, Post> my_posts = new Dictionary<string, Post>();
-
-            public void MarkPost(string board, int threadid, int postid, string file_name)
-            {
-                string hash = get_post_hash(board, threadid, postid);
-                if (!my_posts.ContainsKey(hash))
-                {
-                    my_posts.Add(hash, new Post()
-                    {
-                        Board = board,
-                        ThreadID = threadid,
-                        PostID = postid,
-                        FileName = file_name
-                    });
-                }
-            }
-
-            public int RepostCount
-            {
-                get
-                {
-                    return my_posts.Count();
-                }
-            }
-
-            public Post[] GetRepostsData() { return my_posts.Values.ToArray(); }
-        }
-
-        private static bool is_index_building = false;
-
-        private static void build_file_index()
-        {
-            try
-            {
-                if (is_index_building) { return; }
-                is_index_building = true;
-
-                foreach (string board in ThreadStore.GetExistingBoards())
-                {
-                    var threads = ThreadStore.GetIndexIDOnly(board);
-
-                    foreach (string thread_id in threads)
-                    {
-                        if (thread_id == null) { continue; }
-
-                        var thread_data = ThreadStore.GetThread(board, thread_id);
-
-                        int tid = Convert.ToInt32(thread_id);
-
-                        foreach (var post in thread_data)
-                        {
-                            if (post.MyFile != null)
-                            {
-                                FileIndexInfo w;
-
-                                if (file_index.ContainsKey(post.MyFile.Hash))
-                                {
-                                    w = file_index[post.MyFile.Hash];
-                                }
-                                else
-                                {
-                                    w = new FileIndexInfo(post.MyFile.Hash);
-                                    file_index.Add(post.MyFile.Hash, w);
-                                }
-
-                                w.MarkPost(board, tid, post.PostID, post.MyFile.FileName);
-                            }
-                        }
-                    }
-                }
-                is_index_building = false;
-            }
-            catch (Exception ex)
-            {
-                is_index_building = false;
-                Console.WriteLine("Error occured while building file index:\n{0}\n{1}", ex.Message, ex.StackTrace);
-                Console.Beep();
-            }
-        }
-
-        public static void update_file_index()
-        {
-            file_index.Clear();
-            GC.Collect();
-            build_file_index();
-        }
-
-        public static FileIndexInfo get_file_index_state(string hash)
-        {
-            if (file_index.ContainsKey(hash))
-                return file_index[hash];
-            else
-                return null;
-        }
-
         private static void optimize_directory_struct(string dir)
         {
             DirectoryInfo dirInfo = new DirectoryInfo(dir);
@@ -389,7 +276,10 @@ namespace ChanArchiver
                 string p = Path.Combine(dirInfo.FullName, first_folder, second_folder);
                 Directory.CreateDirectory(p);
 
-                File.Move(f.FullName, Path.Combine(p, f.Name));
+                string dest = Path.Combine(p, f.Name);
+
+                if (!File.Exists(dest))
+                    File.Move(f.FullName, Path.Combine(p, f.Name));
             }
         }
 
@@ -398,6 +288,7 @@ namespace ChanArchiver
             print("Interactive Console", ConsoleColor.Yellow);
             Console.Write(" has started.\nType (help) to view available commands or (exit) to quit\n");
 
+            Console.Write("> ");
             string command = Console.ReadLine().Trim().ToLower();
 
             while (command != "exit")
@@ -471,21 +362,23 @@ namespace ChanArchiver
                     case "bench":
                         Stopwatch sw = new Stopwatch();
                         sw.Start();
-                        build_file_index();
+                        FileIndex.ReBuild();
                         sw.Stop();
-                        Console.WriteLine("Total {0} unique file have been processed in {1} seconds", file_index.Count, sw.Elapsed.TotalSeconds);
+                        Console.WriteLine("{0} unique files have been processed in {1} seconds", 
+                            FileIndex.EntriesCount, sw.Elapsed.TotalSeconds);
+                        sw.Reset();
                         break;
                     case "sanitize-files":
                         {
                             Console.WriteLine("Updating file index...");
 
-                            update_file_index();
+                            FileIndex.ReBuild();
 
                             int i = 0;
                             foreach (var file in Directory.EnumerateFiles(file_save_dir))
                             {
                                 string hash = Path.GetFileNameWithoutExtension(file).Split('.').First();
-                                if (!file_index.ContainsKey(hash))
+                                if (!FileIndex.IsHashValid(hash))
                                 {
                                     i++;
 
@@ -573,9 +466,9 @@ namespace ChanArchiver
                                         else
                                         {
                                             Console.WriteLine("Cannot add this thread. Possible reasons:\n"
-                                                + "- The thread ID is invalid"
+                                                + "- The thread ID is invalid\n"
                                                 + "- The archive no longer archive this board.\n"
-                                                + "- The archive software isn't FoolFuuka. FoolFuuka-based archives are simliar to (archive.foolz.us)"
+                                                + "- The archive software isn't FoolFuuka. FoolFuuka-based archives are simliar to (archive.foolz.us)\n"
                                                 + "- The archive has no JSON API support");
                                         }
 
@@ -590,6 +483,7 @@ namespace ChanArchiver
                         else { Console.WriteLine("Unkown command '{0}'", command); }
                         break;
                 }
+                Console.Write("> ");
                 command = Console.ReadLine().Trim().ToLower();
             }
         }
@@ -726,6 +620,7 @@ namespace ChanArchiver
             Settings.Save();
             Wordfilter.Save();
             NetworkUsageCounter.SaveStats();
+            FileIndex.Save();
 
             Console.WriteLine(" done");
         }
@@ -954,7 +849,9 @@ namespace ChanArchiver
 
             //string file_path = Path.Combine(file_save_dir, md5 + "." + pf.ext);
 
-            string reff = string.Format("http://boards.4chan.org/{0}/res/{1}", pf.board, pf.owner);
+            string reff = string.Format("http://boards.4chan.org/{0}/thread/{1}", pf.board, pf.owner);
+
+            FileIndex.MarkPostAsync(md5, pf);
 
             #region thumb
             if (pf.ThumbLink != PostFile.NoFile)
@@ -1409,18 +1306,18 @@ namespace ChanArchiver
 
         private static void save_banned_files_list()
         {
-            File.WriteAllText(banned_files_savepath, Newtonsoft.Json.JsonConvert.SerializeObject(banned_hashes));
+            File.WriteAllText(banned_files_savepath, JsonConvert.ExportToString(banned_hashes));
         }
 
         private static void load_banned_files_list()
         {
             if (File.Exists(banned_files_savepath))
             {
-                Newtonsoft.Json.Linq.JArray arr = Newtonsoft.Json.JsonConvert.DeserializeObject<Newtonsoft.Json.Linq.JArray>(File.ReadAllText(banned_files_savepath));
+                JsonArray arr = JsonConvert.Import<JsonArray>(File.ReadAllText(banned_files_savepath));
 
                 banned_hashes = new List<string>(arr.Count);
 
-                foreach (Newtonsoft.Json.Linq.JValue obj in arr)
+                foreach (object obj in arr)
                 {
                     banned_hashes.Add(Convert.ToString(obj));
                 }

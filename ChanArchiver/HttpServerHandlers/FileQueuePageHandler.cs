@@ -231,7 +231,7 @@ namespace ChanArchiver.HttpServerHandlers
                         response.Status = System.Net.HttpStatusCode.OK;
                         response.ContentType = "application/json";
 
-                        ThreadServerModule.write_text(Newtonsoft.Json.JsonConvert.SerializeObject(dt), response);
+                        ThreadServerModule.write_text(Jayrock.Json.Conversion.JsonConvert.ExportToString(dt), response);
                     }
                 }
                 return true;

@@ -33,7 +33,14 @@ namespace ChanArchiver
 
         private int GetTicks(DateTime t) 
         {
-            return Convert.ToInt32((t - AniWrap.Common.UnixEpoch).TotalSeconds);
+            try 
+            {
+                return Convert.ToInt32((t - AniWrap.Common.UnixEpoch).TotalSeconds);
+            }
+            catch 
+            {
+                return 0;
+            }
         }
 
         public override string ToString()

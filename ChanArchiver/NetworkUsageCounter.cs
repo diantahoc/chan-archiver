@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using Jayrock.Json;
+using Jayrock.Json.Conversion;
 
 namespace ChanArchiver
 {
@@ -158,21 +158,21 @@ namespace ChanArchiver
             if (File.Exists(NetworkStatsSavePath) && stats_not_loaded)
             {
                 string data = File.ReadAllText(NetworkStatsSavePath);
-                Dictionary<string, object> t = JsonConvert.DeserializeObject<Dictionary<string, object>>(data);
+                Dictionary<string, object> t = JsonConvert.Import<Dictionary<string, object>>(data);
                 if (t != null)
                 {
                     for (int i = 0; i < t.Count; i++)
                     {
                         KeyValuePair<string, object> a = t.ElementAt(i);
 
-                        if (a.Value.GetType() == typeof(JArray))
+                        if (a.Value.GetType() == typeof(JsonArray))
                         {
-                            JArray sdata = (JArray)a.Value;
+                            JsonArray sdata = (JsonArray)a.Value;
                             double[] li = new double[3];
 
-                            li[0] = sdata[0].ToObject<double>();
-                            li[1] = sdata[1].ToObject<double>();
-                            li[2] = sdata[2].ToObject<double>();
+                            li[0] = (double)sdata[0];
+                            li[1] = (double)sdata[1];
+                            li[2] = (double)sdata[2];
 
                             data_history.Add(a.Key, li);
                         }
@@ -184,8 +184,7 @@ namespace ChanArchiver
 
         public static void SaveStats()
         {
-            string d = JsonConvert.SerializeObject(data_history);
-            File.WriteAllText(NetworkStatsSavePath, d);
+            File.WriteAllText(NetworkStatsSavePath, JsonConvert.ExportToString(data_history));
         }
 
         #endregion

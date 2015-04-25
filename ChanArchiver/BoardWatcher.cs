@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using AniWrap.DataTypes;
 using System.Threading.Tasks;
+using Jayrock.Json;
+using Jayrock.Json.Conversion;
 
 namespace ChanArchiver
 {
@@ -37,9 +39,9 @@ namespace ChanArchiver
         public BoardMode Mode { get; private set; }
 
         public int BumpLimit { get { return Program.ValidBoards[this.Board].BumpLimit; } }
-        
+
         public int ImageLimit { get { return Program.ValidBoards[this.Board].ImageLimit; } }
-    
+
         public BoardWatcher(string board)
         {
             if (Program.ValidBoards.ContainsKey(board))
@@ -199,7 +201,7 @@ namespace ChanArchiver
             else
             {
                 t = new ThreadWorker(this, id);
-                
+
                 t.ImageLimit = this.ImageLimit;
                 t.BumpLimit = this.BumpLimit;
 
@@ -214,7 +216,7 @@ namespace ChanArchiver
             SaveManuallyAddedThreads();
         }
 
-        public void AddStaticThread(ThreadContainer tc, bool thumbOnly) 
+        public void AddStaticThread(ThreadContainer tc, bool thumbOnly)
         {
             if (this.watched_threads.ContainsKey(tc.Instance.ID))
             {
@@ -237,23 +239,23 @@ namespace ChanArchiver
 
                 try
                 {
-                    des = Newtonsoft.Json.JsonConvert.DeserializeObject(data);
+                    des = JsonConvert.Import(data);
                 }
                 catch (Exception) { return; }
 
                 Type des_type = (des == null ? null : des.GetType());
 
-                if (des_type == typeof(Newtonsoft.Json.Linq.JArray))
+                if (des_type == typeof(JsonArray))
                 {
                     // legacy save file, des is a was List<int> which is equivalent to JArray
 
-                    Newtonsoft.Json.Linq.JArray w = des as Newtonsoft.Json.Linq.JArray;
+                    JsonArray w = des as JsonArray;
 
-                    foreach (Newtonsoft.Json.Linq.JToken id in w)
+                    foreach (object id in w)
                     {
                         try
                         {
-                            if (id.Type == Newtonsoft.Json.Linq.JTokenType.Integer)
+                            if (id is JsonNumber)
                             {
                                 AddThreadId(Convert.ToInt32(id), Settings.ThumbnailOnly);
                             }
@@ -264,20 +266,19 @@ namespace ChanArchiver
                         }
                     }
                 }
-                else if (des_type == typeof(Newtonsoft.Json.Linq.JObject))
+                else if (des_type == typeof(JsonObject))
                 {
                     //new save file, which was a Dictionary<int, bool>
-                    Newtonsoft.Json.Linq.JObject w = des as Newtonsoft.Json.Linq.JObject;
+                    JsonObject w = des as JsonObject;
 
-                    foreach (KeyValuePair<string, Newtonsoft.Json.Linq.JToken> thread in w)
+                    foreach (JsonMember thread in w)
                     {
                         try
                         {
-                            AddThreadId(Convert.ToInt32(thread.Key), Convert.ToBoolean(thread.Value));
+                            AddThreadId(Convert.ToInt32(thread.Name), Convert.ToBoolean(thread.Value));
                         }
                         catch (Exception)
                         {
-                            continue;
                         }
                     }
                 }
@@ -306,14 +307,14 @@ namespace ChanArchiver
 
             if (dic.Count == 0)
             {
-                if (System.IO.File.Exists(this.ManuallyAddedThreadsSaveFilePath)) 
+                if (System.IO.File.Exists(this.ManuallyAddedThreadsSaveFilePath))
                 {
                     System.IO.File.Delete(this.ManuallyAddedThreadsSaveFilePath);
                 }
             }
             else
             {
-                System.IO.File.WriteAllText(this.ManuallyAddedThreadsSaveFilePath, Newtonsoft.Json.JsonConvert.SerializeObject(dic));
+                System.IO.File.WriteAllText(this.ManuallyAddedThreadsSaveFilePath, JsonConvert.ExportToString(dic));
             }
         }
 
@@ -649,9 +650,9 @@ namespace ChanArchiver
 
         public void SaveFilters()
         {
-            if (this.my_filters.Count == 0) 
+            if (this.my_filters.Count == 0)
             {
-                if (System.IO.File.Exists(this.FilterSaveFilePath)) 
+                if (System.IO.File.Exists(this.FilterSaveFilePath))
                 {
                     System.IO.File.Delete(this.FilterSaveFilePath);
                     return;
@@ -667,7 +668,7 @@ namespace ChanArchiver
                 s.Add(new string[] { filter.GetType().FullName, filter.FilterText, filter.Notes });
             }
 
-            System.IO.File.WriteAllText(this.FilterSaveFilePath, Newtonsoft.Json.JsonConvert.SerializeObject(s));
+            System.IO.File.WriteAllText(this.FilterSaveFilePath, JsonConvert.ExportToString(s));
         }
 
         private string FilterSaveFilePath
@@ -690,11 +691,11 @@ namespace ChanArchiver
         {
             if (System.IO.File.Exists(this.FilterSaveFilePath))
             {
-                List<object> s = Newtonsoft.Json.JsonConvert.DeserializeObject<List<object>>(System.IO.File.ReadAllText(this.FilterSaveFilePath));
+                JsonArray s = JsonConvert.Import<JsonArray>(System.IO.File.ReadAllText(this.FilterSaveFilePath));
 
                 foreach (object filter in s)
                 {
-                    Newtonsoft.Json.Linq.JArray FilterData = (Newtonsoft.Json.Linq.JArray)filter;
+                    JsonArray FilterData = (JsonArray)filter;
 
                     Type t = Type.GetType(Convert.ToString(FilterData[0]));
 

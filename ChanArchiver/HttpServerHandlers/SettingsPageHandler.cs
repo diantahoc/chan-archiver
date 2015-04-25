@@ -49,11 +49,11 @@ namespace ChanArchiver.HttpServerHandlers
                     page.Replace("{gs2c}", "");
                 }
 
-                if (Settings.UseHttps) 
+                if (Settings.UseHttps)
                 {
                     page.Replace("{gs3c}", Checked);
                 }
-                else 
+                else
                 {
                     page.Replace("{gs3c}", "");
                 }
@@ -76,6 +76,14 @@ namespace ChanArchiver.HttpServerHandlers
                     page.Replace("{gs5c}", "");
                 }
 
+                if (Settings.CacheAPIFilesInMemory)
+                {
+                    page.Replace("{gs6c}", Checked);
+                }
+                else
+                {
+                    page.Replace("{gs6c}", "");
+                }
 
 
                 //-------------------- Security Settings --------------------------
@@ -84,7 +92,7 @@ namespace ChanArchiver.HttpServerHandlers
                 {
                     page.Replace("{ss0c}", Checked);
                 }
-                else 
+                else
                 {
                     page.Replace("{ss0c}", "");
                 }
@@ -229,6 +237,7 @@ namespace ChanArchiver.HttpServerHandlers
                 Settings.UseHttps = request.QueryString["gs3"].Value == "1";
                 Settings.RemoveThreadsWhenTheyEnterArchivedState = request.QueryString["gs4"].Value == "1";
                 Settings.SaveBannedFileThumbnail = request.QueryString["gs5"].Value == "1";
+                Settings.CacheAPIFilesInMemory = request.QueryString["gs6"].Value == "1";
 
                 if (Settings.EnableFileStats) { FileSystemStats.Init(); }
 

@@ -6,8 +6,11 @@ using System.IO;
 
 namespace ChanArchiver
 {
+    
     public class ThreadServerModule : HttpServer.HttpModules.HttpModule
     {
+        private static readonly object delete_thread_lock = new object();
+
         private const int ThreadPerPage = 15;
 
         public override bool Process(HttpServer.IHttpRequest request, HttpServer.IHttpResponse response, HttpServer.Sessions.IHttpSession session)
@@ -170,53 +173,54 @@ namespace ChanArchiver
 
             if (command.StartsWith("/deletethread/?"))
             {
-                string board = request.QueryString["board"].Value;
-
-                string threadid = request.QueryString["thread"].Value;
-
-                if (string.IsNullOrEmpty(board) || string.IsNullOrEmpty(threadid)) { _404(response); }
-
-                PostFormatter[] thread_data = ThreadStore.GetThread(board, threadid);
-
-
-                //make sure file index is up-to-date
-                Program.update_file_index();
-
-                //delete the files
-                foreach (var post in thread_data)
+                lock (delete_thread_lock)
                 {
-                    if (post.MyFile == null) { continue; }
+                    string board = request.QueryString["board"].Value;
 
-                    var state = Program.get_file_index_state(post.MyFile.Hash);
+                    string threadid = request.QueryString["thread"].Value;
 
-                    if (state == null) { continue; }
+                    if (string.IsNullOrEmpty(board) || string.IsNullOrEmpty(threadid)) { _404(response); }
 
-                    if (state.RepostCount == 1)
+                    PostFormatter[] thread_data = ThreadStore.GetThread(board, threadid);
+
+                    //delete the files
+                    foreach (var post in thread_data)
                     {
-                        string path = Path.Combine(Program.file_save_dir, post.MyFile.Hash + "." + post.MyFile.Extension);
-
-                        if (File.Exists(path))
+                        if (post.MyFile != null)
                         {
-                            File.Delete(path);
-                        }
-                        else if (File.Exists(path + ".webm"))
-                        {
-                            File.Exists(path + ".webm");
-                        }
+                            var state = FileIndex.GetIndexState(post.MyFile.Hash);
 
-                        path = Path.Combine(Program.thumb_save_dir, post.MyFile.Hash + ".jpg");
+                            if (state != null)
+                            {
+                                if (state.RepostCount == 1)
+                                {
+                                    string path = FileOperations.MapFullFile(post.MyFile.Hash, post.MyFile.Extension);
 
-                        File.Delete(path);
+                                    if (File.Exists(path))
+                                    {
+                                        File.Delete(path);
+                                    }
+                                    else if (File.Exists(path + ".webm"))
+                                    {
+                                        File.Exists(path + ".webm");
+                                    }
+
+                                    path = FileOperations.MapThumbFile(post.MyFile.Hash);
+
+                                    File.Delete(path);
+
+                                    FileIndex.RemovePost(post.MyFile.Hash, post.PostID);
+                                }
+                            }
+                        }
                     }
+
+                    //delete the thread
+                    ThreadStore.DeleteThread(board, threadid);
+
+                    response.Redirect("/boards/" + board);
+                    return true;
                 }
-
-                //delete the thread
-                ThreadStore.DeleteThread(board, threadid);
-
-                Program.update_file_index();
-
-                response.Redirect("/boards/" + board);
-                return true;
             }
 
             if (command == "/boards" || command == "/boards/")
@@ -625,12 +629,9 @@ namespace ChanArchiver
             {
                 string hash = request.QueryString["hash"].Value;
 
-                if (!string.IsNullOrEmpty(hash))
+                if (!string.IsNullOrWhiteSpace(hash))
                 {
-
-                    Program.update_file_index();
-
-                    Program.FileIndexInfo info = Program.get_file_index_state(hash);
+                    FileIndexInfo info = FileIndex.GetIndexState(hash);
 
                     if (info != null)
                     {
@@ -659,16 +660,12 @@ namespace ChanArchiver
                             .Replace("{rinfo}", sb.ToString()), response);
                         return true;
                     }
-
-
                 }
                 else
                 {
                     _404(response);
                     return true;
                 }
-
-
 
                 return true;
             }

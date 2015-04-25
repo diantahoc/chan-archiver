@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
-using Newtonsoft.Json;
+using Jayrock;
+using Jayrock.Json;
+using Jayrock.Json.Conversion;
 using System.Text.RegularExpressions;
 
 namespace ChanArchiver
@@ -32,19 +34,18 @@ namespace ChanArchiver
 
         public static void Save()
         {
-            string _data = JsonConvert.SerializeObject(words, Newtonsoft.Json.Formatting.Indented);
-            File.WriteAllText(SavePath, _data);
+            File.WriteAllText(SavePath, JsonConvert.ExportToString(words));
         }
 
         public static void Load()
         {
             if (System.IO.File.Exists(SavePath))
             {
-                var t = JsonConvert.DeserializeObject<List<string>>(File.ReadAllText(SavePath));
+                JsonArray t = JsonConvert.Import<JsonArray>(File.ReadAllText(SavePath));
 
-                foreach (string s in t)
+                foreach (object s in t)
                 {
-                    Add(s, false);
+                    Add(Convert.ToString(s), false);
                 }
 
                 Rebuild();

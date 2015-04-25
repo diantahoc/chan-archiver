@@ -6,6 +6,8 @@ using System.ComponentModel;
 using System.IO;
 using AniWrap.DataTypes;
 using System.Text.RegularExpressions;
+using Jayrock.Json;
+using Jayrock.Json.Conversion;
 namespace ChanArchiver
 {
     public class ThreadWorker : IDisposable
@@ -390,7 +392,7 @@ namespace ChanArchiver
                     File.Delete(fi.FullName);
                 }
 
-                string data = Newtonsoft.Json.JsonConvert.SerializeObject(il);
+                string data = JsonConvert.ExportToString(il);
                 File.WriteAllText(Path.Combine(thread_folder, t.Name + "-opt.json"), data);
             }
         }
@@ -517,7 +519,7 @@ namespace ChanArchiver
                 dic.Add("FileSize", gp.File.size);
             }
 
-            return Newtonsoft.Json.JsonConvert.SerializeObject(dic, Newtonsoft.Json.Formatting.None);
+            return JsonConvert.ExportToString(dic);
         }
 
         public void Start()

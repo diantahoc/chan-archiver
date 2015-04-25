@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Jayrock.Json;
+using Jayrock.Json.Conversion;
 
 namespace ChanArchiver
 {
     public static class Settings
     {
-
         public static bool AutoStartManuallyAddedThreads { get; set; }
 
         public static bool ThumbnailOnly { get; set; }
@@ -55,9 +56,11 @@ namespace ChanArchiver
 
         public static bool SaveBannedFileThumbnail { get; set; }
 
+        public static bool CacheAPIFilesInMemory { get; set; }
+
         public static void Save()
         {
-            Dictionary<string, object> data = new Dictionary<string, object>(11);
+            Dictionary<string, object> data = new Dictionary<string, object>(20);
 
             data.Add("AutoStartManuallyAddedThreads", AutoStartManuallyAddedThreads);
 
@@ -97,8 +100,9 @@ namespace ChanArchiver
 
             data.Add("SaveBannedFileThumbnail", SaveBannedFileThumbnail);
 
-            string _data = Newtonsoft.Json.JsonConvert.SerializeObject(data, Newtonsoft.Json.Formatting.Indented);
-            System.IO.File.WriteAllText(SettingsSaveFile, _data);
+            data.Add("CacheAPIFilesInMemory", CacheAPIFilesInMemory);
+
+            System.IO.File.WriteAllText(SettingsSaveFile, JsonConvert.ExportToString(data));
         }
 
         public static string SettingsSaveFile { get { return System.IO.Path.Combine(Program.program_dir, "settings.json"); } }
@@ -107,102 +111,74 @@ namespace ChanArchiver
         {
             if (System.IO.File.Exists(SettingsSaveFile))
             {
-                Dictionary<string, object> t = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(System.IO.File.ReadAllText(SettingsSaveFile));
+                JsonObject t = JsonConvert.Import<JsonObject>(System.IO.File.ReadAllText(SettingsSaveFile));
+
                 #region data loading
 
-                if (t.ContainsKey("AutoStartManuallyAddedThreads"))
+                foreach (JsonMember member in t)
                 {
-                    AutoStartManuallyAddedThreads = Convert.ToBoolean(t["AutoStartManuallyAddedThreads"]);
-                }
+                    switch (member.Name)
+                    {
+                        case "AutoStartManuallyAddedThreads":
+                            AutoStartManuallyAddedThreads = Convert.ToBoolean(member.Value); continue;
 
-                if (t.ContainsKey("ThumbnailOnly"))
-                {
-                    ThumbnailOnly = Convert.ToBoolean(t["ThumbnailOnly"]);
-                }
+                        case "ThumbnailOnly":
+                            ThumbnailOnly = Convert.ToBoolean(member.Value); continue;
 
-                if (t.ContainsKey("EnableFileStats"))
-                {
-                    EnableFileStats = Convert.ToBoolean(t["EnableFileStats"]);
-                }
+                        case "EnableFileStats":
+                            EnableFileStats = Convert.ToBoolean(member.Value); continue;
 
-                if (t.ContainsKey("ConvertGifsToWebm"))
-                {
-                    ConvertGifsToWebm = Convert.ToBoolean(t["ConvertGifsToWebm"]);
-                }
+                        case "ConvertGifsToWebm":
+                            ConvertGifsToWebm = Convert.ToBoolean(member.Value); continue;
 
-                if (t.ContainsKey("ConvertWebmToMp4"))
-                {
-                    ConvertWebmToMp4 = Convert.ToBoolean(t["ConvertWebmToMp4"]);
-                }
+                        case "ConvertWebmToMp4":
+                            ConvertWebmToMp4 = Convert.ToBoolean(member.Value); continue;
 
-                if (t.ContainsKey("Convert_Webmgif_To_Target"))
-                {
-                    Convert_Webmgif_To_Target = Convert.ToBoolean(t["Convert_Webmgif_To_Target"]);
-                }
+                        case "Convert_Webmgif_To_Target":
+                            Convert_Webmgif_To_Target = Convert.ToBoolean(member.Value); continue;
 
-                if (t.ContainsKey("Convert_Webmgif_Target"))
-                {
-                    Convert_Webmgif_Target = (X_Target)Convert.ToInt32(t["Convert_Webmgif_Target"]);
-                }
+                        case "Convert_Webmgif_only_devices":
+                            Convert_Webmgif_only_devices = Convert.ToBoolean(member.Value); continue;
 
-                if (t.ContainsKey("Convert_Webmgif_only_devices"))
-                {
-                    Convert_Webmgif_only_devices = Convert.ToBoolean(t["Convert_Webmgif_only_devices"]);
-                }
+                        case "ListThumbsInQueue":
+                            ListThumbsInQueue = Convert.ToBoolean(member.Value); continue;
 
-                if (t.ContainsKey("ListThumbsInQueue"))
-                {
-                    ListThumbsInQueue = Convert.ToBoolean(t["ListThumbsInQueue"]);
-                }
+                        case "Convert_Webmgif_Target":
+                            Convert_Webmgif_Target = (X_Target)Convert.ToInt32(member.Value); continue;
 
-                if (t.ContainsKey("FilePrioritizeMode"))
-                {
-                    FilePrioritizeMode = (FilePrioritizeModeEnum)Convert.ToInt32(t["FilePrioritizeMode"]);
-                }
+                        case "FilePrioritizeMode":
+                            FilePrioritizeMode = (FilePrioritizeModeEnum)Convert.ToInt32(member.Value); continue;
 
-                if (t.ContainsKey("PrioritizeBumpLimit"))
-                {
-                    PrioritizeBumpLimit = Convert.ToBoolean(t["PrioritizeBumpLimit"]);
-                }
+                        case "PrioritizeBumpLimit":
+                            PrioritizeBumpLimit = Convert.ToBoolean(member.Value); continue;
 
-                if (t.ContainsKey("AutoRemoveCompleteFiles"))
-                {
-                    AutoRemoveCompleteFiles = Convert.ToBoolean(t["AutoRemoveCompleteFiles"]);
-                }
+                        case "AutoRemoveCompleteFiles":
+                            AutoRemoveCompleteFiles = Convert.ToBoolean(member.Value); continue;
 
-                if (t.ContainsKey("UseHttps"))
-                {
-                    UseHttps = Convert.ToBoolean(t["UseHttps"]);
-                }
+                        case "UseHttps":
+                            UseHttps = Convert.ToBoolean(member.Value); continue;
 
-                if (t.ContainsKey("RemoveThreadsWhenTheyEnterArchivedState"))
-                {
-                    RemoveThreadsWhenTheyEnterArchivedState = Convert.ToBoolean(t["RemoveThreadsWhenTheyEnterArchivedState"]);
-                }
+                        case "RemoveThreadsWhenTheyEnterArchivedState":
+                            RemoveThreadsWhenTheyEnterArchivedState = Convert.ToBoolean(member.Value); continue;
 
-                if (t.ContainsKey("EnableAuthentication"))
-                {
-                    EnableAuthentication = Convert.ToBoolean(t["EnableAuthentication"]);
-                }
+                        case "EnableAuthentication":
+                            EnableAuthentication = Convert.ToBoolean(member.Value); continue;
 
-                if (t.ContainsKey("AuthUsername"))
-                {
-                    AuthUsername = Convert.ToString(t["AuthUsername"]);
-                }
+                        case "SaveBannedFileThumbnail":
+                            SaveBannedFileThumbnail = Convert.ToBoolean(member.Value); continue;
 
-                if (t.ContainsKey("AuthPassword"))
-                {
-                    AuthPassword = Convert.ToString(t["AuthPassword"]);
-                }
+                        case "AllowGuestAccess":
+                            AllowGuestAccess = Convert.ToBoolean(member.Value); continue;
 
-                if (t.ContainsKey("AllowGuestAccess"))
-                {
-                    AllowGuestAccess = Convert.ToBoolean(t["AllowGuestAccess"]);
-                }
+                        case "AuthUsername":
+                            AuthUsername = Convert.ToString(member.Value); continue;
 
-                if (t.ContainsKey("SaveBannedFileThumbnail"))
-                {
-                    SaveBannedFileThumbnail = Convert.ToBoolean(t["SaveBannedFileThumbnail"]);
+                        case "AuthPassword":
+                            AuthPassword = Convert.ToString(member.Value); continue;
+
+                        case "CacheAPIFilesInMemory":
+                            CacheAPIFilesInMemory = Convert.ToBoolean(member.Value); continue;
+                    }
                 }
 
                 #endregion
@@ -215,6 +191,7 @@ namespace ChanArchiver
                 ListThumbsInQueue = false; FilePrioritizeMode = FilePrioritizeModeEnum.SmallerFirst; PrioritizeBumpLimit = false;
                 ConvertPNGImageWithNoTransparencyToJPG = false; AutoRemoveCompleteFiles = true; UseHttps = true; RemoveThreadsWhenTheyEnterArchivedState = true;
                 EnableAuthentication = true; AuthPassword = "admin"; AuthUsername = "admin"; AllowGuestAccess = false; SaveBannedFileThumbnail = true;
+                CacheAPIFilesInMemory = true;
                 Save();
             }
         }
