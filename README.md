@@ -1,6 +1,14 @@
 ChanArchiver is a personal archive program for 4chan.
 
-### Hidden features:
+### Some features highlights:
+
+#### Web-Authentication:
+
+By default, ChanArchiver enables HTTP Basic Authentication to prevent un-auhorized archive access. The default username/password combination is `admin/admin`.
+
+If you happen to forget your password, you can find your credentials inside the `settings.json` file inside ChanArchive save directory, under `AuthUsername` and `AuthPassword` fields.
+
+Alternatively, you can type `reset-creds` in the interactive console to change your credentials to a random value that will be printed.
 
 #### Wordfilter:
 
@@ -12,19 +20,20 @@ ChanArchiver include a mobile optimized file browser. It can be accessed at `htt
 
 The file browser basically list files thumbnails according to the selected file type.
 
-#### FoolFuuka threads
+#### Adding archived (dead) threads
 
 ChanArchiver can load 404'd threads from a FoolFuuka-based archive. This is limited to boards that exist on 4chan, that means you cannot archive a thread from some /meta/ board. 
 
-This is useful for downloading all the files inside some thread.
+This is useful in various scenarios, for example downloading all the files inside some thread.
 
-To add a thread, please use the `add-fuuka` interactive console command. The command syntax is: `add-fuuka HOST BOARD ID` where `HOST` is the board host (`archive.foolz.us` for example), `BOARD` is the board letter and `ID` is the thread id. 
+Threads can be added using the Watch Jobs web page.
 
-The archive has to support FoolFuuka JSON API. An HTML parser might be added in the future, along with a web interface for this feature.
+Currently only FoolFukka JSON API is supported. 
+An HTML parser might be added in the future, along with automatic archive resort when a thread/file is not found (404'ed).
 
 ### Command Line switches
 
-NOTICE: The command line switches provide basic and legacy thread adding / board monitoring. The preferred way to perform these actions is to the the Web interface. 
+NOTICE: The command line switches provide basic and legacy thread adding / board monitoring and they will be removed in future releases. The preferred way to perform these actions is to the the Web interface. 
 
 By default, ChanArchiver start the http server (listen on port `8787`). You can modify it's behavior with the following command line switches:
 
@@ -35,6 +44,8 @@ By default, ChanArchiver start the http server (listen on port `8787`). You can 
 * `--verbose` : Output logs to the terminal console, instead of only logging them to the web ui. Plus perform additional logging.
 * `--port:123`: Change the http server port to 123.
 * `--savedir <dir>` : Change the save directory.
+* `--idle` : Prevent ChanArchiver from resuming saved jobs.
+
 
 ### Integration with 4chan
 
@@ -47,6 +58,13 @@ The `[Archive TO]` button stand for `Archive Thumbnail Only`.
 User script: https://raw.github.com/diantahoc/chan-archiver/master/chan_archiver.user.js
 
 ChanArchiver must be running in order have this script working properly. Modify the script to match your `ipadress:port` settings.
+
+### Todo list
+
+* Add the ability to download threads as zip archive.
+* Add support for Fuuka-based archives.
+* Add the ability to use archives when a thread/file 404.
+* Add a WebUI for word filters.
 
 ### Credits and Legal
 
