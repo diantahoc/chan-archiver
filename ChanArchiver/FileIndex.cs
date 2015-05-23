@@ -186,7 +186,17 @@ namespace ChanArchiver
 
                             if (data.Count > 0)
                             {
-                                FileIndexInfo info = new FileIndexInfo(hash);
+                                FileIndexInfo info;
+
+                                if (file_index.ContainsKey(hash))
+                                {
+                                    info = file_index[hash];
+                                }
+                                else 
+                                {
+                                    info = new FileIndexInfo(hash);
+                                    file_index.Add(hash, info);
+                                }
 
                                 foreach (JsonObject file_data in data)
                                 {
@@ -201,7 +211,7 @@ namespace ChanArchiver
                                     catch (Exception) { }
                                 }
 
-                                file_index.Add(hash, info);
+                              
                             }
                         }
                     }

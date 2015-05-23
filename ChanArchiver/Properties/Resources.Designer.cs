@@ -581,6 +581,23 @@ namespace ChanArchiver.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to ChanArchive help text
+        ///
+        ///--thread:a:133 : Archive thread 133 from the /a/ board. Additional threads can be added via the web user interface. Cannot be used in conjunction with --board.
+        ///
+        ///--noserver : To prevent ChanArchiver starting the HTTP server. Useful if you don&apos;t want to serve page right now, or another instance of ChanArchiver is running as server.
+        ///
+        ///--board:r : Archive the /r/ board. Overrides the board for the --thread switch, so cannot be used with --thread
+        ///
+        ///--thumbonly : Only save thumbnails. [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string help_text {
+            get {
+                return ResourceManager.GetString("help_text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
         internal static byte[] hr {
@@ -951,19 +968,19 @@ namespace ChanArchiver.Properties {
         /// <summary>
         ///   Looks up a localized string similar to &lt;!DOCTYPE html&gt;
         ///&lt;html lang=&quot;en&quot;&gt;
-        ///  &lt;head&gt;
-        ///    &lt;meta http-equiv=&quot;content-type&quot; content=&quot;text/html; charset=UTF-8&quot;/&gt;
-        ///    &lt;meta charset=&quot;utf-8&quot;/&gt;
-        ///    &lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=edge&quot;/&gt;
-        ///    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;/&gt;
-        ///    &lt;meta name=&quot;description&quot; content=&quot;&quot;/&gt;
-        ///    &lt;meta name=&quot;author&quot; content=&quot;&quot;/&gt;
-        ///    &lt;link rel=&quot;shortcut icon&quot; href=&quot;/res/favicon.ico&quot;/&gt;
+        ///&lt;head&gt;
+        ///    &lt;meta http-equiv=&quot;content-type&quot; content=&quot;text/html; charset=UTF-8&quot; /&gt;
+        ///    &lt;meta charset=&quot;utf-8&quot; /&gt;
+        ///    &lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=edge&quot; /&gt;
+        ///    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot; /&gt;
+        ///    &lt;meta name=&quot;description&quot; content=&quot;&quot; /&gt;
+        ///    &lt;meta name=&quot;author&quot; content=&quot;&quot; /&gt;
+        ///    &lt;link rel=&quot;shortcut icon&quot; href=&quot;/res/favicon.ico&quot; /&gt;
         ///
         ///    &lt;title&gt;[ChanArchiver] - Watch Jobs&lt;/title&gt;
         ///
         ///    &lt;!-- Bootstrap core CSS --&gt;
-        ///    &lt;l [rest of string was truncated]&quot;;.
+        ///  [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string wjobs_page {
             get {

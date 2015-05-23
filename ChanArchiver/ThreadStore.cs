@@ -262,7 +262,14 @@ namespace ChanArchiver
                         pf.PostID = Convert.ToInt32(member.Value);
                         continue;
                     case "Time":
-                        pf.Time = Convert.ToDateTime(member.Value);
+                        try
+                        {
+                            pf.Time = DateTime.Parse(member.Value.ToString());
+                        }
+                        catch 
+                        {
+
+                        }
                         continue;
                     case "FileHash":
                         {

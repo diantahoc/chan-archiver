@@ -101,15 +101,22 @@ namespace AniWrap
 
             if (File.Exists(file_path))
             {
-                JsonObject obj = JsonConvert.Import<JsonObject>(File.ReadAllText(file_path));
+                try
+                {
+                    JsonObject obj = JsonConvert.Import<JsonObject>(File.ReadAllText(file_path));
 
-                StorageEntry se = new StorageEntry();
+                    StorageEntry se = new StorageEntry();
 
-                se.LastModified = parse_datetime(obj["LastModified"].ToString());
+                    se.LastModified = parse_datetime(obj["LastModified"].ToString());
 
-                se.Text = obj["Text"].ToString();
+                    se.Text = obj["Text"].ToString();
 
-                return se;
+                    return se;
+                }
+                catch (JsonException) 
+                {
+                    return null;
+                }
             }
             else
             {

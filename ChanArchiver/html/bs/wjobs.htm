@@ -1,152 +1,206 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
-    <meta charset="utf-8"/>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <meta name="description" content=""/>
-    <meta name="author" content=""/>
-    <link rel="shortcut icon" href="/res/favicon.ico"/>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="" />
+    <meta name="author" content="" />
+    <link rel="shortcut icon" href="/res/favicon.ico" />
 
     <title>[ChanArchiver] - Watch Jobs</title>
 
     <!-- Bootstrap core CSS -->
-    <link href="/res/bootstrap.css" rel="stylesheet"/>
-    
+    <link href="/res/bootstrap.css" rel="stylesheet" />
+
     <link rel="stylesheet" href="res/font-awesome.min.css" />
 
-      <!-- Custom styles for this template -->
-    <link href="/res/dashboard.css" rel="stylesheet"/>
+    <!-- Custom styles for this template -->
+    <link href="/res/dashboard.css" rel="stylesheet" />
 
-  </head>
+</head>
 
-  <body>
+<body>
 
     <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
-      <div class="container-fluid">
-        <div class="navbar-header">
-          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-            <span class="sr-only">Toggle navigation</span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="navbar-brand" href="/">ChanArchiver</a>
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="/">ChanArchiver</a>
+            </div>
+            <div class="navbar-collapse collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/boards">Archived Boards</a>
+                    </li>
+                    <li>
+                        <a href="https://github.com/diantahoc/chan-archiver" target="_blank">Github</a>
+                    </li>
+                </ul>
+            </div>
         </div>
-        <div class="navbar-collapse collapse">
-          <ul class="nav navbar-nav navbar-right">
-            <li>
-              <a href="/boards">Archived Boards</a>
-            </li>
-            <li>
-              <a href="https://github.com/diantahoc/chan-archiver" target="_blank">Github</a>
-            </li>
-          </ul>
-        </div>
-      </div>
     </div>
 
     <div class="container-fluid">
-      <div class="row">
-        <div class="col-sm-3 col-md-2 sidebar">
+        <div class="row">
+            <div class="col-sm-3 col-md-2 sidebar">
 
-          <ul class="nav nav-sidebar">
-            <li>
-              <a href="/">Overview</a>
-            </li>
-           
-            <li>
-              <a href="/fq">File Queue</a>
-            </li>
-          </ul>
+                <ul class="nav nav-sidebar">
+                    <li>
+                        <a href="/">Overview</a>
+                    </li>
 
-          <ul class="nav nav-sidebar">
-            <li class="active">
-              <a href="/wjobs">Watch Jobs</a>
-            </li>
-            <li>
-              <a href="/monboards">Monitored Boards</a>
-            </li>
+                    <li>
+                        <a href="/fq">File Queue</a>
+                    </li>
+                </ul>
 
-            <li>
-              <a href="/filters">Thread Filters</a>
-            </li>
-          </ul>
+                <ul class="nav nav-sidebar">
+                    <li class="active">
+                        <a href="/wjobs">Watch Jobs</a>
+                    </li>
+                    <li>
+                        <a href="/monboards">Monitored Boards</a>
+                    </li>
+
+                    <li>
+                        <a href="/filters">Thread Filters</a>
+                    </li>
+                </ul>
 
 
-          <ul class="nav nav-sidebar">
-            <li>
-              <a href="/bannedfiles">Banned files</a>
-            </li>
+                <ul class="nav nav-sidebar">
+                    <li>
+                        <a href="/bannedfiles">Banned files</a>
+                    </li>
 
-            <li>
-              <a href="/settings">Settings</a>
-            </li>
+                    <li>
+                        <a href="/settings">Settings</a>
+                    </li>
 
-          </ul>
-          
-        </div>
+                </ul>
 
-        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
-          <h1 class="page-header">Watch Jobs</h1>
+            </div>
 
-          <div class="row">
+            <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+                <h1 class="page-header">Watch Jobs</h1>
 
-            <form action="/add/thread/">
-              <div class="col-lg-6">
-                <span>
-                  Enter 4chan thread URL or text in this format <code>board:threadid</code>
-                </span>
-                <div class="input-group">
 
-                  <input name="urlorformat" type="text" class="form-control" placeholder="4chan thread url or board:threadid"/>
-                  <span class="input-group-btn">
-                    <button class="btn btn-default" type="submit">Watch thread</button>
-                  </span>
-                                
+
+                <div class="row">
+                    <h5>Adding threads on 4chan</h5>
+                    <form action="/add/thread/">
+                        <div class="col-lg-6">
+                            <span>Enter 4chan thread URL or text in this format <code>board:threadid</code>
+                            </span>
+                            <div class="input-group">
+
+                                <input name="urlorformat" type="text" class="form-control" placeholder="4chan thread url or board:threadid" />
+                                <span class="input-group-btn">
+                                    <button class="btn btn-default" type="submit">Watch thread</button>
+                                </span>
+
+                            </div>
+
+                            <input id="to" type="checkbox" name="to" value="1" />
+                            <label for="to">Save only thumbnails</label>
+
+                        </div>
+                    </form>
+
                 </div>
-                
-                <input id="to" type="checkbox" name="to" value="1"/>
-                <label for="to">Save only thumbnails</label>
-                
-              </div>
-            </form>
-            
-          </div>
-          <!-- /.row -->
 
-          <hr/>
+                <div class="row">
+                    <h5>Adding 404'ed threads that exist on 4chan archives</h5>
+                    <form action="/add/threadfromarchive/">
+                        <div class="col-lg-6">
 
-          <div class="table-responsive">
-            <table class="table table-striped table-hover">
-              <thead>
-                <tr>
-                  <th></th>
-                  <th>#</th>
-                  <th>Board</th>
-                  <th>ID</th>
-                  <th>Added Automatically?</th>
-                  <th>Thumbnail Only?</th>
-                  <th>Link</th>
-                  <th>Title</th>
-                  <th>Last updated</th>
-                  <th>Auto-sage?</th>
-                  <th>Image Limit?</th>
-                  <th>Info</th>
-                </tr>
-              </thead>
-              <tbody>
+                            <span>Choose an archive, and enter thread id</span>
 
-                {Items}
+                            <br />
 
-              </tbody>
-            </table>
-          </div>
+                            <label for="ai_menu">Archive: </label>
+                            <select id="ai_menu" name="ai_index" onchange="if (this.selectedIndex!=-1) handle_archive_option_change();">
+                                {archives}
+                            </select>
+
+                            <br />
+
+                            <label for="ai_menu">Supported boards: </label>
+
+                            <select id="boards_menu" name="board"></select>
+
+                            
+
+                            <span class="input-group-btn">
+                                <input type="text" name="threadid" placeholder="thread id" />
+                                <button class="btn btn-default" type="submit">Add thread</button>
+                            </span>
+                        
+                            <br />
 
 
+                            <input type="checkbox" onchange="var d = document.getElementById('archiveinfodiv'); if (this.checked) { d.removeAttribute('hidden');} else { d.setAttribute('hidden', 'hidden'); }" id="showarchiveinfo" />
+                            <label for="showarchiveinfo">Show archive information</label>
+
+                            <br />
+
+                            <div id="archiveinfodiv" hidden="hidden">
+                                <h5>Archive information</h5>
+
+                                <label for="archive_info_support_http">Support HTTP: </label>
+                                <p id="archive_info_support_http"></p>
+
+                                <label for="archive_info_support_https">Support HTTPS: </label>
+                                <p id="archive_info_support_https"></p>
+
+                                <label for="archive_info_files">Full files supported for: </label>
+                                <p id="archive_info_files"></p>
+                            </div>
+                        
+                        </div>
+
+
+                    </form>
+
+                </div>
+
+            <hr />
+
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>#</th>
+                            <th>Board</th>
+                            <th>ID</th>
+                            <th>Added Automatically?</th>
+                            <th>Thumbnail Only?</th>
+                            <th>Link</th>
+                            <th>Title</th>
+                            <th>Last updated</th>
+                            <th>Auto-sage?</th>
+                            <th>Image Limit?</th>
+                            <th>Info</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {Items}
+
+                    </tbody>
+                </table>
+            </div>
+
+
+            </div>
         </div>
-      </div>
     </div>
 
     <!-- Bootstrap core JavaScript
@@ -155,7 +209,59 @@
     <script src="/res/jquery.js"></script>
     <script src="/res/bootstrap.js"></script>
     <script src="/res/docs.js"></script>
+    <script>
+
+        var items =
+            [
+                //{ai_items_js}
+            ];
+
+        var boards_names =
+            {
+                //{board_names_js}
+            };
+
+        function handle_archive_option_change() {
+            var index = document.getElementById("ai_menu").value;
+
+            var ai_info = items[index];
+
+            var board_menu = document.getElementById("boards_menu");
+
+            var children_count = board_menu.childNodes.length;
+
+            for (var i = 0; i < children_count; i++) {
+                board_menu.remove(0);
+            }
+
+            var stringb = new Array();
+
+            for (var f in ai_info.supported_files) {
+
+                var board = ai_info.supported_files[f];
+                console.log(board);
+                var option_item = document.createElement("option");
+                option_item.setAttribute("value", board);
+                option_item.innerHTML = board + " - " + boards_names[board];
+
+                board_menu.appendChild(option_item);
+
+                stringb.push(board);
+                stringb.push(" ");
+                if (f < ai_info.supported_files.length - 1) {
+                    stringb.push(",");
+                }
+            }
+
+            document.getElementById("archive_info_support_http").innerHTML = ai_info.ishttp ? "Yes" : "No";
+            document.getElementById("archive_info_support_https").innerHTML = ai_info.ishttps ? "Yes" : "No";
+            document.getElementById("archive_info_files").innerHTML = stringb.join("");
+        }
+
+        handle_archive_option_change();
+
+    </script>
 
 
-  </body>
+</body>
 </html>

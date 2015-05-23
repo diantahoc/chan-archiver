@@ -268,4 +268,23 @@
   <data name="UserAgentList" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\useragentlist.txt;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>
+  <data name="help_text" xml:space="preserve">
+    <value>ChanArchive help text
+
+--thread:a:133 : Archive thread 133 from the /a/ board. Additional threads can be added via the web user interface. Cannot be used in conjunction with --board.
+
+--noserver : To prevent ChanArchiver starting the HTTP server. Useful if you don't want to serve page right now, or another instance of ChanArchiver is running as server.
+
+--board:r : Archive the /r/ board. Overrides the board for the --thread switch, so cannot be used with --thread
+
+--thumbonly : Only save thumbnails.
+
+--verbose : Output logs to the terminal console, instead of only logging them to the web ui. Plus perform additional logging.
+
+--port:123: Change the http server port to 123.
+
+--savedir &lt;dir&gt; : Change the save directory.
+
+--idle: Prevent ChanArchiver from resuming saved jobs</value>
+  </data>
 </root>

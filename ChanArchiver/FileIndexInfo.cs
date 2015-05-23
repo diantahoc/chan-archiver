@@ -46,15 +46,18 @@ namespace ChanArchiver
         public void MarkPost(string board, int threadid, int postid, string file_name)
         {
             string hash = get_post_hash(board, threadid, postid);
-            if (!my_posts.ContainsKey(hash))
+            lock (my_posts)
             {
-                my_posts.Add(hash, new Post()
+                if (!my_posts.ContainsKey(hash))
                 {
-                    Board = board,
-                    ThreadID = threadid,
-                    PostID = postid,
-                    FileName = file_name
-                });
+                    my_posts.Add(hash, new Post()
+                    {
+                        Board = board,
+                        ThreadID = threadid,
+                        PostID = postid,
+                        FileName = file_name
+                    });
+                }
             }
         }
 

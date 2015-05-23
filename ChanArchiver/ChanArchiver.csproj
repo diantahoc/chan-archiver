@@ -113,6 +113,8 @@
     <Compile Include="aniwrap\libs\hap\1_4_0\HtmlAgilityPack\MixedCodeDocumentTextFragment.cs" />
     <Compile Include="aniwrap\libs\hap\1_4_0\HtmlAgilityPack\NameValuePair.cs" />
     <Compile Include="aniwrap\libs\hap\1_4_0\HtmlAgilityPack\NameValuePairList.cs" />
+    <Compile Include="ArchivesProvider.cs" />
+    <Compile Include="ArchivedThreadAdder.cs" />
     <Compile Include="BoardWatcher.cs" />
     <Compile Include="FileFormatter.cs" />
     <Compile Include="FileIndex.cs" />
@@ -137,6 +139,7 @@
     <Compile Include="HttpServerHandlers\ThreadFiltersPageHandler.cs" />
     <Compile Include="HttpServerHandlers\ThreadJobInfoPageHandler.cs" />
     <Compile Include="HttpServerHandlers\WatchJobsPageHandler.cs" />
+    <Compile Include="JobQueue.cs" />
     <Compile Include="Libs\JayrockJSON\Common\Mask.cs" />
     <Compile Include="Libs\JayrockJSON\Jayrock.Json\BooleanObject.cs" />
     <Compile Include="Libs\JayrockJSON\Jayrock.Json\Collections\KeyedCollection.cs" />

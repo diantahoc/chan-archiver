@@ -507,7 +507,7 @@ namespace ChanArchiver
                 dic.Add("PosterID", gp.PosterID);
             }
 
-            dic.Add("Time", gp.Time);
+            dic.Add("Time", gp.Time.ToString());
 
             if (gp.File != null)
             {

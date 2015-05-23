@@ -6,7 +6,7 @@ using System.IO;
 
 namespace ChanArchiver
 {
-    
+
     public class ThreadServerModule : HttpServer.HttpModules.HttpModule
     {
         private static readonly object delete_thread_lock = new object();
@@ -461,6 +461,59 @@ namespace ChanArchiver
                         _404(response);
                     }
                 }
+                else if (mode == "threadfromarchive") 
+                {
+                    try
+                    {
+                        string ai_index_str = request.QueryString["ai_index"].Value;
+                        string board = request.QueryString["board"].Value;
+                        string threadid_str = request.QueryString["threadid"].Value;
+
+                        if (!string.IsNullOrEmpty(ai_index_str)
+                            && !string.IsNullOrEmpty(board)
+                            && !string.IsNullOrEmpty(threadid_str))
+                        {
+                            int ai_index = -1;
+                            int tid = -1;
+
+                            if (int.TryParse(ai_index_str, out ai_index)
+                                && int.TryParse(threadid_str, out tid))
+                            {
+                                ArchiveInfo info = ArchivesProvider.GetAllArchives().ElementAt(ai_index);
+
+                                var status = ArchivedThreadAdder.AddThreadFromArchive(board, tid, false, info);
+
+                                if (status != AddThreadFromArchiveStatus.Success)
+                                {
+                                    write_text("Unable to add thread, reason: " + status.ToString(), response);
+                                    return true;
+                                }
+
+                                else
+                                {
+                                    response.Redirect("/wjobs");
+                                    return true;
+                                }
+
+
+                            }
+                        }
+
+                    }
+                    catch (FormatException)
+                    {
+                        write_text("Unable to add thread, reason: Invalid thread id", response);
+                        return true;
+                    }
+                    catch (IndexOutOfRangeException)
+                    {
+                        write_text("Unable to add thread, reason: Invalid archvie info index", response);
+                        return true;
+                    }
+
+                    write_text("Unable to add thread, reason: possible malformed parameters", response);
+                    return true;
+                }
                 else
                 {
                     _404(response);
@@ -805,6 +858,26 @@ namespace ChanArchiver
                     }
                 }
                 response.Redirect("/monboards");
+                return true;
+            }
+
+            if (command.StartsWith("/get_archive_info/"))
+            {
+                string board = request.QueryString["b"].Value;
+
+                StringBuilder sb = new StringBuilder();
+
+                var data = ArchivesProvider.GetArchivesForBoard(board, true);
+
+                sb.AppendFormat("Result count: {0}<br/>", data.Count());
+
+                foreach (var d in data)
+                {
+                    sb.AppendFormat("HOST: {0} <br/>", d.Domain);
+                }
+
+                write_text(sb.ToString(), response);
+
                 return true;
             }
 

@@ -88,7 +88,11 @@ namespace ChanArchiver.HttpServerHandlers
                 response.Status = System.Net.HttpStatusCode.OK;
                 response.ContentType = "text/html";
 
-                byte[] data = Encoding.UTF8.GetBytes(Properties.Resources.wjobs_page.Replace("{Items}", sb.ToString()));
+                byte[] data = Encoding.UTF8.GetBytes(Properties.Resources.wjobs_page
+                    .Replace("//{ai_items_js}", get_ai_items())
+                    .Replace("//{board_names_js}", get_boards_names_js())
+                    .Replace("{archives}", get_archives_html())
+                    .Replace("{Items}", sb.ToString()));
                 response.ContentLength = data.Length;
                 response.SendHeaders();
                 response.SendBody(data);
@@ -96,6 +100,119 @@ namespace ChanArchiver.HttpServerHandlers
                 return true;
             }
             return false;
+        }
+
+        private string get_ai_items()
+        {
+            StringBuilder sb = new StringBuilder();
+
+            /*
+
+                {
+                       supported_boards: [""],
+                       supported_files: [""],
+                       name: "",
+                       ishttp: true,
+                       ishttps: false
+                 }
+                  */
+
+            int a_c = ArchivesProvider.GetAllArchives().Count();
+            int w_ac = 0;
+
+            foreach (ArchiveInfo w in ArchivesProvider.GetAllArchives())
+            {
+                sb.Append("{");
+                sb.Append("supported_boards:[");
+
+                int c = w.GetSupportedBoards().Count();
+                int c_w = 0;
+                foreach (string b in w.GetSupportedBoards())
+                {
+                    sb.Append("\"");
+                    sb.Append(b);
+                    sb.Append("\"");
+                    if (c_w < c - 1)
+                    {
+                        sb.Append(",");
+                    }
+                    c_w++;
+                }
+
+                sb.Append("],");
+
+                sb.Append("supported_files:[");
+
+                c = w.GetSupportedFiles().Count();
+                c_w = 0;
+                foreach (string b in w.GetSupportedFiles())
+                {
+                    sb.Append("\"");
+                    sb.Append(b);
+                    sb.Append("\"");
+                    if (c_w < c - 1)
+                    {
+                        sb.Append(",");
+                    }
+                    c_w++;
+                }
+
+                sb.Append("],");
+
+                sb.Append("name: \"");
+                sb.Append(w.Name.Replace("\"", @"\"""));
+                sb.Append("\",");
+
+                sb.Append("ishttp: ");
+                sb.Append(w.SupportHttp ? "true" : "false");
+                sb.Append(",");
+
+                sb.Append("ishttps: ");
+                sb.Append(w.SupportHttps ? "true" : "false");
+
+
+                sb.Append("}");
+
+                if (w_ac < a_c - 1)
+                {
+                    sb.Append(",");
+                }
+            }
+
+            return sb.ToString();
+
+
+        }
+
+        private string get_boards_names_js()
+        {
+            StringBuilder sb = new StringBuilder();
+
+            int c = 0;
+            foreach (var board in Program.ValidBoards)
+            {
+                sb.AppendFormat(" {0}: \"{1}\"", board.Key, board.Value.Title.Replace("\"", @"\"""));
+                if (c < Program.ValidBoards.Count - 1) 
+                {
+                    sb.Append(",");
+                }
+            }
+
+            return sb.ToString();
+        }
+
+        public string get_archives_html() 
+        {
+            StringBuilder sb = new StringBuilder();
+            int c = 0;
+
+            foreach (var a in ArchivesProvider.GetAllArchives()) 
+            {
+                sb.AppendFormat("<option value='{0}'>{1}</option>", c, System.Web.HttpUtility.HtmlEncode( a.Name));
+                c++;
+            }
+
+            return sb.ToString();
         }
 
     }

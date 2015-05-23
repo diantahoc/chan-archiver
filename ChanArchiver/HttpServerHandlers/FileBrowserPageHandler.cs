@@ -9,13 +9,13 @@ namespace ChanArchiver.HttpServerHandlers
     class FileBrowserPageHandler : HttpServer.HttpModules.HttpModule
     {
 
-        Func<FileInfo, bool>[] Selectors = new Func<FileInfo, bool>[] 
+        Func<string, bool>[] Selectors = new Func<string, bool>[] 
         {
-            new Func<FileInfo, bool>(x =>  { return x.Name.EndsWith(".webm"); } ),
-            new Func<FileInfo, bool>(x =>  { return x.Name.EndsWith(".webm") && !x.Name.EndsWith(".gif.webm"); } ),
-            new Func<FileInfo, bool>(x =>  { return x.Name.EndsWith(".jpg") ;} ),
-            new Func<FileInfo, bool>(x =>  { return x.Name.EndsWith(".png") ;} ),
-            new Func<FileInfo, bool>(x =>  { return x.Name.EndsWith(".gif") ;} )
+            new Func<string, bool>(x =>  { return x.EndsWith(".webm"); } ),
+            new Func<string, bool>(x =>  { return x.EndsWith(".webm") && !x.EndsWith(".gif.webm"); } ),
+            new Func<string, bool>(x =>  { return x.EndsWith(".jpg") ;} ),
+            new Func<string, bool>(x =>  { return x.EndsWith(".png") ;} ),
+            new Func<string, bool>(x =>  { return x.EndsWith(".gif") ;} )
         };
 
         public override bool Process(HttpServer.IHttpRequest request, HttpServer.IHttpResponse response, HttpServer.Sessions.IHttpSession session)
@@ -77,22 +77,23 @@ namespace ChanArchiver.HttpServerHandlers
 
                     foreach (string path in FileOperations.EnumerateOptimizedDirectory(Program.file_save_dir))
                     {
-                        FileInfo fi = new FileInfo(path);
+                        string filename = System.IO.Path.GetFileName(path);
                         if (has_reached_next_page)
                         {
-                            if (counter > limit) { next_value = fi.Name; break; }
-                            if (fc(fi))
+                            if (counter > limit) { next_value = filename; break; }
+                            if (fc(filename))
                             {
-                                string h = fi.Name.Split('.')[0];
-                                string ext = fi.Name.Substring(h.Length);
+                                string file_name_without_extension = System.IO.Path.GetFileNameWithoutExtension(filename);
+                                string ext = System.IO.Path.GetExtension(filename);
 
-                                sb.AppendFormat("<a href=\"/file/{0}{1}\"><img src=\"/thumb/{0}.jpg\" /></a><br />", h, ext);
+                                sb.AppendFormat("<a href=\"/file/{0}{1}\"><img src=\"/thumb/{0}.jpg\" /></a><br />",
+                                    file_name_without_extension, ext);
                                 counter++;
                             }
                         }
                         else
                         {
-                            has_reached_next_page = prev_value == fi.Name;
+                            has_reached_next_page = prev_value == filename;
                         }
                     }
                 }

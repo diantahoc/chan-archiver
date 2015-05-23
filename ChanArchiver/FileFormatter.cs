@@ -32,26 +32,30 @@ namespace ChanArchiver
 
         public override string ToString()
         {
+            return ToString(false);
+        }
 
+        public string ToString(bool relativepath)
+        {
             StringBuilder image_template = new StringBuilder(Properties.Resources.file_template);
 
             image_template.Replace("{post:id}", this.PostID.ToString());
 
-            image_template.Replace("{file:fulllink}", string.Format("/file/{0}.{1}", this.Hash, this.Extension));
+            string image_url_start = relativepath ? "" : "/";
 
-            image_template.Replace("{file:thumbsrc}", string.Format("/thumb/{0}", this.Hash + ".jpg"));
+            image_template.Replace("{file:fulllink}", string.Format("{0}file/{1}.{2}", image_url_start, this.Hash, this.Extension));
+
+            image_template.Replace("{file:thumbsrc}", string.Format("{0}thumb/{1}", image_url_start, this.Hash + ".jpg"));
 
             image_template.Replace("{file:name}", this.FileName);
 
             image_template.Replace("{file:4chan-md5}", this.Hash);
 
             image_template.Replace("{file:size}", Program.format_size_string(this.Size));
-            
+
             image_template.Replace("{file:ext}", this.Extension);
 
             image_template.Replace("{file:dimensions}", string.Format("{0}x{1}", this.Width, this.Height));
-
-
 
             return image_template.ToString();
         }

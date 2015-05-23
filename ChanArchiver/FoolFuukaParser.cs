@@ -9,12 +9,64 @@ using AniWrap.DataTypes;
 
 namespace ChanArchiver
 {
-    public struct FoolFuukaParserData
+    public class FoolFuukaParserData
     {
-        public string HTML_URL;
-        public string HOST;
-        public string BOARD;
-        public int ThreadID;
+        public FoolFuukaParserData(ArchiveInfo info, string board, int threadId)
+        {
+            if (info != null && info.Software != ArchiveInfo.ArchiverSoftware.FoolFuuka)
+            {
+                throw new ArgumentException("ArchiveInfo Software must be FoolFuuka");
+            }
+
+            this.Archive = info;
+            this.BOARD = board;
+            this.ThreadID = threadId;
+        }
+
+        public ArchiveInfo Archive { get; private set; }
+
+        public string HOST { get { return Archive.Domain; } }
+
+        public string BOARD { get; private set; }
+        public int ThreadID { get; private set; }
+
+        private string get_http_prefix()
+        {
+            /*
+             Check user preference first
+             * then check archive cabability
+             */
+            bool user_want_https = Settings.UseHttps;
+            bool user_want_http = !user_want_https;
+
+            if (user_want_https && this.Archive.SupportHttps)
+            {
+                return "https";
+            }
+            else if (user_want_https && !this.Archive.SupportHttps)
+            {
+                return "http";
+            }
+            else if (user_want_http && !this.Archive.SupportHttp && this.Archive.SupportHttps)
+            {
+                return "https";
+            }
+            else
+            {
+                return "http";
+            }
+        }
+
+        public string GetAPIUrl()
+        {
+            return string.Format("{0}://{1}/_/api/chan/thread/?board={2}&num={3}",
+                get_http_prefix(), this.HOST, this.BOARD, this.ThreadID);
+        }
+
+        public string GetBoardIndexUrl()
+        {
+            return string.Format("{0}://{1}/{2}/", get_http_prefix(), this.HOST, this.BOARD);
+        }
     }
 
     public static class FoolFuukaParser
@@ -78,6 +130,7 @@ namespace ChanArchiver
                 }
                 else
                 {
+                    //TODO parse_html
                     return null;
                 }
             }
@@ -85,13 +138,14 @@ namespace ChanArchiver
 
         private static string fetch_api(FoolFuukaParserData ffp_data)
         {
-            string url = string.Format("http://{0}/_/api/chan/thread/?board={1}&num={2}", ffp_data.HOST, ffp_data.BOARD, ffp_data.ThreadID);
+            string url = ffp_data.GetAPIUrl();
 
             HttpWebRequest wr = (HttpWebRequest)WebRequest.Create(url);
-          
+
+            wr.CookieContainer = get_cookies_for_board(ffp_data);
             wr.AllowAutoRedirect = true;
-            wr.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:26.0) Gecko/20100101 Firefox/26.0";
-            wr.Referer = string.Format("http://boards.4chan.org/{0}/res/{1}", ffp_data.BOARD, ffp_data.ThreadID);
+            wr.UserAgent = Program.get_random_user_agent();
+            //wr.Referer = string.Format("http://boards.4chan.org/{0}/thread/{1}", ffp_data.BOARD, ffp_data.ThreadID);
 
             wr.Method = "GET";
 
@@ -120,26 +174,50 @@ namespace ChanArchiver
             }
         }
 
+
+        private static CookieContainer get_cookies_for_board(FoolFuukaParserData ffp_data)
+        {
+            try 
+            {
+                string url = ffp_data.GetBoardIndexUrl();
+
+                HttpWebRequest wr = (HttpWebRequest)WebRequest.Create(url);
+
+                wr.CookieContainer = new CookieContainer();
+
+                using (var w = wr.GetResponse()) 
+                {
+                    return wr.CookieContainer;
+                }
+            }
+            catch
+            {
+                return new CookieContainer();
+            }
+        }
+
         private static ThreadContainer parse_ffuuka_json(FoolFuukaParserData ffp_data)
         {
             ThreadContainer tc = null;
 
             string data = fetch_api(ffp_data);
 
-            JsonObject ob = JsonConvert.Import<JsonObject>(data);
+            JsonObject response = JsonConvert.Import<JsonObject>(data);
 
-            JsonObject thread_object = (JsonObject)ob[ffp_data.ThreadID.ToString()];
+            JsonObject threadObject = (JsonObject)response[ffp_data.ThreadID.ToString()];
 
-            JsonObject op_post = (JsonObject)thread_object["op"];
+            JsonObject opPost = (JsonObject)threadObject["op"];
 
-            tc = new ThreadContainer(parse_thread(op_post, ffp_data));
+            tc = new ThreadContainer(parse_thread(opPost, ffp_data));
 
-            JsonArray replies = (JsonArray)thread_object["posts"];
+            JsonObject postsObject = (JsonObject)threadObject["posts"];
 
-            foreach (object t in replies)
+            foreach (string reply_id in postsObject.Names.Cast<string>())
             {
+                JsonObject replyObject = (JsonObject)postsObject[reply_id];
+                GenericPost reply = parse_reply(replyObject, ffp_data);
+                tc.AddReply(reply);
                 continue;
-                //tc.AddReply(parse_reply(a, ffp_data));
             }
 
             return tc;

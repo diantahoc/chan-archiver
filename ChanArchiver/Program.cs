@@ -61,6 +61,8 @@ namespace ChanArchiver
 
             bool is_t = false;
 
+            bool autorun = true;
+
             foreach (string arg in args)
             {
                 if (arg.StartsWith("--thread:"))
@@ -90,6 +92,11 @@ namespace ChanArchiver
                     verbose = true;
                 }
 
+                if (arg == "--idle")
+                {
+                    autorun = false;
+                }
+
                 if (arg.StartsWith("--port:"))
                 {
                     Int32.TryParse(arg.Split(':')[1], out port);
@@ -102,7 +109,7 @@ namespace ChanArchiver
 
                 if (arg == "-help" || arg == "--help" || arg == "/help" || arg == "-h")
                 {
-                    Console.Write("Help text");
+                    Console.Write(Properties.Resources.help_text);
                     return;
                 }
             }
@@ -144,8 +151,7 @@ namespace ChanArchiver
             Console.Title = "ChanArchiver";
 
             print("ChanArchiver", ConsoleColor.Cyan);
-            Console.WriteLine(" v1.1 stable");
-
+            Console.WriteLine(" v1.12 stable");
 
             if (Environment.OSVersion.Platform == PlatformID.Unix)
             {
@@ -165,7 +171,7 @@ namespace ChanArchiver
             else
             {
                 ffmpeg_path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "ffmpeg.exe");
-                Console.WriteLine("Make sure you place ffmpeg.exe in your home folder");
+                Console.WriteLine("Make sure to place ffmpeg.exe in your home folder");
             }
 
             swf_watch = new FileSystemWatcher(file_save_dir);
@@ -181,7 +187,7 @@ namespace ChanArchiver
             Console.Write("Saving files in ");
             print(string.Format("'{0}'\n", program_dir), ConsoleColor.Red);
 
-            load_settings();
+            load_settings(autorun);
 
             if (Settings.ThumbnailOnly)
             {
@@ -195,7 +201,7 @@ namespace ChanArchiver
                 start_server();
             }
 
-            if (!string.IsNullOrEmpty(board))
+            if (!string.IsNullOrWhiteSpace(board))
             {
                 if (single_id > 0)
                 {
@@ -209,28 +215,29 @@ namespace ChanArchiver
 
             FileIndex.Load();
 
-            //Task.Factory.StartNew((Action)delegate { try { build_file_index(); } catch (Exception) { } });
-
-            //Console.WriteLine("Building file index...");
-
-            //try
-            //{
-            //    build_file_index();
-            //    Stopwatch sw = new Stopwatch();
-            //    sw.Start();
-            //    build_file_index();
-            //    sw.Stop();
-            //    Console.WriteLine("Total {0} unique file have been processed in {1} seconds", file_index.Count, sw.Elapsed.TotalSeconds);
-            //}
-            //catch (Exception) { }
-
             optimize_directory_struct(thumb_save_dir);
             optimize_directory_struct(file_save_dir);
+
+            ArchivesProvider.Load();
 
             interactive_console();
 
             save_settings();
             FileSystemStats.Dispose();
+        }
+
+        public static BoardWatcher get_board_watcher(string board)
+        {
+            if (Program.active_dumpers.ContainsKey(board))
+            {
+                return Program.active_dumpers[board];
+            }
+            else
+            {
+                BoardWatcher bw = new BoardWatcher(board);
+                Program.active_dumpers.Add(board, bw);
+                return bw;
+            }
         }
 
         private static string get_ffmpeg_path_unix()
@@ -253,7 +260,7 @@ namespace ChanArchiver
 
             string[] letters = 
             {
-                "0", "1", "2", "3", "4", "5", "6", "7","8", "9", "A", "B", "C","D","E", "F"
+                "0", "1", "2", "3", "4", "5", "6", "7","8", "9", "A", "B", "C", "D", "E", "F"
             };
 
             // Make the directories if they don't exist
@@ -268,18 +275,20 @@ namespace ChanArchiver
                 break;
             }
 
-            foreach (var f in dirInfo.GetFiles())
+            foreach (string f in Directory.EnumerateFiles(dirInfo.FullName, "*", SearchOption.TopDirectoryOnly))
             {
-                string first_folder = f.Name[0].ToString().ToUpper();
-                string second_folder = f.Name[1].ToString().ToUpper();
+                string file_name = Path.GetFileName(f);
+
+                string first_folder = file_name[0].ToString().ToUpper();
+                string second_folder = file_name[1].ToString().ToUpper();
 
                 string p = Path.Combine(dirInfo.FullName, first_folder, second_folder);
                 Directory.CreateDirectory(p);
 
-                string dest = Path.Combine(p, f.Name);
+                string dest = Path.Combine(p, file_name);
 
                 if (!File.Exists(dest))
-                    File.Move(f.FullName, Path.Combine(p, f.Name));
+                    File.Move(f, dest);
             }
         }
 
@@ -364,7 +373,7 @@ namespace ChanArchiver
                         sw.Start();
                         FileIndex.ReBuild();
                         sw.Stop();
-                        Console.WriteLine("{0} unique files have been processed in {1} seconds", 
+                        Console.WriteLine("{0} unique files have been processed in {1} seconds",
                             FileIndex.EntriesCount, sw.Elapsed.TotalSeconds);
                         sw.Reset();
                         break;
@@ -426,61 +435,39 @@ namespace ChanArchiver
                         }
                         else if (command.StartsWith("add-fuuka")) // add-fuuka HOST BOARD ID
                         {
-                            try
+                            Console.WriteLine("The command line version of this feature was deprecated in favor of the WebUI interface. Use that instead");
+
+                            /*try
                             {
-                                string[] data = command.Split(' ');
-                                if (data.Length != 4)
+                                string[] data = command.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+                                if (data.Length == 3)
                                 {
-                                    Console.WriteLine("Invalid syntax. Usage: add-fuuka HOST BOARD ID\n" +
-                                        "Where HOST is the host name of the archive (for example archive.foolz.us).");
+
+                                    string board = data[1];
+                                    int tid = -1;
+
+                                    if (Int32.TryParse(data[2], out tid))
+                                    {
+                                        ArchivedThreadAdder.AddThreadFromArchive(board, tid, true);
+                                    }
+                                    else
+                                    {
+                                        Console.WriteLine("Invalid thread id");
+                                    }
                                 }
                                 else
                                 {
-                                    FoolFuukaParserData a = new FoolFuukaParserData();
-                                    a.HOST = data[1];
-                                    a.BOARD = data[2].ToLower();
-                                    a.ThreadID = Convert.ToInt32(data[3]);
-
-                                    if (ValidBoards.ContainsKey(a.BOARD))
-                                    {
-                                        BoardWatcher bw = null;
-                                        if (active_dumpers.ContainsKey(a.BOARD))
-                                        {
-                                            bw = active_dumpers[a.BOARD];
-                                        }
-                                        else
-                                        {
-                                            bw = new BoardWatcher(a.BOARD);
-                                            active_dumpers.Add(a.BOARD, bw);
-                                        }
-
-                                        Console.WriteLine("Adding thread {0} from board {1}...", a.ThreadID, a.BOARD);
-
-                                        ThreadContainer tc = FoolFuukaParser.Parse(a);
-
-                                        if (tc != null)
-                                        {
-                                            bw.AddStaticThread(tc, Settings.ThumbnailOnly);
-                                            Console.WriteLine("Thread {0} from board {1} added.", a.ThreadID, a.BOARD);
-                                        }
-                                        else
-                                        {
-                                            Console.WriteLine("Cannot add this thread. Possible reasons:\n"
-                                                + "- The thread ID is invalid\n"
-                                                + "- The archive no longer archive this board.\n"
-                                                + "- The archive software isn't FoolFuuka. FoolFuuka-based archives are simliar to (archive.foolz.us)\n"
-                                                + "- The archive has no JSON API support");
-                                        }
-
-                                    }
+                                    Console.WriteLine("Invalid syntax. Usage: add-fuuka BOARD ID");
                                 }
                             }
                             catch (Exception ex)
                             {
                                 Console.WriteLine("Error occured: {0}", ex.Message);
-                            }
+                            }*/
+
                         }
-                        else { Console.WriteLine("Unkown command '{0}'", command); }
+                        else { Console.WriteLine("Unknown command '{0}'", command); }
                         break;
                 }
                 Console.Write("> ");
@@ -603,18 +590,26 @@ namespace ChanArchiver
             Console.WriteLine("Done");
         }
 
-        private static void load_settings()
+        private static void load_settings(bool loadboards)
         {
             load_banned_files_list();
             NetworkUsageCounter.LoadStats();
-            load_boards();
+
+            if (loadboards)
+            {
+                load_boards();
+            }
+            else
+            {
+                print("Not resuming thread downloading\n", ConsoleColor.Yellow);
+            }
+
             Wordfilter.Load();
         }
 
         private static void save_settings()
         {
             Console.Write("Saving ...");
-
             save_boards();
             save_banned_files_list();
             Settings.Save();
@@ -1000,13 +995,10 @@ namespace ChanArchiver
             {
                 return Amib.Threading.WorkItemPriority.Level2;
             }
-            else if (pf.size > 6 * mb)
+            else //if (pf.size > 6 * mb)
             {
                 return Amib.Threading.WorkItemPriority.Level1;
             }
-
-            //this should never occure
-            return Amib.Threading.WorkItemPriority.Level1;
 
             //smaller than 50KB, Highest Priority
             //between 50KB and 400KB, High pr
