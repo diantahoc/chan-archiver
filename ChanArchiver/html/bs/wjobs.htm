@@ -1,24 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="" />
-    <meta name="author" content="" />
-    <link rel="shortcut icon" href="/res/favicon.ico" />
-
-    <title>[ChanArchiver] - Watch Jobs</title>
-
-    <!-- Bootstrap core CSS -->
-    <link href="/res/bootstrap.css" rel="stylesheet" />
-
-    <link rel="stylesheet" href="res/font-awesome.min.css" />
-
-    <!-- Custom styles for this template -->
-    <link href="/res/dashboard.css" rel="stylesheet" />
-
+    {{commons-headtags}}
 </head>
 
 <body>
@@ -48,45 +31,9 @@
     </div>
 
     <div class="container-fluid">
+
         <div class="row">
-            <div class="col-sm-3 col-md-2 sidebar">
-
-                <ul class="nav nav-sidebar">
-                    <li>
-                        <a href="/">Overview</a>
-                    </li>
-
-                    <li>
-                        <a href="/fq">File Queue</a>
-                    </li>
-                </ul>
-
-                <ul class="nav nav-sidebar">
-                    <li class="active">
-                        <a href="/wjobs">Watch Jobs</a>
-                    </li>
-                    <li>
-                        <a href="/monboards">Monitored Boards</a>
-                    </li>
-
-                    <li>
-                        <a href="/filters">Thread Filters</a>
-                    </li>
-                </ul>
-
-
-                <ul class="nav nav-sidebar">
-                    <li>
-                        <a href="/bannedfiles">Banned files</a>
-                    </li>
-
-                    <li>
-                        <a href="/settings">Settings</a>
-                    </li>
-
-                </ul>
-
-            </div>
+            {{commons-sidebar}}
 
             <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
                 <h1 class="page-header">Watch Jobs</h1>
@@ -136,13 +83,13 @@
 
                             <select id="boards_menu" name="board"></select>
 
-                            
+
 
                             <span class="input-group-btn">
-                                <input type="text" name="threadid" placeholder="thread id" />
+                                <input type="text" data-validate="number" name="threadid" placeholder="thread id" />
                                 <button class="btn btn-default" type="submit">Add thread</button>
                             </span>
-                        
+
                             <br />
 
 
@@ -163,7 +110,7 @@
                                 <label for="archive_info_files">Full files supported for: </label>
                                 <p id="archive_info_files"></p>
                             </div>
-                        
+
                         </div>
 
 
@@ -171,44 +118,40 @@
 
                 </div>
 
-            <hr />
+                <hr />
 
-            <div class="table-responsive">
-                <table class="table table-striped table-hover">
-                    <thead>
-                        <tr>
-                            <th></th>
-                            <th>#</th>
-                            <th>Board</th>
-                            <th>ID</th>
-                            <th>Added Automatically?</th>
-                            <th>Thumbnail Only?</th>
-                            <th>Link</th>
-                            <th>Title</th>
-                            <th>Last updated</th>
-                            <th>Auto-sage?</th>
-                            <th>Image Limit?</th>
-                            <th>Info</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {Items}
-
-                    </tbody>
-                </table>
-            </div>
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>#</th>
+                                <th>Board</th>
+                                <th>ID</th>
+                                <th>Added Automatically?</th>
+                                <th>Thumbnail Only?</th>
+                                <th>Link</th>
+                                <th>Title</th>
+                                <th>Last updated</th>
+                                <th>Auto-sage?</th>
+                                <th>Image Limit?</th>
+                                <th>Info</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{watched-threads-table}}
+                        </tbody>
+                    </table>
+                </div>
 
 
             </div>
         </div>
     </div>
 
-    <!-- Bootstrap core JavaScript
-    ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
-    <script src="/res/jquery.js"></script>
-    <script src="/res/bootstrap.js"></script>
-    <script src="/res/docs.js"></script>
+    {{commons-scripts}}
+    <script src="/res/verify.js"></script>
+
     <script>
 
         var items =

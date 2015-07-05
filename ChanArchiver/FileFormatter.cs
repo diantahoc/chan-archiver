@@ -58,6 +58,14 @@ namespace ChanArchiver
             image_template.Replace("{file:dimensions}", string.Format("{0}x{1}", this.Width, this.Height));
 
             return image_template.ToString();
+        
+        }
+
+        public void ChangeExtension(string newext) 
+        {
+            string filename = System.IO.Path.GetFileNameWithoutExtension(this.FileName);
+            this.FileName = string.Format("{0}.{1}", filename, newext);
+           // this.Extension = newext;
         }
 
     }

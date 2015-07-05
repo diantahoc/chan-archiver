@@ -120,7 +120,10 @@ namespace ChanArchiver.HttpServerHandlers
                         data = Properties.Resources.FontAwesome_otf;
                         response.ContentType = "application/font-sfnt";
                         break;
-
+                    case "verify.js":
+                        data = Encoding.UTF8.GetBytes(Properties.Resources.verify_notify_min);
+                        response.ContentType = "application/javascript";
+                        break;
                     default:
                         break;
                 }

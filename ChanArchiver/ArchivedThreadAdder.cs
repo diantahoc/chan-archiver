@@ -53,7 +53,7 @@ namespace ChanArchiver
             {
                 FoolFuukaParserData a = new FoolFuukaParserData(info, board, tid);
 
-                BoardWatcher bw = Program.get_board_watcher(board);
+                BoardWatcher bw = Program.GetBoardWatcher(board);
 
                 if (outputConsoleMessages)
                 {

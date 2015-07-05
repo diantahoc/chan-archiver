@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using ChanArchiver.HttpServerHandlers;
 
 namespace ChanArchiver
 {
@@ -34,7 +35,9 @@ namespace ChanArchiver
                         return true;
                     }
 
-                    int board_thread_count = ThreadStore.CountThreads(board);
+                    ThreadStore.GetStorageEngine().UpdateThreadStoreStats();
+
+                    int board_thread_count = ThreadStore.GetStorageEngine().StoreStats[board];
 
                     if (board_thread_count == 0)
                     {
@@ -54,7 +57,7 @@ namespace ChanArchiver
 
                     int start = page_offset * (ThreadPerPage);
 
-                    PostFormatter[] board_index = ThreadStore.GetIndex(board, start, ThreadPerPage);
+                    PostFormatter[] board_index = ThreadStore.GetStorageEngine().GetIndex(board, start, ThreadPerPage);
 
                     StringBuilder s = new StringBuilder();
 
@@ -90,7 +93,7 @@ namespace ChanArchiver
                         .Replace("{pagen}", page_numbers.ToString())
                         .Replace("{Items}", s.ToString()));
 
-                    response.ContentType = "text/html; charset=utf-8";
+                    response.ContentType = ServerConstants.HtmlContentType;
                     response.Encoding = Encoding.UTF8;
                     response.Status = System.Net.HttpStatusCode.OK;
                     response.ContentLength = data.Length;
@@ -105,35 +108,51 @@ namespace ChanArchiver
                     string board = parame[2];
                     string threadid = parame[3];
 
-                    if (string.IsNullOrEmpty(board) || string.IsNullOrEmpty(threadid)) { _404(response); }
+                    int parsedThreadId = -1;
+                    int.TryParse(threadid, out parsedThreadId);
 
-                    PostFormatter[] thread_data = ThreadStore.GetThread(board, threadid); if (thread_data.Length == 0) { _404(response); return true; }
+                    if (string.IsNullOrEmpty(board) || string.IsNullOrEmpty(threadid)) { _404(response); return true; }
+                    if (parsedThreadId <= 0) { _404(response); return true; }
+
+                    StringBuilder pageHtml = new StringBuilder(Properties.Resources.page_template);
 
                     StringBuilder body = new StringBuilder();
 
-                    body.Append(thread_data[0]);
-
-                    body.Replace("{post:link}", string.Format("#p{0}", thread_data[0].PostID));
-
-                    for (int i = 1; i < thread_data.Length; i++)
                     {
-                        body.Append(thread_data[i]);
+                        PostFormatter[] thread_data = ThreadStore.GetStorageEngine().GetThread(board, threadid);
+                        if (thread_data.Length == 0) { _404(response); return true; }
+
+                        body.Append(thread_data[0]);
+
+                        body.Replace("{post:link}", string.Format("#p{0}", thread_data[0].PostID));
+
+                        for (int i = 1; i < thread_data.Length; i++)
+                        {
+                            body.Append(thread_data[i]);
+                        }
                     }
 
-                    //body.Append("</div>");
+                    string thread_notes = ThreadStore.GetStorageEngine().GetThreadNotes(board, parsedThreadId);
 
-                    byte[] respon = Encoding.UTF8.GetBytes
-                        (Properties.Resources.page_template
-                        .Replace("{board-title}", string.Format("/{0}/ - ChanArchiver", board))
-                        .Replace("{board-letter}", board)
-                        .Replace("{thread-id}", threadid)
-                        .Replace("{thread-posts}", body.ToString()));
+                    thread_notes = System.Web.HttpUtility.HtmlEncode(thread_notes);
 
-                    response.ContentType = "text/html; charset=utf-8";
-                    response.ContentLength = respon.Length;
+                    pageHtml.Replace("{board-title}", string.Format("[ChanArchiver] - /{0}/ Thread No. {1}", board, threadid));
+
+                    pageHtml.Replace("{board-letter}", board);
+
+                    pageHtml.Replace("{thread-id}", threadid);
+
+                    pageHtml.Replace("{{notes}}", thread_notes);
+
+                    pageHtml.Replace("{thread-posts}", body.ToString());
+
+                    byte[] content = Encoding.UTF8.GetBytes(pageHtml.ToString());
+
+                    response.ContentType = ServerConstants.HtmlContentType;
+                    response.ContentLength = content.Length;
                     response.Encoding = Encoding.UTF8;
                     response.SendHeaders();
-                    response.SendBody(respon);
+                    response.SendBody(content);
 
                     return true;
                 }
@@ -147,7 +166,9 @@ namespace ChanArchiver
 
                 if (string.IsNullOrEmpty(board) || string.IsNullOrEmpty(threadid)) { _404(response); }
 
-                PostFormatter[] thread_data = ThreadStore.GetThread(board, threadid); if (thread_data.Length == 0) { _404(response); return true; }
+                PostFormatter[] thread_data = ThreadStore.GetStorageEngine().GetThread(board, threadid); 
+                
+                if (thread_data.Length == 0) { _404(response); return true; }
 
                 StringBuilder sb = new StringBuilder();
 
@@ -163,7 +184,7 @@ namespace ChanArchiver
                 }
 
                 byte[] data = Encoding.UTF8.GetBytes(sb.ToString());
-                response.ContentType = "text/html; charset=utf-8";
+                response.ContentType = ServerConstants.HtmlContentType;
                 response.ContentLength = data.Length;
                 response.Encoding = Encoding.UTF8;
                 response.SendHeaders();
@@ -216,7 +237,7 @@ namespace ChanArchiver
                     }
 
                     //delete the thread
-                    ThreadStore.DeleteThread(board, threadid);
+                    ThreadStore.GetStorageEngine().DeleteThread(board, threadid);
 
                     response.Redirect("/boards/" + board);
                     return true;
@@ -236,7 +257,7 @@ namespace ChanArchiver
                         s.Append("<div class=\"col-6 col-sm-6 col-lg-4\">");
 
                         s.AppendFormat("<h2>/{0}/</h2>", folder_name);
-                        s.AppendFormat("<p>Thread Count: {0}</p>", ThreadStore.CountThreads(folder_name));
+                        s.AppendFormat("<p>Thread Count: {0}</p>", ThreadStore.StoreStats[folder_name]);
 
                         s.AppendFormat("<p><a class=\"btn btn-default\" href=\"/boards/{0}\" role=\"button\">browse »</a></p>", folder_name);
 
@@ -461,7 +482,7 @@ namespace ChanArchiver
                         _404(response);
                     }
                 }
-                else if (mode == "threadfromarchive") 
+                else if (mode == "threadfromarchive")
                 {
                     try
                     {
@@ -815,50 +836,29 @@ namespace ChanArchiver
 
             #endregion
 
-            if (command.StartsWith("/action/enablefullfile"))
-            {
-                Settings.ThumbnailOnly = false;
-                response.Redirect("/");
-                return true;
-            }
-
             if (command == "/ua")
             {
                 string ua = request.Headers["User-Agent"].ToLower();
-                write_text(string.Format("Your user agent: {0} <br/> Device support webm {1}", ua,
-                    ChanArchiver.HttpServerHandlers.FileHandler.device_not_support_webm(ua)), response);
+                write_text(string.Format("Your user agent: {0}<br/>Device support WebM: {1}", ua,
+                    !ChanArchiver.HttpServerHandlers.FileHandler.device_not_support_webm(ua)), response);
                 return true;
             }
 
-            if (command.StartsWith("/stopallmat/"))
+            if (command == "/ua/t")
             {
-                string board = request.QueryString["b"].Value;
-                if (!string.IsNullOrWhiteSpace(board))
+                string ua = request.Headers["User-Agent"].ToLower();
+                if (!Program.uas_always_mp4.Contains(ua))
                 {
-                    if (Program.active_dumpers.ContainsKey(board))
-                    {
-                        var bw = Program.active_dumpers[board];
-
-                        for (int i = 0; i < bw.watched_threads.Count; i++)
-                        {
-                            try
-                            {
-                                ThreadWorker tw = bw.watched_threads.ElementAt(i).Value;
-                                if (!tw.AddedAutomatically)
-                                {
-                                    tw.Stop();
-                                }
-                            }
-                            catch (System.IndexOutOfRangeException)
-                            {
-                                break;
-                            }
-                            catch { }
-                        }
-                    }
+                    Program.uas_always_mp4.Add(ua);
+                    write_text("added to mp4 list", response);
+                    return true;
                 }
-                response.Redirect("/monboards");
-                return true;
+                else
+                {
+                    Program.uas_always_mp4.Remove(ua);
+                    write_text("removed from mp4 list", response);
+                    return true;
+                }
             }
 
             if (command.StartsWith("/get_archive_info/"))
@@ -884,6 +884,11 @@ namespace ChanArchiver
             return false;
         }
 
+        public static string GetThreadPageLink(string board, int tid) 
+        {
+            return string.Format("/boards/{0}/{1}", board, tid);
+        }
+
         public static void _404(HttpServer.IHttpResponse response)
         {
             response.Status = System.Net.HttpStatusCode.NotFound;
@@ -896,7 +901,7 @@ namespace ChanArchiver
         public static void write_text(string text, HttpServer.IHttpResponse response)
         {
             byte[] data = Encoding.UTF8.GetBytes(text);
-            response.ContentType = "text/html; charset=utf-8";
+            response.ContentType = ServerConstants.HtmlContentType;
             response.ContentLength = data.Length;
             response.SendHeaders();
             response.SendBody(data);

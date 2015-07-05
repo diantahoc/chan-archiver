@@ -164,17 +164,18 @@ namespace ChanArchiver.Properties {
         ///   Looks up a localized string similar to &lt;!DOCTYPE html&gt;
         ///&lt;html lang=&quot;en&quot;&gt;
         ///&lt;head&gt;
-        ///    &lt;meta http-equiv=&quot;content-type&quot; content=&quot;text/html; charset=UTF-8&quot; /&gt;
-        ///    &lt;meta charset=&quot;utf-8&quot; /&gt;
-        ///    &lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=edge&quot; /&gt;
-        ///    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot; /&gt;
-        ///    &lt;meta name=&quot;description&quot; content=&quot;&quot; /&gt;
-        ///    &lt;meta name=&quot;author&quot; content=&quot;&quot; /&gt;
-        ///    &lt;link rel=&quot;shortcut icon&quot; href=&quot;/res/favicon.ico&quot; /&gt;
+        ///{{commons-headtags}}
+        ///&lt;/head&gt;
         ///
-        ///    &lt;title&gt;[ChanArchiver] - Monitored Boards&lt;/title&gt;
+        ///&lt;body&gt;
         ///
-        ///    &lt;!-- Bootstrap core CSS  [rest of string was truncated]&quot;;.
+        ///    &lt;div class=&quot;navbar navbar-inverse navbar-fixed-top&quot; role=&quot;navigation&quot;&gt;
+        ///        &lt;div class=&quot;container-fluid&quot;&gt;
+        ///            &lt;div class=&quot;navbar-header&quot;&gt;
+        ///                &lt;button type=&quot;button&quot; class=&quot;navbar-toggle&quot; data-toggle=&quot;collapse&quot; data-target=&quot;.navbar-collapse&quot;&gt;
+        ///                    &lt;span class=&quot;sr-only&quot;&gt;Toggle navigation&lt;/span&gt;
+        ///                    &lt;span class=&quot;icon-bar&quot;&gt;&lt;/span&gt;
+        ///                    &lt;span class=&quot;i [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string boards_page {
             get {
@@ -229,6 +230,68 @@ namespace ChanArchiver.Properties {
         internal static string cached_boards {
             get {
                 return ResourceManager.GetString("cached_boards", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;!--
+        ///    This file contain common &lt;head&gt; tags such as &lt;meta&gt; tags and &lt;link&gt; tags.
+        ///    Note: It is included using copy/paste inclusion.
+        ///    Replace tag: {{commons-headtags}}
+        ///--&gt;
+        ///&lt;meta http-equiv=&quot;content-type&quot; content=&quot;text/html; charset=UTF-8&quot; /&gt;
+        ///&lt;meta charset=&quot;utf-8&quot; /&gt;
+        ///&lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=edge&quot; /&gt;
+        ///&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot; /&gt;
+        ///&lt;link rel=&quot;shortcut icon&quot; href=&quot;/res/favicon.ico&quot; /&gt;
+        ///&lt;link href=&quot;/res/bootstrap.css&quot; rel=&quot;stylesheet&quot;  [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string commons_headtags {
+            get {
+                return ResourceManager.GetString("commons_headtags", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;!-- 
+        ///    This file contain common &lt;script&gt; includes that are shared across ChanArchiver page.
+        ///    Note: It is included using copy/paste inclusion.
+        ///    Replace tag: {{commons-scripts}}
+        ///--&gt;
+        ///&lt;script src=&quot;/res/jquery.js&quot;&gt;&lt;/script&gt;
+        ///&lt;script src=&quot;/res/bootstrap.js&quot;&gt;&lt;/script&gt;
+        ///&lt;!--&lt;script src=&quot;/res/docs.js&quot;&gt;&lt;/script&gt;--&gt;.
+        /// </summary>
+        internal static string commons_script {
+            get {
+                return ResourceManager.GetString("commons_script", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;!--
+        ///    This file contain the sidebar section of most ChanArchiver pages.
+        ///    Note: It is included using copy/paste inclusion.
+        ///    Replace tag: {{commons-sidebar}}
+        ///--&gt;
+        ///&lt;div class=&quot;col-sm-3 col-md-2 sidebar&quot;&gt;
+        ///
+        ///    &lt;ul class=&quot;nav nav-sidebar&quot;&gt;
+        ///        &lt;li class=&quot;{{overview-active}}&quot;&gt;
+        ///            &lt;a href=&quot;/&quot;&gt;Overview&lt;/a&gt;
+        ///        &lt;/li&gt;
+        ///
+        ///        &lt;li class=&quot;{{filequeue-active}}&quot;&gt;
+        ///            &lt;a href=&quot;/fq&quot;&gt;File Queue&lt;/a&gt;
+        ///        &lt;/li&gt;
+        ///    &lt;/ul&gt;
+        ///
+        ///    &lt;ul class=&quot;nav nav-sidebar&quot;&gt;
+        ///        &lt;li class [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string commons_sidebar {
+            get {
+                return ResourceManager.GetString("commons_sidebar", resourceCulture);
             }
         }
         
@@ -291,19 +354,20 @@ namespace ChanArchiver.Properties {
         /// <summary>
         ///   Looks up a localized string similar to &lt;!DOCTYPE html&gt;
         ///&lt;html lang=&quot;en&quot;&gt;
-        ///  &lt;head&gt;
-        ///    &lt;meta http-equiv=&quot;content-type&quot; content=&quot;text/html; charset=UTF-8&quot;/&gt;
-        ///    &lt;meta charset=&quot;utf-8&quot;/&gt;
-        ///    &lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=edge&quot;/&gt;
-        ///    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;/&gt;
-        ///    &lt;meta name=&quot;description&quot; content=&quot;&quot;/&gt;
-        ///    &lt;meta name=&quot;author&quot; content=&quot;&quot;/&gt;
-        ///    &lt;link rel=&quot;shortcut icon&quot; href=&quot;/res/favicon.ico&quot;/&gt;
         ///
-        ///    &lt;title&gt;[ChanArchiver] - Overview&lt;/title&gt;
+        ///&lt;head&gt;
+        ///    {{commons-headtags}}
+        ///    &lt;link rel=&quot;stylesheet&quot; href=&quot;res/font-awesome.min.css&quot; /&gt;
+        ///&lt;/head&gt;
         ///
-        ///    &lt;!-- Bootstrap core CSS --&gt;
-        ///    &lt;lin [rest of string was truncated]&quot;;.
+        ///&lt;body&gt;
+        ///
+        ///    &lt;div class=&quot;navbar navbar-inverse navbar-fixed-top&quot; role=&quot;navigation&quot;&gt;
+        ///        &lt;div class=&quot;container-fluid&quot;&gt;
+        ///            &lt;div class=&quot;navbar-header&quot;&gt;
+        ///                &lt;button type=&quot;button&quot; class=&quot;navbar-toggle&quot; data-toggle=&quot;collapse&quot; data-target=&quot;.navbar-collapse&quot;&gt;
+        ///                    &lt;span class=&quot;sr-only&quot;&gt;Toggle navigation&lt;/span&gt;
+        ///                  [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string dashboard_page {
             get {
@@ -420,19 +484,18 @@ namespace ChanArchiver.Properties {
         /// <summary>
         ///   Looks up a localized string similar to &lt;!DOCTYPE html&gt;
         ///&lt;html lang=&quot;en&quot;&gt;
-        ///  &lt;head&gt;
-        ///    &lt;meta http-equiv=&quot;content-type&quot; content=&quot;text/html; charset=UTF-8&quot;/&gt;
-        ///    &lt;meta charset=&quot;utf-8&quot;/&gt;
-        ///    &lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=edge&quot;/&gt;
-        ///    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;/&gt;
-        ///    &lt;meta name=&quot;description&quot; content=&quot;&quot;/&gt;
-        ///    &lt;meta name=&quot;author&quot; content=&quot;&quot;/&gt;
-        ///    &lt;link rel=&quot;shortcut icon&quot; href=&quot;/res/favicon.ico&quot;/&gt;
+        ///&lt;head&gt;
+        ///    &lt;meta http-equiv=&quot;content-type&quot; content=&quot;text/html; charset=UTF-8&quot; /&gt;
+        ///    &lt;meta charset=&quot;utf-8&quot; /&gt;
+        ///    &lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=edge&quot; /&gt;
+        ///    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot; /&gt;
+        ///    &lt;link rel=&quot;shortcut icon&quot; href=&quot;/res/favicon.ico&quot; /&gt;
         ///
         ///    &lt;title&gt;[ChanArchiver] - File Info&lt;/title&gt;
         ///
-        ///    &lt;!-- Bootstrap core CSS --&gt;
-        ///    &lt;li [rest of string was truncated]&quot;;.
+        ///    &lt;link href=&quot;/res/bootstrap.css&quot; rel=&quot;stylesheet&quot; /&gt;
+        ///    &lt;link href=&quot;/res/dashboard.css&quot; rel=&quot;stylesheet&quot; /&gt;
+        ///&lt;/he [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string fileinfo {
             get {
@@ -444,18 +507,18 @@ namespace ChanArchiver.Properties {
         ///   Looks up a localized string similar to &lt;!DOCTYPE html&gt;
         ///&lt;html lang=&quot;en&quot;&gt;
         ///&lt;head&gt;
-        ///    &lt;meta http-equiv=&quot;content-type&quot; content=&quot;text/html; charset=UTF-8&quot; /&gt;
-        ///    &lt;meta charset=&quot;utf-8&quot; /&gt;
-        ///    &lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=edge&quot; /&gt;
-        ///    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot; /&gt;
-        ///    &lt;meta name=&quot;description&quot; content=&quot;&quot; /&gt;
-        ///    &lt;meta name=&quot;author&quot; content=&quot;&quot; /&gt;
-        ///    &lt;link rel=&quot;shortcut icon&quot; href=&quot;/res/favicon.ico&quot; /&gt;
+        ///    {{commons-headtags}}
+        ///&lt;/head&gt;
         ///
-        ///    &lt;title&gt;[ChanArchiver] - File Queue&lt;/title&gt;
+        ///&lt;body&gt;
         ///
-        ///    &lt;!-- Bootstrap core CSS --&gt;
-        ///  [rest of string was truncated]&quot;;.
+        ///    &lt;div class=&quot;navbar navbar-inverse navbar-fixed-top&quot; role=&quot;navigation&quot;&gt;
+        ///        &lt;div class=&quot;container-fluid&quot;&gt;
+        ///            &lt;div class=&quot;navbar-header&quot;&gt;
+        ///                &lt;button type=&quot;button&quot; class=&quot;navbar-toggle&quot; data-toggle=&quot;collapse&quot; data-target=&quot;.navbar-collapse&quot;&gt;
+        ///                    &lt;span class=&quot;sr-only&quot;&gt;Toggle navigation&lt;/span&gt;
+        ///                    &lt;span class=&quot;icon-bar&quot;&gt;&lt;/span&gt;
+        ///                    &lt;span clas [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string filequeue_page {
             get {
@@ -466,19 +529,19 @@ namespace ChanArchiver.Properties {
         /// <summary>
         ///   Looks up a localized string similar to &lt;!DOCTYPE html&gt;
         ///&lt;html lang=&quot;en&quot;&gt;
-        ///  &lt;head&gt;
-        ///    &lt;meta http-equiv=&quot;content-type&quot; content=&quot;text/html; charset=UTF-8&quot;/&gt;
-        ///    &lt;meta charset=&quot;utf-8&quot;/&gt;
-        ///    &lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=edge&quot;/&gt;
-        ///    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;/&gt;
-        ///    &lt;meta name=&quot;description&quot; content=&quot;&quot;/&gt;
-        ///    &lt;meta name=&quot;author&quot; content=&quot;&quot;/&gt;
-        ///    &lt;link rel=&quot;shortcut icon&quot; href=&quot;/res/favicon.ico&quot;/&gt;
+        ///&lt;head&gt;
+        ///    {{commons-headtags}}
+        ///    &lt;link rel=&quot;stylesheet&quot; href=&quot;res/font-awesome.min.css&quot; /&gt;
+        ///&lt;/head&gt;
         ///
-        ///    &lt;title&gt;[ChanArchiver] - Thread Filters&lt;/title&gt;
+        ///&lt;body&gt;
         ///
-        ///    &lt;!-- Bootstrap core CSS --&gt;
-        ///   [rest of string was truncated]&quot;;.
+        ///    &lt;div class=&quot;navbar navbar-inverse navbar-fixed-top&quot; role=&quot;navigation&quot;&gt;
+        ///        &lt;div class=&quot;container-fluid&quot;&gt;
+        ///            &lt;div class=&quot;navbar-header&quot;&gt;
+        ///                &lt;button type=&quot;button&quot; class=&quot;navbar-toggle&quot; data-toggle=&quot;collapse&quot; data-target=&quot;.navbar-collapse&quot;&gt;
+        ///                    &lt;span class=&quot;sr-only&quot;&gt;Toggle navigation&lt;/span&gt;
+        ///                    [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string filters_page {
             get {
@@ -789,23 +852,22 @@ namespace ChanArchiver.Properties {
         /// <summary>
         ///   Looks up a localized string similar to &lt;!DOCTYPE html&gt;
         ///&lt;html&gt;
-        ///  &lt;head&gt;
-        ///    &lt;meta charset=&quot;utf-8&quot;/&gt;
-        ///    &lt;meta name=&quot;robots&quot; content=&quot;noarchive&quot;/&gt;
-        ///    &lt;meta name=&quot;referrer&quot; content=&quot;origin&quot;/&gt;
-        ///    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1&quot;/&gt;
-        ///    &lt;link rel=&quot;shortcut icon&quot; href=&quot;/favicon.ico&quot;/&gt;
-        ///    &lt;link rel=&quot;stylesheet&quot; href=&quot;/res/blue.css&quot;/&gt;
-        ///
+        ///&lt;head&gt;
+        ///    &lt;meta charset=&quot;utf-8&quot; /&gt;
+        ///    &lt;meta name=&quot;robots&quot; content=&quot;noarchive&quot; /&gt;
+        ///    &lt;meta name=&quot;referrer&quot; content=&quot;origin&quot; /&gt;
+        ///    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1&quot; /&gt;
+        ///    &lt;link rel=&quot;shortcut icon&quot; href=&quot;/favicon.ico&quot; /&gt;
+        ///    &lt;link rel=&quot;stylesheet&quot; href=&quot;/res/blue.css&quot; /&gt;
         ///    &lt;title&gt;{board-title}&lt;/title&gt;
-        ///  &lt;/head&gt;
+        ///&lt;/head&gt;
         ///
-        ///  &lt;body class=&quot;board_{board-letter}&quot;&gt;
+        ///&lt;body class=&quot;board_{board-letter}&quot;&gt;
         ///    &lt;span id=&quot;id_css&quot;&gt;&lt;/span&gt;
         ///
-        ///    &lt;hr class=&quot;desktop&quot;/&gt;
+        ///    &lt;hr class=&quot;desktop&quot; /&gt;
         ///    &lt;div class=&quot;navLinks&quot;&gt;
-        ///  [rest of string was truncated]&quot;;.
+        ///   [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string page_template {
             get {
@@ -966,25 +1028,63 @@ namespace ChanArchiver.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to /** Verify.js - v0.0.1 - 2013/06/12
+        /// * https://github.com/jpillora/verify
+        /// * Copyright (c) 2013 Jaime Pillora - MIT
+        /// */
+        ///(function(e,t,i){function n(e,t){function n(){f(&quot;ajax error&quot;),t.callback(&quot;There has been an error&quot;)}function r(){d.prompt(u,!1);for(var e=s.loading[p];e.length;)e.pop().success.apply(t,arguments);s.loaded[p]=arguments}var o={method:&quot;GET&quot;,timeout:15e3},l=t._exec,u=&quot;GroupRuleExecution&quot;===l.type?l.element.domElem:t.field,h=e.success,c=e.error,d=l.element.options,p=JSON?JSON.stringify(e):a(),m [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string verify_notify_min {
+            get {
+                return ResourceManager.GetString("verify_notify_min", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &lt;!DOCTYPE html&gt;
         ///&lt;html lang=&quot;en&quot;&gt;
         ///&lt;head&gt;
-        ///    &lt;meta http-equiv=&quot;content-type&quot; content=&quot;text/html; charset=UTF-8&quot; /&gt;
-        ///    &lt;meta charset=&quot;utf-8&quot; /&gt;
-        ///    &lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=edge&quot; /&gt;
-        ///    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot; /&gt;
-        ///    &lt;meta name=&quot;description&quot; content=&quot;&quot; /&gt;
-        ///    &lt;meta name=&quot;author&quot; content=&quot;&quot; /&gt;
-        ///    &lt;link rel=&quot;shortcut icon&quot; href=&quot;/res/favicon.ico&quot; /&gt;
+        ///    {{commons-headtags}}
+        ///&lt;/head&gt;
         ///
-        ///    &lt;title&gt;[ChanArchiver] - Watch Jobs&lt;/title&gt;
+        ///&lt;body&gt;
         ///
-        ///    &lt;!-- Bootstrap core CSS --&gt;
-        ///  [rest of string was truncated]&quot;;.
+        ///    &lt;div class=&quot;navbar navbar-inverse navbar-fixed-top&quot; role=&quot;navigation&quot;&gt;
+        ///        &lt;div class=&quot;container-fluid&quot;&gt;
+        ///            &lt;div class=&quot;navbar-header&quot;&gt;
+        ///                &lt;button type=&quot;button&quot; class=&quot;navbar-toggle&quot; data-toggle=&quot;collapse&quot; data-target=&quot;.navbar-collapse&quot;&gt;
+        ///                    &lt;span class=&quot;sr-only&quot;&gt;Toggle navigation&lt;/span&gt;
+        ///                    &lt;span class=&quot;icon-bar&quot;&gt;&lt;/span&gt;
+        ///                    &lt;span clas [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string wjobs_page {
             get {
                 return ResourceManager.GetString("wjobs_page", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;!DOCTYPE html&gt;
+        ///&lt;html&gt;
+        ///&lt;head&gt;
+        ///    &lt;meta charset=&quot;utf-8&quot; /&gt;
+        ///    &lt;link rel=&quot;stylesheet&quot; href=&quot;res/blue.css&quot; /&gt;
+        ///    &lt;title&gt;{title}&lt;/title&gt;
+        ///&lt;/head&gt;
+        ///
+        ///&lt;body class=&quot;board_{board-letter}&quot;&gt;
+        ///    &lt;span id=&quot;id_css&quot;&gt;&lt;/span&gt;
+        ///    &lt;div class=&quot;board&quot;&gt;
+        ///        &lt;div class=&quot;thread&quot; id=&quot;t{thread-id}&quot;&gt;
+        ///            {thread-posts}
+        ///        &lt;/div&gt;
+        ///    &lt;/div&gt;
+        ///&lt;/body&gt;
+        ///&lt;/html&gt;.
+        /// </summary>
+        internal static string zip_page_template {
+            get {
+                return ResourceManager.GetString("zip_page_template", resourceCulture);
             }
         }
     }

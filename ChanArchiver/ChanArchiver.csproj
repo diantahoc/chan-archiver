@@ -62,6 +62,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\Desktop\New folder\HttpServer.v1.1\HttpServer.dll</HintPath>
     </Reference>
+    <Reference Include="ICSharpCode.SharpZipLib">
+      <HintPath>..\..\..\..\..\Desktop\New folder\libs\sharp zip lib\ICSharpCode.SharpZipLib.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -126,19 +129,32 @@
     <Compile Include="Filters\IFilter.cs" />
     <Compile Include="FoolFuukaParser.cs" />
     <Compile Include="HMSFormatter.cs" />
+    <Compile Include="HtmlTemplates.cs" />
     <Compile Include="HttpServerHandlers\BannedFilesPageHandler.cs" />
     <Compile Include="HttpServerHandlers\FileBrowserPageHandler.cs" />
     <Compile Include="HttpServerHandlers\FileHandler.cs" />
     <Compile Include="HttpServerHandlers\FileInfoPageHandler.cs" />
-    <Compile Include="HttpServerHandlers\FileQueuePageHandler.cs" />
+    <Compile Include="HttpServerHandlers\PageHandlers\FileQueuePageHandler.cs" />
+    <Compile Include="HttpServerHandlers\JsonApi\GetDailyNetworkStatisticsJsonApiHandler.cs" />
+    <Compile Include="HttpServerHandlers\JsonApi\GetFileInfoJsonApiHandler.cs" />
+    <Compile Include="HttpServerHandlers\JsonApi\GetMonthlyNetworkStatisticsJsonApiHandler.cs" />
+    <Compile Include="HttpServerHandlers\JsonApi\GetThreadsStatisticsJsonApiHandler.cs" />
+    <Compile Include="HttpServerHandlers\JsonApi\JsonApiHandlerBase.cs" />
     <Compile Include="HttpServerHandlers\LogPageHandler.cs" />
-    <Compile Include="HttpServerHandlers\MonitoredBoardsPageHandler.cs" />
-    <Compile Include="HttpServerHandlers\OverviewPageHandler.cs" />
+    <Compile Include="HttpServerHandlers\PageHandlers\MonitoredBoardsPageHandler.cs" />
+    <Compile Include="HttpServerHandlers\PageHandlers\OverviewPageHandler.cs" />
+    <Compile Include="HttpServerHandlers\PageHandlers\PageHandlerBase.cs" />
     <Compile Include="HttpServerHandlers\ResourcesHandler.cs" />
+    <Compile Include="HttpServerHandlers\ServerConstants.cs" />
+    <Compile Include="HttpServerHandlers\SettingsAction\ThumbnailOnlySettingsController.cs" />
     <Compile Include="HttpServerHandlers\SettingsPageHandler.cs" />
-    <Compile Include="HttpServerHandlers\ThreadFiltersPageHandler.cs" />
+    <Compile Include="HttpServerHandlers\PageHandlers\ThreadFiltersPageHandler.cs" />
     <Compile Include="HttpServerHandlers\ThreadJobInfoPageHandler.cs" />
-    <Compile Include="HttpServerHandlers\WatchJobsPageHandler.cs" />
+    <Compile Include="HttpServerHandlers\ThreadsAction\DownloadAsZipHandler.cs" />
+    <Compile Include="HttpServerHandlers\ThreadsAction\StopAllManuallyAddedThreadsHandler.cs" />
+    <Compile Include="HttpServerHandlers\ThreadsAction\ThreadNotesHandler.cs" />
+    <Compile Include="HttpServerHandlers\UrlParameters.cs" />
+    <Compile Include="HttpServerHandlers\PageHandlers\WatchJobsPageHandler.cs" />
     <Compile Include="JobQueue.cs" />
     <Compile Include="Libs\JayrockJSON\Common\Mask.cs" />
     <Compile Include="Libs\JayrockJSON\Jayrock.Json\BooleanObject.cs" />
@@ -347,6 +363,10 @@
     </Compile>
     <Compile Include="Settings.cs" />
     <Compile Include="HttpServerHandlers\ThreadServerModule.cs" />
+    <Compile Include="Thread Storage\DummyStorageImplementation.cs" />
+    <Compile Include="Thread Storage\FolderStorageEngine.cs" />
+    <Compile Include="Thread Storage\IStorageEngine.cs" />
+    <Compile Include="Thread Storage\ThreadStoreStats.cs" />
     <Compile Include="ThreadStore.cs" />
     <Compile Include="ThreadWorker.cs" />
     <Compile Include="Wordfilter.cs" />
@@ -368,10 +388,14 @@
   <ItemGroup>
     <Content Include="clover_icon.ico" />
     <Content Include="html\bs\banned_files.html" />
+    <Content Include="html\bs\Common Html\headtags.html" />
+    <Content Include="html\bs\Common Html\scripts.html" />
+    <Content Include="html\bs\Common Html\sidebar.html" />
     <Content Include="html\bs\file_reposts.html" />
     <Content Include="html\bs\res\font-awesome.min.css" />
     <Content Include="html\bs\res\jquery.flot.pie.min.js" />
     <Content Include="html\bs\res\paper_theme.min.css" />
+    <Content Include="html\bs\res\verify.notify.min.js" />
     <Content Include="html\bs\settings_page.html">
       <SubType>Designer</SubType>
     </Content>
@@ -386,6 +410,7 @@
       <SubType>Designer</SubType>
     </Content>
     <Content Include="html\chan-templates\reply_template.htm" />
+    <Content Include="html\chan-templates\zip_page_template.html" />
     <Content Include="html\file_list_page.html" />
     <Content Include="Libs\JayrockJSON\Jayrock\json.js" />
     <Content Include="Resources\UserAgentList.txt" />
@@ -462,6 +487,7 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

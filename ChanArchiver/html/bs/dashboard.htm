@@ -1,257 +1,193 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
-    <meta charset="utf-8"/>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <meta name="description" content=""/>
-    <meta name="author" content=""/>
-    <link rel="shortcut icon" href="/res/favicon.ico"/>
 
-    <title>[ChanArchiver] - Overview</title>
-
-    <!-- Bootstrap core CSS -->
-    <link href="/res/bootstrap.css" rel="stylesheet"/>
-    
+<head>
+    {{commons-headtags}}
     <link rel="stylesheet" href="res/font-awesome.min.css" />
-    
-    <!-- Custom styles for this template -->
-    <link href="/res/dashboard.css" rel="stylesheet"/>
+</head>
 
-    <style type="text/css" id="holderjs-style"></style>
-  </head>
-
-  <body>
+<body>
 
     <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
-      <div class="container-fluid">
-        <div class="navbar-header">
-          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-            <span class="sr-only">Toggle navigation</span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="navbar-brand" href="/">ChanArchiver</a>
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="/">ChanArchiver</a>
+            </div>
+            <div class="navbar-collapse collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/boards">Archived Boards</a>
+                    </li>
+                    <li>
+                        <a href="https://github.com/diantahoc/chan-archiver" target="_blank">Github</a>
+                    </li>
+                </ul>
+            </div>
         </div>
-        <div class="navbar-collapse collapse">
-          <ul class="nav navbar-nav navbar-right">
-            <li>
-              <a href="/boards">Archived Boards</a>
-            </li>
-            <li>
-              <a href="https://github.com/diantahoc/chan-archiver" target="_blank">Github</a>
-            </li>
-          </ul>
-        </div>
-      </div>
     </div>
 
     <div class="container-fluid">
-      <div class="row">
-        <div class="col-sm-3 col-md-2 sidebar">
+        <div class="row">
+            {{commons-sidebar}}
 
-          <ul class="nav nav-sidebar">
-            <li class="active">
-              <a href="/">Overview</a>
-            </li>
-
-            <li>
-              <a href="/fq">File Queue</a>
-            </li>
-          </ul>
-
-          <ul class="nav nav-sidebar">
-            <li>
-              <a href="/wjobs">Watch Jobs</a>
-            </li>
-
-            <li>
-              <a href="/monboards">Monitored Boards</a>
-            </li>
-
-            <li>
-              <a href="/filters">Thread Filters</a>
-            </li>
-
-          </ul>
-
-
-          <ul class="nav nav-sidebar">
-            <li>
-              <a href="/bannedfiles">Banned files</a>
-            </li>
-
-            <li>
-              <a href="/settings">Settings</a>
-            </li>
-
-          </ul>
-          
-        </div>
-
-        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
-          <h1 class="page-header">Overview</h1>
-          {thumbmode}
+            <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+                <h1 class="page-header">Overview</h1>
+                {thumbmode}
           {lowdiskspacenotice}
           <div class="table-responsive">
-            <table class="table table-striped">
-              <thead>
-                <tr>
-                  <th>Running Time</th>
-                  <th>Disk usage</th>
-                  <th>Network usage</th>
-                  <th>Archived threads</th>
-                </tr>
-              </thead>
-              <tbody>
-                {RunningTime}
-              </tbody>
-            </table>
+              <table class="table table-striped">
+                  <thead>
+                      <tr>
+                          <th>Running Time</th>
+                          <th>Disk usage</th>
+                          <th>Network usage</th>
+                          <th>Archived threads</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      {RunningTime}
+                  </tbody>
+              </table>
           </div>
 
-          {DiskUsage}
+                {DiskUsage}
 
           <h2 class="sub-header">Network usage</h2>
-          <span class="label label-primary">This hour</span>
-          <div class="table-responsive">
-            <table class="table table-striped">
-              <thead>
-                <tr>
-                  <th>% API files</th>
-                  <th>% Thumbnail</th>
-                  <th>% Full files</th>
-                  <th>Total</th>
-                </tr>
-              </thead>
-              <tbody>
+                <span class="label label-primary">This hour</span>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>% API files</th>
+                                <th>% Thumbnail</th>
+                                <th>% Full files</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {NetworkStats}
+                        </tbody>
+                    </table>
+                </div>
 
-                {NetworkStats}
+                <span id="network-statistics-today-label" class="label label-primary" style="display: none;">This day
+                </span>
 
-              </tbody>
-            </table>
+                <div id="network-statistics-today-chart" style="width: 100%; height: 300px; display: none;">
+                </div>
+
+                <span id="network-statistics-month-label" class="label label-primary" style="display: none;">This month
+                </span>
+
+                <div id="network-statistics-month-chart" style="width: 100%; height: 300px; display: none;">
+                </div>
+
+                <noscript>
+                    Enable JavaScript to display hourly and daily network statistics
+                </noscript>
 
 
-          </div>
+                <h2 class="sub-header">Archived Threads Statistics</h2>
 
-          <span class="label label-primary">This day</span>
-          <div id="netstats" style="width: 100%; height: 300px;"></div>
+                <div id="thread-statistics-chart" style="width: 100%; height: 300px; display: none;">
+                </div>
 
-          <span class="label label-primary">This month</span>
-          <div id="netstats-month" style="width: 100%; height: 300px;"></div>
-          
+                <div id="thread-statistics-plain" class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Board</th>
+                                <th>Count</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {ArchivedThreads}
+                        </tbody>
+                    </table>
+                    <noscript>
+                        <span>Enable JavaScript to display a line chart</span>
+                    </noscript>
+                </div>
 
-          <h2 class="sub-header">Archived threads</h2>
-          
-          <div id="threadstats" style="width: 100%; height: 300px;" display="none"></div>
-          
-          <noscript>
-            <div class="table-responsive">
-              <table class="table table-striped">
-                <thead>
-                  <tr>
-                    <th>Board</th>
-                    <th>Count</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {ArchivedThreads}
-                </tbody>
-              </table>
+
             </div>
-          </noscript>
-
         </div>
-      </div>
     </div>
 
-    <!-- Bootstrap core JavaScript
-    ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
-    <script src="/res/jquery.js"></script>
-    <script src="/res/bootstrap.js"></script>
-    <script src="/res/docs.js"></script>
+    {{commons-scripts}}
+
     <script src="/res/jquery.flot.min.js"></script>
     <script src="/res/jquery.flot.categories.min.js"></script>
-    <script src="/res/jquery.flot.pie.min.js"></script>
+    <!--<script src="/res/jquery.flot.pie.min.js"></script>-->
     <script>
-	$(function() {
-		var data =  [{network-stats-data}];
-		$.plot("#netstats", [ data ], {
-			series: {
-				bars: {
-					show: true,
-					barWidth: 0.6,
-					align: "center"
-				}
-			},
-			xaxis: {
-				mode: "categories",
-				tickLength: 0
-			}
-		});
-	});
-  
-  	$(function() {
-		var data =  [{network-stats-month}];
-		$.plot("#netstats-month", [ data ], {
-			series: {
-				bars: {
-					show: true,
-					barWidth: 0.6,
-					align: "center"
-				}
-			},
-			xaxis: {
-				mode: "categories",
-				tickLength: 0
-			}
-		});
-	});
-  
-  
-  $(function() {
-  
-    $("#threadstats").show();
-    
-		var data =  [{thread-stats-data}];
-    
-    /*$.plot('#threadstats', data, {
-    series: {
-        pie: {
-            show: true,
-            radius: 500,
-            label: {
-                show: true,
-                formatter: labelFormatter,
-                threshold: 0.1
-            }
-        }
-    },
-    legend: {
-        show: false
-    }
-});*/
 
-  
-		$.plot("#threadstats", [ data ], {
-			series: {
-				bars: {
-					show: true,
-					barWidth: 0.6,
-					align: "center"
-				}
-			},
-			xaxis: {
-				mode: "categories",
-				tickLength: 0
-			}
-		});
-    
-	});
-  
+        $.getJSON("{get-network-stats-today-api-link}", "", function (obj) {
+
+            $("#network-statistics-today-label").show();
+            $("#network-statistics-today-chart").show();
+
+            $.plot("#network-statistics-today-chart", [obj], {
+                series: {
+                    bars: {
+                        show: true,
+                        barWidth: 0.6,
+                        align: "center"
+                    }
+                },
+                xaxis: {
+                    mode: "categories",
+                    tickLength: 0
+                }
+            });
+        });
+
+        $.getJSON("{get-network-stats-month-api-link}", "", function (obj) {
+
+            $("#network-statistics-month-label").show();
+            $("#network-statistics-month-chart").show();
+
+            $.plot("#network-statistics-month-chart", [obj], {
+                series: {
+                    bars: {
+                        show: true,
+                        barWidth: 0.6,
+                        align: "center"
+                    }
+                },
+                xaxis: {
+                    mode: "categories",
+                    tickLength: 0
+                }
+            });
+        });
+
+        $.getJSON("{get-threads-stats-api-link}", "", function (obj) {
+
+            $("#thread-statistics-plain").hide();
+            $("#thread-statistics-chart").show();
+
+            $.plot("#thread-statistics-chart", [obj], {
+                series: {
+                    bars: {
+                        show: true,
+                        barWidth: 0.6,
+                        align: "center"
+                    }
+                },
+                xaxis: {
+                    mode: "categories",
+                    tickLength: 0
+                }
+            });
+
+        });
 
     </script>
-  </body>
+</body>
 </html>

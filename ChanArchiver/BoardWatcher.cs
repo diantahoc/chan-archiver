@@ -44,12 +44,11 @@ namespace ChanArchiver
 
         public BoardWatcher(string board)
         {
-            if (Program.ValidBoards.ContainsKey(board))
+            if (Program.IsBoardLetterValid(board))
             {
                 this.Board = board;
                 this.Mode = BoardMode.None;
                 Task.Factory.StartNew(load_board_sleep_times);
-
                 LoadFilters();
                 LoadManuallyAddedThreads();
             }
@@ -721,5 +720,20 @@ namespace ChanArchiver
             this.mylogs.Add(lo);
         }
 
+        /*public IEnumerable<ThreadWorker> EnumerateThreads()
+        {
+            for (int i = 0; i < this.watched_threads.Count; i++)
+            {
+                try
+                {
+                    yield return watched_threads.ElementAt(i).Value;
+                }
+                catch (System.IndexOutOfRangeException)
+                {
+                    break;
+                }
+                catch { }
+            }
+        }*/
     }
 }

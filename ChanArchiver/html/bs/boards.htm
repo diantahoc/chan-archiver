@@ -1,22 +1,7 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="" />
-    <meta name="author" content="" />
-    <link rel="shortcut icon" href="/res/favicon.ico" />
-
-    <title>[ChanArchiver] - Monitored Boards</title>
-
-    <!-- Bootstrap core CSS -->
-    <link href="/res/bootstrap.css" rel="stylesheet" />
-
-    <!-- Custom styles for this template -->
-    <link href="/res/dashboard.css" rel="stylesheet" />
-
+{{commons-headtags}}
 </head>
 
 <body>
@@ -47,45 +32,8 @@
 
     <div class="container-fluid">
         <div class="row">
-            <div class="col-sm-3 col-md-2 sidebar">
 
-                <ul class="nav nav-sidebar">
-                    <li>
-                        <a href="/">Overview</a>
-                    </li>
-
-                    <li>
-                        <a href="/fq">File Queue</a>
-                    </li>
-                </ul>
-
-                <ul class="nav nav-sidebar">
-                    <li>
-                        <a href="/wjobs">Watch Jobs</a>
-                    </li>
-
-                    <li class="active">
-                        <a href="/monboards">Monitored Boards</a>
-                    </li>
-
-                    <li>
-                        <a href="/filters">Thread Filters</a>
-                    </li>
-                </ul>
-
-
-                <ul class="nav nav-sidebar">
-                    <li>
-                        <a href="/bannedfiles">Banned files</a>
-                    </li>
-
-                    <li>
-                        <a href="/settings">Settings</a>
-                    </li>
-
-                </ul>
-
-            </div>
+            {{commons-sidebar}}
 
             <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
                 <h1 class="page-header">Monitored Boards</h1>
@@ -128,7 +76,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {Items}
+                            {items}
                         </tbody>
                     </table>
                 </div>
@@ -137,14 +85,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Bootstrap core JavaScript
-    ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
-    <script src="/res/jquery.js"></script>
-    <script src="/res/bootstrap.js"></script>
-    <script src="/res/docs.js"></script>
-
-
+    {{commons-scripts}}
 </body>
 </html>

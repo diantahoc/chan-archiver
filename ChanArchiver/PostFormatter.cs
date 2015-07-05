@@ -31,13 +31,13 @@ namespace ChanArchiver
 
         public FileFormatter MyFile { get; set; }
 
-        private int GetTicks(DateTime t) 
+        private int GetTicks(DateTime t)
         {
-            try 
+            try
             {
                 return Convert.ToInt32((t - AniWrap.Common.UnixEpoch).TotalSeconds);
             }
-            catch 
+            catch
             {
                 return 0;
             }
@@ -45,15 +45,22 @@ namespace ChanArchiver
 
         public override string ToString()
         {
+            return ToString(false);
+        }
+
+        public string ToString(bool isRelativePath)
+        {
             StringBuilder template = null;
+
+            string image_url_start = isRelativePath ? "" : "/";
 
             switch (this.Type)
             {
                 case PostType.OP:
                     template = new StringBuilder(Properties.Resources.op_template);
 
-                    template.Replace("{op:sticky}", this.IsSticky ? "<img src='/res/sticky.png' />" : "");
-                    template.Replace("{op:locked}", this.IsLocked ? "<img src='/res/locked.png' />" : "");
+                    template.Replace("{op:sticky}", this.IsSticky ? string.Format("<img src='{0}res/sticky.png' />", image_url_start) : "");
+                    template.Replace("{op:locked}", this.IsLocked ? string.Format("<img src='{0}res/locked.png' />", image_url_start) : "");
 
                     break;
                 case PostType.Reply:
@@ -114,7 +121,7 @@ namespace ChanArchiver
             }
             else
             {
-                template.Replace("{post:file}", MyFile.ToString());
+                template.Replace("{post:file}", MyFile.ToString(isRelativePath));
             }
 
             if (string.IsNullOrEmpty(this.Comment))

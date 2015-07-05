@@ -278,7 +278,7 @@ namespace ChanArchiver.HttpServerHandlers
 
         public static bool device_not_support_webm(string ua)
         {
-            return ua.Contains("s60") || ua.Contains("symbos");
+            return Program.uas_always_mp4.Contains(ua) || ua.Contains("s60") || ua.Contains("symbos");
         }
 
         private string get_mime(string ext)

@@ -74,5 +74,6 @@ ChanArchiver use the following libraries:
 * `Webserver` - C# embeddable HTTP server. http://webserver.codeplex.com/ 
 * `SmartThreadPool` - Smart thread pool. http://www.codeproject.com/Articles/7933/Smart-Thread-Pool
 * `HtmlAgilityPack` - An agile HTML parser. It's used by `AniWrap`, but it is included in ChanArchiver source. http://htmlagilitypack.codeplex.com/
+* `SharpZipLib` - Zip library for C#. https://icsharpcode.github.io/SharpZipLib/
 
 ChanArchiver is legally licensed under the GPLv2. Contributing is simple as suggesting features, or reporting issues, or forking and sending pull requests.

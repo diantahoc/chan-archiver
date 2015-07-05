@@ -13,11 +13,17 @@ using HttpServer.Authentication;
 using HttpServer.HttpModules;
 using Jayrock.Json;
 using Jayrock.Json.Conversion;
+using ChanArchiver.HttpServerHandlers.ThreadsAction;
+using ChanArchiver.HttpServerHandlers.SettingsAction;
+using ChanArchiver.HttpServerHandlers.PageHandlers;
+using ChanArchiver.HttpServerHandlers.JsonApi;
 
 namespace ChanArchiver
 {
     class Program
     {
+        public const string Version = "v1.12";
+
         public static string file_save_dir = "";
         public static string thumb_save_dir = "";
         public static string api_cache_dir = "";
@@ -25,6 +31,7 @@ namespace ChanArchiver
         public static string temp_files_dir = "";
         public static string board_settings_dir = "";
         public static string invalid_files_dir = "";
+        public static string html_templates_dir = "";
 
         public static string program_dir;
         public static string ffmpeg_path;
@@ -49,6 +56,8 @@ namespace ChanArchiver
         public static Dictionary<string, AniWrap.AniWrap.BoardInfo> ValidBoards { get; private set; }
 
         private static FileSystemWatcher swf_watch;
+
+        public static List<string> uas_always_mp4 = new List<string>();
 
         static void Main(string[] args)
         {
@@ -115,6 +124,9 @@ namespace ChanArchiver
             }
 
 
+            ThreadStore.SetUp(new Thread_Storage.FolderStorageEngine());
+
+
             thumb_stp = new Amib.Threading.SmartThreadPool() { MaxThreads = 10, MinThreads = 0 };
             thumb_stp.Start();
 
@@ -135,6 +147,9 @@ namespace ChanArchiver
             temp_files_dir = Path.Combine(program_dir, "temp"); Directory.CreateDirectory(temp_files_dir);
             board_settings_dir = Path.Combine(program_dir, "settings"); Directory.CreateDirectory(board_settings_dir);
             invalid_files_dir = Path.Combine(program_dir, "invalid_files"); Directory.CreateDirectory(invalid_files_dir);
+            html_templates_dir = Path.Combine(program_dir, "html_templates", Version); Directory.CreateDirectory(html_templates_dir);
+
+            HtmlTemplates.Init();
 
             Settings.Load();
 
@@ -150,8 +165,9 @@ namespace ChanArchiver
             }
             Console.Title = "ChanArchiver";
 
-            print("ChanArchiver", ConsoleColor.Cyan);
-            Console.WriteLine(" v1.12 stable");
+            print("ChanArchiver ", ConsoleColor.Cyan);
+            Console.Write(Version);
+            Console.WriteLine(" stable");
 
             if (Environment.OSVersion.Platform == PlatformID.Unix)
             {
@@ -226,18 +242,26 @@ namespace ChanArchiver
             FileSystemStats.Dispose();
         }
 
-        public static BoardWatcher get_board_watcher(string board)
+        public static BoardWatcher GetBoardWatcher(string board)
         {
             if (Program.active_dumpers.ContainsKey(board))
             {
                 return Program.active_dumpers[board];
             }
-            else
+
+            if (IsBoardLetterValid(board))
             {
                 BoardWatcher bw = new BoardWatcher(board);
                 Program.active_dumpers.Add(board, bw);
                 return bw;
             }
+
+            return null;
+        }
+
+        public static bool IsBoardLetterValid(string letter)
+        {
+            return  !string.IsNullOrEmpty(letter) && ValidBoards.ContainsKey(letter);
         }
 
         private static string get_ffmpeg_path_unix()
@@ -304,6 +328,16 @@ namespace ChanArchiver
             {
                 switch (command)
                 {
+                    case "rhtml":
+                        try
+                        {
+                            HtmlTemplates.Reload();
+                        }
+                        catch (FileNotFoundException e)
+                        {
+                            Console.WriteLine("Some files are missing: ", e.ToString());
+                        }
+                        break;
                     case "save":
                         save_settings();
                         break;
@@ -758,18 +792,23 @@ namespace ChanArchiver
 
                 HttpServer.HttpServer server = new HttpServer.HttpServer();
 
-                server.ServerName = "ChanArchiver";
+                server.ServerName = "ChanArchiver " + Version;
 
                 server.AuthenticationModules.Add(
                     new BasicAuthentication(new AuthenticationHandler(authenticate),
                         new AuthenticationRequiredHandler(check_authenticate)));
 
-                server.Add(new ChanArchiver.HttpServerHandlers.OverviewPageHandler());
+                // Let the OOP abuse begin
+
+                // Page handlers
+                server.Add(new OverviewPageHandler());
+                server.Add(new FileQueuePageHandler());
+                server.Add(new WatchJobsPageHandler());
+                server.Add(new MonitoredBoardsPageHandler());
+                server.Add(new ThreadFiltersPageHandler());
+
                 server.Add(new ChanArchiver.HttpServerHandlers.LogPageHandler());
-                server.Add(new ChanArchiver.HttpServerHandlers.FileQueuePageHandler());
-                server.Add(new ChanArchiver.HttpServerHandlers.WatchJobsPageHandler());
-                server.Add(new ChanArchiver.HttpServerHandlers.MonitoredBoardsPageHandler());
-                server.Add(new ChanArchiver.HttpServerHandlers.ThreadFiltersPageHandler());
+              
                 server.Add(new ChanArchiver.HttpServerHandlers.FileInfoPageHandler());
                 server.Add(new ChanArchiver.HttpServerHandlers.ResourcesHandler());
                 server.Add(new ChanArchiver.HttpServerHandlers.FileHandler());
@@ -778,6 +817,20 @@ namespace ChanArchiver
                 server.Add(new ChanArchiver.HttpServerHandlers.ThreadJobInfoPageHandler());
                 server.Add(new ChanArchiver.HttpServerHandlers.FileBrowserPageHandler());
                 server.Add(new ThreadServerModule());
+
+                // Threads actions
+                server.Add(new StopAllManuallyAddedThreadsHandler());
+                server.Add(new ThreadNotesHandler());
+                server.Add(new DownloadAsZipHandler());
+
+                // Settings actions
+                server.Add(new ThumbnailOnlySettingsController());
+
+                // JSON Api
+                server.Add(new GetThreadsStatisticsJsonApiHandler());
+                server.Add(new GetDailyNetworkStatisticsJsonApiHandler());
+                server.Add(new GetMonthlyNetworkStatisticsJsonApiHandler());
+                server.Add(new GetFileInfoJsonApiHandler());
 
                 server.ExceptionThrown += server_ExceptionThrown;
 

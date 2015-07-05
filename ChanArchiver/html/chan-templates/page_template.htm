@@ -1,40 +1,53 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8"/>
-    <meta name="robots" content="noarchive"/>
-    <meta name="referrer" content="origin"/>
-    <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <link rel="shortcut icon" href="/favicon.ico"/>
-    <link rel="stylesheet" href="/res/blue.css"/>
-
+<head>
+    <meta charset="utf-8" />
+    <meta name="robots" content="noarchive" />
+    <meta name="referrer" content="origin" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="stylesheet" href="/res/blue.css" />
     <title>{board-title}</title>
-  </head>
+</head>
 
-  <body class="board_{board-letter}">
+<body class="board_{board-letter}">
     <span id="id_css"></span>
 
-    <hr class="desktop"/>
+    <hr class="desktop" />
     <div class="navLinks">
-      [<a href="/boards/{board-letter}" accesskey="a">Return</a>] [<a href="#bottom">Bottom</a>] [<a href="/getfilelist?board={board-letter}&thread={thread-id}">File list</a>] [<a href="/deletethread/?board={board-letter}&thread={thread-id}">Delete</a>]
+        [<a href="/boards/{board-letter}" accesskey="a">Return</a>]
+        [<a href="#bottom">Bottom</a>]
+        [<a href="/getfilelist?board={board-letter}&thread={thread-id}">File list</a>]
+        [<a href="/action/zipthread/?board={board-letter}&threadid={thread-id}">Download as Zip</a>]
+        [<a href="/deletethread/?board={board-letter}&thread={thread-id}">Delete</a>]
     </div>
-    <hr/>
+    <hr />
+    <div class="threadNotes">
+        <form action="/action/threadnotes/">
+            <input type="hidden" name="board" value="{board-letter}" />
+            <input type="hidden" name="threadid" value="{thread-id}" />
+            <textarea class="form-control" cols="20" rows="3" name="threadnotestext">{{notes}}</textarea>
+            <br />
+            <button class="btn btn-default" type="submit">Save notes</button>
+        </form>
+    </div>
+    <hr />
     <form name="delform" id="delform" action="" method="post">
-      <div class="board">
-        <div class="thread" id="t{thread-id}">
-          {thread-posts}
+        <div class="board">
+            <div class="thread" id="t{thread-id}">
+                {thread-posts}
+            </div>
+            <hr />
+            <div class="navLinks">
+                [<a href="/boards/{board-letter}" accesskey="a">Return</a>] [<a href="#top">Top</a>]
+            </div>
+            <hr />
         </div>
-        <hr/>
-        <div class="navLinks">
-          [<a href="/boards/{board-letter}" accesskey="a">Return</a>] [<a href="#top">Top</a>]
-        </div>
-        <hr/>
-      </div>
-      <hr/>
+        <hr />
 
     </form>
 
     <div id="bottom">
     </div>
-  </body>
+</body>
 </html>

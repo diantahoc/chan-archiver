@@ -1,22 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="" />
-    <meta name="author" content="" />
-    <link rel="shortcut icon" href="/res/favicon.ico" />
-
-    <title>[ChanArchiver] - File Queue</title>
-
-    <!-- Bootstrap core CSS -->
-    <link href="/res/bootstrap.css" rel="stylesheet" />
-
-    <!-- Custom styles for this template -->
-    <link href="/res/dashboard.css" rel="stylesheet" />
-
+    {{commons-headtags}}
 </head>
 
 <body>
@@ -47,44 +32,7 @@
 
     <div class="container-fluid">
         <div class="row">
-            <div class="col-sm-3 col-md-2 sidebar">
-
-                <ul class="nav nav-sidebar">
-                    <li>
-                        <a href="/">Overview</a>
-                    </li>
-
-                    <li class="active">
-                        <a href="/fq">File Queue</a>
-                    </li>
-                </ul>
-
-                <ul class="nav nav-sidebar">
-                    <li>
-                        <a href="/wjobs">Watch Jobs</a>
-                    </li>
-                    <li>
-                        <a href="/monboards">Monitored Boards</a>
-                    </li>
-
-                    <li>
-                        <a href="/filters">Thread Filters</a>
-                    </li>
-                </ul>
-
-
-                <ul class="nav nav-sidebar">
-                    <li>
-                        <a href="/bannedfiles">Banned files</a>
-                    </li>
-
-                    <li>
-                        <a href="/settings">Settings</a>
-                    </li>
-
-                </ul>
-
-            </div>
+            {{commons-sidebar}}
 
             <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
 
@@ -104,7 +52,13 @@
 
                             <form action="/set/maxfilequeue/">
 
-                                <input id="countff" class="form-control" type="text" name="count" placeholder="{mff}" autocomplete="off" />
+                                <input id="countff"
+                                    class="form-control"
+                                    type="text"
+                                    data-validate="number"
+                                    name="count"
+                                    value="{{settings-max-parallel-files-download}}"
+                                    autocomplete="off" />
 
                                 <span class="input-group-btn">
                                     <button class="btn btn-default" type="submit">Set</button>
@@ -119,11 +73,11 @@
 
                 <div class="bs-callout bs-callout-info">
                     <h4>Queue stats</h4>
-                    {qstats}
+                    {{file-queue-statistics}}
                 </div>
 
                 <div class="table-responsive">
-                    <table id="filequeue" class="table sortable table-striped">
+                    <table id="filequeue" class="table sortable table-striped  table-hover">
                         <thead>
 
                             <tr>
@@ -143,8 +97,7 @@
 
                         </thead>
                         <tbody>
-                            {Files}
-
+                            {{files-table}}
                         </tbody>
                     </table>
                 </div>
@@ -153,39 +106,8 @@
             </div>
         </div>
     </div>
-
-    <!-- Bootstrap core JavaScript
-    ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
-    <script src="/res/jquery.js"></script>
-    <script src="/res/bootstrap.js"></script>
-    <script src="/res/docs.js"></script>
+    {{commons-scripts}}
     <script src="/res/sorttable.js"></script>
-<!--    <script>
-        function update_cols() {
-            var cols = document.getElementById("filequeue").children[1].children;
-            var update = function (item) {
-                var id = item.getAttribute("id");
-                $.get("/fq/json/",
-                {
-                    hash: id
-                },
-                function (data) {
-                    item.children[0].innerHTML = data.Status;
-                    item.children[1].textContent = data.RetryCount;
-                    item.children[5].textContent = data.Percent;
-                }, "json");
-            };
-            for (i = 0; i < cols.length; i++) {
-                var item = cols[i];
-                if (item.children[5].textContent != "100 %") {
-                    continue;
-                }
-                else {
-                    update(item);
-                }
-            }
-        }
-    </script>-->
+    <script src="/res/verify.js"></script>
 </body>
 </html>
