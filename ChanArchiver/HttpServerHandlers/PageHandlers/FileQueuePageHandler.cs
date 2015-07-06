@@ -10,12 +10,6 @@ namespace ChanArchiver.HttpServerHandlers.PageHandlers
     {
         public const string Url = "/fq";
 
-        // Used for file queue statistics
-        private Dictionary<string, int> exts_stats = new Dictionary<string, int>();
-        private Dictionary<string, int> board_stats = new Dictionary<string, int>();
-        private int files_count = 0;
-        private double total_files_size = 0;
-
         public override bool Process(HttpServer.IHttpRequest request, HttpServer.IHttpResponse response, HttpServer.Sessions.IHttpSession session)
         {
             if (request.UriPath == Url || request.UriPath == (Url + "/"))
@@ -24,9 +18,11 @@ namespace ChanArchiver.HttpServerHandlers.PageHandlers
 
                 IncludeCommonHtml(sb);
 
-                sb.Replace("{{files-table}}", GetFileQueueTableHtml());
+                var stats = new stats();
 
-                sb.Replace("{{file-queue-statistics}}", GetFileStatsHtml());
+                sb.Replace("{{files-table}}", GetFileQueueTableHtml(stats));
+
+                sb.Replace("{{file-queue-statistics}}", GetFileStatsHtml(stats));
 
                 sb.Replace("{{settings-max-parallel-files-download}}", Program.file_stp.MaxThreads.ToString());
 
@@ -80,15 +76,15 @@ namespace ChanArchiver.HttpServerHandlers.PageHandlers
             return false;
         }
 
-        private string GetFileQueueTableHtml()
+        private string GetFileQueueTableHtml(stats s)
         {
             StringBuilder sb = new StringBuilder();
 
             var ordered = Program.queued_files.OrderByDescending(x => x.Value.Percent());
 
-            files_count = ordered.Count();
+            s.files_count = ordered.Count();
 
-            for (int index = 0; index < files_count; index++)
+            for (int index = 0; index < s.files_count; index++)
             {
                 try
                 {
@@ -118,7 +114,7 @@ namespace ChanArchiver.HttpServerHandlers.PageHandlers
 
                         if (f.Status != FileQueueStateInfo.DownloadStatus.Complete || f.Status != FileQueueStateInfo.DownloadStatus.NotFound)
                         {
-                            total_files_size += f.PostFile.size;
+                            s.total_files_size += f.PostFile.size;
                         }
                     }
                     else
@@ -128,7 +124,7 @@ namespace ChanArchiver.HttpServerHandlers.PageHandlers
                         //complete files are not in the queue any more
                         if (f.Status != FileQueueStateInfo.DownloadStatus.Complete || f.Status != FileQueueStateInfo.DownloadStatus.NotFound)
                         {
-                            total_files_size += f.Length;
+                            s.total_files_size += f.Length;
                         }
 
                     }
@@ -142,12 +138,12 @@ namespace ChanArchiver.HttpServerHandlers.PageHandlers
                     if (f.Type == FileQueueStateInfo.FileType.Thumbnail)
                     {
                         sb.Append("<td><span class=\"label label-info\">JPG</span></td>");
-                        IncrementKey(exts_stats, "jpg");
+                        IncrementKey(s.exts_stats, "jpg");
                     }
                     else
                     {
                         sb.AppendFormat("<td>{0}</td>", get_ext(f.PostFile.ext));
-                        IncrementKey(exts_stats, f.PostFile.ext);
+                        IncrementKey(s.exts_stats, f.PostFile.ext);
                     }
 
                     sb.AppendFormat("<td>{0} %</td>", Math.Round(f.Percent(), 2));
@@ -158,7 +154,7 @@ namespace ChanArchiver.HttpServerHandlers.PageHandlers
 
                     sb.Append("</tr>");
 
-                    IncrementKey(board_stats, f.PostFile.board);
+                    IncrementKey(s.board_stats, f.PostFile.board);
                 }
                 catch (Exception)
                 {
@@ -168,19 +164,19 @@ namespace ChanArchiver.HttpServerHandlers.PageHandlers
             return sb.ToString();
         }
 
-        private string GetFileStatsHtml()
+        private string GetFileStatsHtml(stats s)
         {
             StringBuilder stats = new StringBuilder();
 
-            stats.AppendFormat("<p>{0}: <b>{1}</b></p>", "Total file in the queue", files_count);
+            stats.AppendFormat("<p>{0}: <b>{1}</b></p>", "Total file in the queue", s.files_count);
 
-            stats.AppendFormat("<p>{0}: <b>{1}</b></p>", "Total files size", Program.format_size_string(total_files_size));
+            stats.AppendFormat("<p>{0}: <b>{1}</b></p>", "Total files size", Program.format_size_string(s.total_files_size));
 
-            if (board_stats.Count > 0)
+            if (s.board_stats.Count > 0)
             {
                 stats.Append("<p><ul>");
 
-                foreach (KeyValuePair<string, int> v in board_stats)
+                foreach (KeyValuePair<string, int> v in s.board_stats)
                 {
                     stats.AppendFormat("<li>{0} file for /{1}/</li>", v.Value, v.Key);
                 }
@@ -188,11 +184,11 @@ namespace ChanArchiver.HttpServerHandlers.PageHandlers
                 stats.Append("</ul></p>");
             }
 
-            if (exts_stats.Count > 0)
+            if (s.exts_stats.Count > 0)
             {
                 stats.Append("<p><ul>");
 
-                foreach (KeyValuePair<string, int> v in exts_stats)
+                foreach (KeyValuePair<string, int> v in s.exts_stats)
                 {
                     stats.AppendFormat("<li>{0} file is {1}</li>", v.Value, get_ext(v.Key));
                 }
@@ -201,6 +197,15 @@ namespace ChanArchiver.HttpServerHandlers.PageHandlers
             }
 
             return stats.ToString();
+        }
+
+        // Used for file queue statistics
+        private class stats
+        {
+            public Dictionary<string, int> exts_stats = new Dictionary<string, int>();
+            public Dictionary<string, int> board_stats = new Dictionary<string, int>();
+            public int files_count = 0;
+            public double total_files_size = 0;
         }
 
         private void IncrementKey(Dictionary<string, int> a, string key)
