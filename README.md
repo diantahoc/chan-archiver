@@ -4,7 +4,7 @@ ChanArchiver is a personal archive program for 4chan.
 
 #### Web-Authentication:
 
-By default, ChanArchiver enables HTTP Basic Authentication to prevent un-auhorized archive access. The default username/password combination is `admin/admin`.
+By default, ChanArchiver enables HTTP Basic Authentication to prevent un-authorized archive access. The default username/password combination is `admin/admin`.
 
 If you happen to forget your password, you can find your credentials inside the `settings.json` file inside ChanArchive save directory, under `AuthUsername` and `AuthPassword` fields.
 
