@@ -56,6 +56,8 @@ namespace AniWrap.DataTypes
 
         public enum CapcodeEnum { Admin, Mod, Developer, None }
 
+        public bool IsOpPost { get { return this.GetType() == typeof(Thread); } }
+
       //  public CommentToken[] CommentTokens { get { return ThreadHelper.TokenizeComment(this.Comment); } }
 
     }

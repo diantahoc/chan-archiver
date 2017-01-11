@@ -22,7 +22,7 @@ namespace ChanArchiver
 {
     class Program
     {
-        public const string Version = "v1.12";
+        public const string Version = "v1.13";
 
         public static string file_save_dir = "";
         public static string thumb_save_dir = "";
@@ -261,7 +261,7 @@ namespace ChanArchiver
 
         public static bool IsBoardLetterValid(string letter)
         {
-            return  !string.IsNullOrEmpty(letter) && ValidBoards.ContainsKey(letter);
+            return !string.IsNullOrEmpty(letter) && ValidBoards.ContainsKey(letter);
         }
 
         private static string get_ffmpeg_path_unix()
@@ -418,7 +418,7 @@ namespace ChanArchiver
                             FileIndex.ReBuild();
 
                             int i = 0;
-                            foreach (var file in Directory.EnumerateFiles(file_save_dir))
+                            foreach (var file in Directory.EnumerateFiles(file_save_dir, "*", SearchOption.AllDirectories))
                             {
                                 string hash = Path.GetFileNameWithoutExtension(file).Split('.').First();
                                 if (!FileIndex.IsHashValid(hash))
@@ -599,26 +599,16 @@ namespace ChanArchiver
 
         private static void optimize_all_threads()
         {
-            DirectoryInfo[] boards = new DirectoryInfo(post_files_dir).GetDirectories();
-            foreach (DirectoryInfo board in boards)
+            foreach (string board in ThreadStore.GetStorageEngine().GetExistingBoards())
             {
-                DirectoryInfo[] threads = board.GetDirectories();
-
-                foreach (DirectoryInfo thread in threads)
+                foreach (string tidStr in ThreadStore.GetStorageEngine().GetIndexIDOnly(board))
                 {
-                    if (active_dumpers.ContainsKey(board.Name))
+                    int tid = -1;
+                    if (Int32.TryParse(tidStr, out tid))
                     {
-                        BoardWatcher bw = active_dumpers[board.Name];
-
-                        int w = -1;
-                        Int32.TryParse(thread.Name, out w);
-                        if (bw.watched_threads.ContainsKey(w))
-                        {
-                            continue;
-                        }
+                        ThreadStore.GetStorageEngine().OptimizeThread(board, tid);
+                        Console.WriteLine("Optimized thread {0} - {1}", board, tidStr);
                     }
-                    ThreadWorker.optimize_thread_file(thread.FullName);
-                    Console.WriteLine("Optimized thread {0} - {1}", board.Name, thread.Name);
                 }
             }
             Console.WriteLine("Done");
@@ -805,14 +795,18 @@ namespace ChanArchiver
                 server.Add(new FileQueuePageHandler());
                 server.Add(new WatchJobsPageHandler());
                 server.Add(new MonitoredBoardsPageHandler());
-                server.Add(new ThreadFiltersPageHandler());
+                server.Add(new WhitelistThreadFiltersPageHandler());
+                server.Add(new BlacklistThreadFiltersPageHandler());
+                server.Add(new BannedFilesPageHandler());
+
+                server.Add(new FileInfoPageHandler());
 
                 server.Add(new ChanArchiver.HttpServerHandlers.LogPageHandler());
-              
-                server.Add(new ChanArchiver.HttpServerHandlers.FileInfoPageHandler());
+
+               
                 server.Add(new ChanArchiver.HttpServerHandlers.ResourcesHandler());
                 server.Add(new ChanArchiver.HttpServerHandlers.FileHandler());
-                server.Add(new ChanArchiver.HttpServerHandlers.BannedFilesPageHandler());
+               
                 server.Add(new ChanArchiver.HttpServerHandlers.SettingsPageHandler());
                 server.Add(new ChanArchiver.HttpServerHandlers.ThreadJobInfoPageHandler());
                 server.Add(new ChanArchiver.HttpServerHandlers.FileBrowserPageHandler());

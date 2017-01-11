@@ -7,7 +7,7 @@ namespace ChanArchiver.HttpServerHandlers
 {
     /// <summary>
     /// A class that holds a list of Url parameters used in various ChanArchiver
-    /// HTTP handlers. This is to provide consistancy
+    /// HTTP handlers. This is to provide consistency
     /// </summary>
     public static class UrlParameters
     {
@@ -18,5 +18,6 @@ namespace ChanArchiver.HttpServerHandlers
         public const string MonthNumber = "monthnumber";
         public const string ThreadId = "threadid";
         public const string ThreadNotesText = "threadnotestext";
+        public const string FileHash = "filehash";
     }
 }

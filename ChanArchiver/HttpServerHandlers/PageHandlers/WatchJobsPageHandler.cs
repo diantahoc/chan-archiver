@@ -58,8 +58,9 @@ namespace ChanArchiver.HttpServerHandlers.PageHandlers
                         {
                             ThreadWorker tw = bw.watched_threads.ElementAt(index).Value;
 
-                            //don't pollute the list with unactive thread workers (because no filter match) in monitor only mode
-                            if (tw.AddedAutomatically && (!tw.IsActive) && bw.Mode == BoardWatcher.BoardMode.Monitor) { continue; }
+                            // Don't pollute the list with unactive thread workers (because no filter match) in monitor modes
+                            if (tw.AddedAutomatically && (!tw.IsActive) &&
+                                (bw.Mode == BoardWatcher.BoardMode.Whitelist || bw.Mode == BoardWatcher.BoardMode.Blacklist)) { continue; }
 
                             sb.Append("<tr>");
 

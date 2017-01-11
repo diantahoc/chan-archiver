@@ -6,13 +6,14 @@ using System.IO;
 using Jayrock;
 using Jayrock.Json;
 using Jayrock.Json.Conversion;
+using AniWrap.DataTypes;
 
 namespace ChanArchiver.Thread_Storage
 {
     /// <summary>
     /// ChanArchiver legacy storage engine
     /// </summary>
-    [Obsolete("Use SQLite engine instead", false)]
+    //[Obsolete("Use SQLite engine instead", false)]
     public class FolderStorageEngine
         : IStorageEngine
     {
@@ -20,7 +21,7 @@ namespace ChanArchiver.Thread_Storage
 
         public PostFormatter[] GetThread(string board, string id)
         {
-            string thread_dir_path = Path.Combine(Program.post_files_dir, board, id);
+            string thread_dir_path = Path.Combine(Program.post_files_dir, board, id.ToString());
 
             DirectoryInfo info = new DirectoryInfo(thread_dir_path);
 
@@ -103,7 +104,7 @@ namespace ChanArchiver.Thread_Storage
 
         public void DeleteThread(string board, string id)
         {
-            string thread_dir_path = Path.Combine(Program.post_files_dir, board, id);
+            string thread_dir_path = Path.Combine(Program.post_files_dir, board, id.ToString());
 
             if (Directory.Exists(thread_dir_path))
             {
@@ -122,6 +123,7 @@ namespace ChanArchiver.Thread_Storage
                     yield return Path.GetFileName(dir);
                 }
             }
+            yield break;
         }
 
         public IEnumerable<string> GetExistingBoards()
@@ -352,6 +354,132 @@ namespace ChanArchiver.Thread_Storage
 
                 File.WriteAllText(notes_file_path, notes);
             }
+        }
+
+        public void savePost(string board, int tid, int postId, GenericPost post)
+        {
+            string threadDirectory = Path.Combine(Program.post_files_dir, board, tid.ToString());
+            Directory.CreateDirectory(threadDirectory);
+
+            string jsonFilePath;
+
+            if (post.IsOpPost)
+            {
+                jsonFilePath = Path.Combine(threadDirectory, "op.json");
+            }
+            else
+            {
+                jsonFilePath = Path.Combine(threadDirectory, postId.ToString() + ".json");
+            }
+
+            if (!File.Exists(jsonFilePath))
+            {
+                string content = get_post_string(post);
+                File.WriteAllText(jsonFilePath, content);
+            }
+        }
+
+        private string get_post_string(GenericPost gp)
+        {
+            JsonObject jObject = new JsonObject();
+
+            if (gp.IsOpPost)
+            {
+                AniWrap.DataTypes.Thread t = (AniWrap.DataTypes.Thread)gp;
+                jObject.Put("Closed", t.IsClosed);
+                jObject.Put("Sticky", t.IsSticky);
+            }
+
+            jObject.Put("Board", gp.Board);
+
+            jObject.Put("ID", gp.ID);
+
+            jObject.Put("Name", gp.Name);
+
+            if (gp.Capcode != GenericPost.CapcodeEnum.None)
+            {
+                jObject.Put("Capcode", gp.Capcode.ToString());
+            }
+
+            if (!string.IsNullOrEmpty(gp.Comment))
+            {
+                jObject.Put("RawComment", Wordfilter.Process(gp.Comment));
+                // dic.Add("FormattedComment", gp.CommentText);
+            }
+
+            /*// Flag stuffs*/
+
+            if (!string.IsNullOrEmpty(gp.country_flag))
+            {
+                jObject.Put("CountryFlag", gp.country_flag);
+            }
+
+            if (!string.IsNullOrEmpty(gp.country_name))
+            {
+                jObject.Put("CountryName", gp.country_name);
+            }
+
+            /* Flag stuffs //*/
+
+            if (!string.IsNullOrEmpty(gp.Email))
+            {
+                jObject.Put("Email", gp.Email);
+            }
+
+            if (!string.IsNullOrEmpty(gp.Trip))
+            {
+                jObject.Put("Trip", gp.Trip);
+            }
+
+            if (!string.IsNullOrEmpty(gp.Subject))
+            {
+                jObject.Put("Subject", gp.Subject);
+            }
+
+            if (!string.IsNullOrEmpty(gp.PosterID))
+            {
+                jObject.Put("PosterID", gp.PosterID);
+            }
+
+            jObject.Put("Time", gp.Time.ToString());
+
+            if (gp.File != null)
+            {
+                jObject.Put("FileHash", Program.base64tostring(gp.File.hash));
+                jObject.Put("FileName", Wordfilter.Process(gp.File.filename) + "." + gp.File.ext);
+                jObject.Put("ThumbTime", gp.File.thumbnail_tim);
+                jObject.Put("FileHeight", gp.File.height);
+                jObject.Put("FileWidth", gp.File.width);
+                jObject.Put("FileSize", gp.File.size);
+            }
+
+            return jObject.ToString();
+        }
+
+
+        public void OptimizeThread(string board, int tid)
+        {
+            // On October 10, 2015, I have decided to let this function be no-op
+            /*if (Directory.Exists(thread_folder))
+            {
+                DirectoryInfo t = new DirectoryInfo(thread_folder);
+
+                if (File.Exists(Path.Combine(t.FullName, t.Name + "-opt.json"))) { return; }
+
+                FileInfo[] files = t.GetFiles("*.json");
+
+                Dictionary<string, string> il = new Dictionary<string, string>();
+
+                foreach (FileInfo fi in files)
+                {
+                    il.Add(fi.Name.Split('.')[0], File.ReadAllText(fi.FullName));
+
+                    File.Delete(fi.FullName);
+                }
+
+                string data = JsonConvert.ExportToString(il);
+                File.WriteAllText(Path.Combine(thread_folder, t.Name + "-opt.json"), data);
+            }*/
         }
     }
 }

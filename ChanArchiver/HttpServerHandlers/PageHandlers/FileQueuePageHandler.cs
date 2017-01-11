@@ -148,7 +148,7 @@ namespace ChanArchiver.HttpServerHandlers.PageHandlers
 
                     sb.AppendFormat("<td>{0} %</td>", Math.Round(f.Percent(), 2));
 
-                    sb.AppendFormat("<td> <a href=\"/fileinfo/{0}\" class=\"label label-primary\">Info</a> </td>", kvp.Key);
+                    sb.AppendFormat("<td> <a href=\"{0}\" class=\"label label-primary\">Info</a> </td>", FileInfoPageHandler.GetLinkToThisPage(kvp.Key));
 
                     sb.AppendFormat("<td><span class=\"label label-primary\">{0}</span></td>", f.Type == FileQueueStateInfo.FileType.FullFile ? f.Priority.ToString().Replace("Level", "") : "N/A");
 

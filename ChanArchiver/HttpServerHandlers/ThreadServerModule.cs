@@ -202,7 +202,7 @@ namespace ChanArchiver
 
                     if (string.IsNullOrEmpty(board) || string.IsNullOrEmpty(threadid)) { _404(response); }
 
-                    PostFormatter[] thread_data = ThreadStore.GetThread(board, threadid);
+                    PostFormatter[] thread_data = ThreadStore.GetStorageEngine().GetThread(board, threadid);
 
                     //delete the files
                     foreach (var post in thread_data)
@@ -257,7 +257,7 @@ namespace ChanArchiver
                         s.Append("<div class=\"col-6 col-sm-6 col-lg-4\">");
 
                         s.AppendFormat("<h2>/{0}/</h2>", folder_name);
-                        s.AppendFormat("<p>Thread Count: {0}</p>", ThreadStore.StoreStats[folder_name]);
+                        s.AppendFormat("<p>Thread Count: {0}</p>", ThreadStore.GetStorageEngine().StoreStats[folder_name]);
 
                         s.AppendFormat("<p><a class=\"btn btn-default\" href=\"/boards/{0}\" role=\"button\">browse »</a></p>", folder_name);
 
@@ -419,7 +419,8 @@ namespace ChanArchiver
 
                     BoardWatcher.BoardMode m = BoardWatcher.BoardMode.None;
 
-                    if (mon_type == "part") { m = BoardWatcher.BoardMode.Monitor; }
+                    if (mon_type == "white") { m = BoardWatcher.BoardMode.Whitelist; }
+                    if (mon_type == "black") { m = BoardWatcher.BoardMode.Blacklist; }
                     if (mon_type == "full") { m = BoardWatcher.BoardMode.FullBoard; }
                     if (mon_type == "harvest") { m = BoardWatcher.BoardMode.Harvester; }
 

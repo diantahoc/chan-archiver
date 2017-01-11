@@ -91,9 +91,12 @@ namespace ChanArchiver
                 Title = string.Format("/{0}/ - {1}", this.Board.Board, this.ID)
             });
 
-            if (this.AddedAutomatically && this.IsActive && this.Board.Mode == BoardWatcher.BoardMode.Monitor)
+            if (this.Board.Mode == BoardWatcher.BoardMode.Whitelist || this.Board.Mode == BoardWatcher.BoardMode.Blacklist)
             {
-                this.Start();
+                if (this.AddedAutomatically && this.IsActive)
+                {
+                    this.Start();
+                }
             }
         }
 
@@ -128,19 +131,19 @@ namespace ChanArchiver
 
                     var tc = Program.aw.GetThreadData(this.Board.Board, this.ID);
 
-                    if (string.IsNullOrEmpty(this.ThreadTitle)) { this.ThreadTitle = tc.Title; }
+                    this.ThreadTitle = tc.Title;
 
                     if (!can_i_run(tc.Instance))
                     {
                         log(new LogEntry()
                         {
                             Level = LogEntry.LogLevel.Info,
-                            Message = "ThreadWorker stopped because there is no matching filter",
+                            Message = "ThreadWorker stopped because of a filter",
                             Sender = "ThreadWorker",
                             Title = string.Format("/{0}/ - {1}", this.Board.Board, this.ID)
                         });
                         running = false;
-                        Directory.Delete(thread_folder);
+                        ThreadStore.GetStorageEngine().DeleteThread(this.Board.Board, this.ID.ToString());
                         break;
                     }
 
@@ -151,13 +154,7 @@ namespace ChanArchiver
                         {
                             if (this.Board.IsFileAllowed(tc.Instance.File.ext))
                             {
-                                string op = Path.Combine(thread_folder, "op.json");
-
-                                if (!File.Exists(op))
-                                {
-                                    string post_data = get_post_string(tc.Instance);
-                                    File.WriteAllText(op, post_data);
-                                }
+                                savePost(tc.Instance);
 
                                 Program.dump_files(tc.Instance.File, this.ThumbOnly);
                             }
@@ -165,13 +162,7 @@ namespace ChanArchiver
                     }
                     else
                     {
-                        string op = Path.Combine(thread_folder, "op.json");
-
-                        if (!File.Exists(op))
-                        {
-                            string post_data = get_post_string(tc.Instance);
-                            File.WriteAllText(op, post_data);
-                        }
+                        savePost(tc.Instance);
 
                         if (tc.Instance.File != null) { Program.dump_files(tc.Instance.File, this.ThumbOnly); }
                     }
@@ -197,17 +188,12 @@ namespace ChanArchiver
                             else { continue; }
                         }
 
-                        string item_path = Path.Combine(thread_folder, tc.Replies[i].ID.ToString() + ".json");
-
-                        if (!File.Exists(item_path))
-                        {
-                            string post_data = get_post_string(tc.Replies[i]);
-                            File.WriteAllText(item_path, post_data);
-                        }
+                        GenericPost replyPost = tc.Replies[i];
+                        savePost(replyPost);
 
                         if (tc.Replies[i].File != null)
                         {
-                            with_image++;
+                            ++with_image;
                             Program.dump_files(tc.Replies[i].File, this.ThumbOnly);
                         }
                     }
@@ -243,10 +229,10 @@ namespace ChanArchiver
                         }
                     }
 
-                    
+
                     if (tc.Instance.IsSticky) { this.UpdateInterval = 5; }
 
-                    if (tc.Instance.IsArchived) 
+                    if (tc.Instance.IsArchived)
                     {
                         log(new LogEntry()
                         {
@@ -257,15 +243,15 @@ namespace ChanArchiver
                         });
 
 
-                        optimize_thread_file(thread_folder);
+                        ThreadStore.GetStorageEngine().OptimizeThread(this.Board.Board, this.ID);
 
                         this.Stop();
 
-                        if (Settings.RemoveThreadsWhenTheyEnterArchivedState && !this.AddedAutomatically) 
+                        if (Settings.RemoveThreadsWhenTheyEnterArchivedState && !this.AddedAutomatically)
                         {
                             Thread404(this);
                         }
-                        else 
+                        else
                         {
                             goto stop;
                         }
@@ -289,7 +275,7 @@ namespace ChanArchiver
 
                         if (!(this.AddedAutomatically && this.Board.Mode == BoardWatcher.BoardMode.Harvester))
                         {
-                            optimize_thread_file(thread_folder);
+                            ThreadStore.GetStorageEngine().OptimizeThread(this.Board.Board, this.ID);
                         }
 
                         this.Stop();
@@ -321,19 +307,14 @@ namespace ChanArchiver
             });
         }
 
+        private void savePost(GenericPost gp)
+        {
+            ThreadStore.GetStorageEngine().savePost(this.Board.Board, this.ID, gp.ID, gp);
+        }
+
         private void save_thread_container(ThreadContainer tc)
         {
-            string thread_folder = Path.Combine(Program.post_files_dir, this.Board.Board, this.ID.ToString());
-
-            Directory.CreateDirectory(thread_folder);
-
-            string op = Path.Combine(thread_folder, "op.json");
-
-            if (!File.Exists(op))
-            {
-                string post_data = get_post_string(tc.Instance);
-                File.WriteAllText(op, post_data);
-            }
+            savePost(tc.Instance);
 
             if (tc.Instance.File != null) { Program.dump_files(tc.Instance.File, this.ThumbOnly); }
 
@@ -343,17 +324,14 @@ namespace ChanArchiver
 
             for (int i = 0; i < count; i++)
             {
-                string item_path = Path.Combine(thread_folder, tc.Replies[i].ID.ToString() + ".json");
 
-                if (!File.Exists(item_path))
-                {
-                    string post_data = get_post_string(tc.Replies[i]);
-                    File.WriteAllText(item_path, post_data);
-                }
+                GenericPost reply = tc.Replies[i];
 
-                if (tc.Replies[i].File != null)
+                savePost(reply);
+
+                if (reply.File != null)
                 {
-                    with_image++;
+                    ++with_image;
                     Program.dump_files(tc.Replies[i].File, this.ThumbOnly);
                 }
             }
@@ -367,46 +345,26 @@ namespace ChanArchiver
             });
 
             log(new LogEntry() { Level = LogEntry.LogLevel.Info, Message = "Optimizing thread data." });
-            
-            optimize_thread_file(thread_folder);
+
+            ThreadStore.GetStorageEngine().OptimizeThread(this.Board.Board, this.ID);
 
             log(new LogEntry() { Level = LogEntry.LogLevel.Success, Message = "Optimisation done." });
         }
 
-        public static void optimize_thread_file(string thread_folder)
-        {
-            if (Directory.Exists(thread_folder))
-            {
-                DirectoryInfo t = new DirectoryInfo(thread_folder);
-
-                if (File.Exists(Path.Combine(t.FullName, t.Name + "-opt.json"))) { return; }
-
-                FileInfo[] files = t.GetFiles("*.json");
-
-                Dictionary<string, string> il = new Dictionary<string, string>();
-
-                foreach (FileInfo fi in files)
-                {
-                    il.Add(fi.Name.Split('.')[0], File.ReadAllText(fi.FullName));
-
-                    File.Delete(fi.FullName);
-                }
-
-                string data = JsonConvert.ExportToString(il);
-                File.WriteAllText(Path.Combine(thread_folder, t.Name + "-opt.json"), data);
-            }
-        }
-
-        private bool can_i_run(AniWrap.DataTypes.GenericPost po)
+        private bool can_i_run(GenericPost po)
         {
             if (this.AddedAutomatically)
             {
-                //if the container board is in monitor mode, we need to see
-                //if this thread has a matching filter
-                //otherwise we should not start it.
-                if (this.Board.Mode == BoardWatcher.BoardMode.Monitor)
+                // If the container board is in whitelist mode, only start the worker when there is matching filters 
+                // If the container board is in blacklist mode, only start the worker when there is NO matching filters 
+
+                if (this.Board.Mode == BoardWatcher.BoardMode.Whitelist)
                 {
                     return this.Board.MatchFilters(po);
+                }
+                else if (this.Board.Mode == BoardWatcher.BoardMode.Blacklist)
+                {
+                    return !this.Board.MatchFilters(po);
                 }
                 else
                 {
@@ -442,84 +400,6 @@ namespace ChanArchiver
             {
                 Program.PrintLog(lo);
             }
-        }
-
-        private string get_post_string(GenericPost gp)
-        {
-            Dictionary<string, object> dic = new Dictionary<string, object>();
-
-            if (gp.GetType() == typeof(AniWrap.DataTypes.Thread))
-            {
-                AniWrap.DataTypes.Thread t = (AniWrap.DataTypes.Thread)gp;
-                dic.Add("Closed", t.IsClosed);
-                dic.Add("Sticky", t.IsSticky);
-            }
-
-            dic.Add("Board", gp.Board);
-
-            dic.Add("ID", gp.ID);
-
-            dic.Add("Name", gp.Name);
-
-            if (gp.Capcode != GenericPost.CapcodeEnum.None)
-            {
-                dic.Add("Capcode", gp.Capcode);
-            }
-
-            if (!string.IsNullOrEmpty(gp.Comment))
-            {
-
-                dic.Add("RawComment", Wordfilter.Process(gp.Comment));
-                // dic.Add("FormattedComment", gp.CommentText);
-            }
-
-            /*// Flag stuffs*/
-
-            if (!string.IsNullOrEmpty(gp.country_flag))
-            {
-                dic.Add("CountryFlag", gp.country_flag);
-            }
-
-            if (!string.IsNullOrEmpty(gp.country_name))
-            {
-                dic.Add("CountryName", gp.country_name);
-            }
-
-            /* Flag stuffs //*/
-
-            if (!string.IsNullOrEmpty(gp.Email))
-            {
-                dic.Add("Email", gp.Email);
-            }
-
-            if (!string.IsNullOrEmpty(gp.Trip))
-            {
-                dic.Add("Trip", gp.Trip);
-            }
-
-            if (!string.IsNullOrEmpty(gp.Subject))
-            {
-                dic.Add("Subject", gp.Subject);
-            }
-
-            if (!string.IsNullOrEmpty(gp.PosterID))
-            {
-                dic.Add("PosterID", gp.PosterID);
-            }
-
-            dic.Add("Time", gp.Time.ToString());
-
-            if (gp.File != null)
-            {
-                dic.Add("FileHash", Program.base64tostring(gp.File.hash));
-                dic.Add("FileName", Wordfilter.Process(gp.File.filename) + "." + gp.File.ext);
-                dic.Add("ThumbTime", gp.File.thumbnail_tim);
-                dic.Add("FileHeight", gp.File.height);
-                dic.Add("FileWidth", gp.File.width);
-                dic.Add("FileSize", gp.File.size);
-            }
-
-            return JsonConvert.ExportToString(dic);
         }
 
         public void Start()

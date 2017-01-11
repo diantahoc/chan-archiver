@@ -6,6 +6,7 @@ using AniWrap.DataTypes;
 using System.Threading.Tasks;
 using Jayrock.Json;
 using Jayrock.Json.Conversion;
+using System.IO;
 
 namespace ChanArchiver
 {
@@ -69,9 +70,13 @@ namespace ChanArchiver
             /// </summary>
             FullBoard,
             /// <summary>
-            /// Monitor board for new threads, and only archive threads who has a filter match
+            /// Monitor board for new threads, and only archive threads who have a whitelist filter match
             /// </summary>
-            Monitor,
+            Whitelist,
+            /// <summary>
+            /// Monitor board for new threads, and archive all threads except threads who have blacklist filter match
+            /// </summary>
+            Blacklist,
             /// <summary>
             /// Monitor all threads and download specific file types
             /// </summary>
@@ -403,18 +408,19 @@ namespace ChanArchiver
                                 }
                             }
 
-                            if (this.Mode == BoardMode.Monitor)
+                            if (this.Mode == BoardMode.Whitelist)
                             {
+                                // In Whitelist mode, skip threads with no filter match
+
                                 if (!this.MatchFilters(thread))
                                 {
-                                    //in monitor mode, don't auto-start unacceptable threads
                                     this.Log(new LogEntry()
-                                    {
-                                        Level = LogEntry.LogLevel.Info,
-                                        Message = "Thread " + thread.ID.ToString() + " has no matching filter, skipping it.",
-                                        Sender = "BoardWatcher",
-                                        Title = ""
-                                    });
+                                     {
+                                         Level = LogEntry.LogLevel.Info,
+                                         Message = "Thread " + thread.ID.ToString() + " has no matching filter, skipping it.",
+                                         Sender = "BoardWatcher",
+                                         Title = ""
+                                     });
                                 }
                                 else
                                 {
@@ -423,7 +429,36 @@ namespace ChanArchiver
                                     Log(new LogEntry()
                                     {
                                         Level = LogEntry.LogLevel.Info,
-                                        Message = string.Format("Thread {0} has matching filters, starting it.", thread.ID),
+                                        Message = string.Format("Thread {0} has matching whitelist filters, starting it.", thread.ID),
+                                        Sender = "BoardWatcher",
+                                        Title = string.Format("/{0}/", this.Board)
+                                    });
+
+                                    tw.Start();
+                                }
+                            }
+                            else if (this.Mode == BoardMode.Blacklist)
+                            {
+                                // In Blacklist mode, skip threads with filter match
+
+                                if (this.MatchFilters(thread))
+                                {
+                                    this.Log(new LogEntry()
+                                   {
+                                       Level = LogEntry.LogLevel.Info,
+                                       Message = "Thread " + thread.ID.ToString() + " has matching filter, skipping it.",
+                                       Sender = "BoardWatcher",
+                                       Title = ""
+                                   });
+                                }
+                                else
+                                {
+                                    started_count++;
+
+                                    Log(new LogEntry()
+                                    {
+                                        Level = LogEntry.LogLevel.Info,
+                                        Message = string.Format("Thread {0} has no matching blacklist filters, starting it.", thread.ID),
                                         Sender = "BoardWatcher",
                                         Title = string.Format("/{0}/", this.Board)
                                     });
@@ -596,9 +631,48 @@ namespace ChanArchiver
 
         List<ChanArchiver.Filters.IFilter> my_filters = new List<Filters.IFilter>();
 
-        public ChanArchiver.Filters.IFilter[] Filters
+        public ChanArchiver.Filters.IFilter[] WhitelistFilters
         {
-            get { return this.my_filters.ToArray(); }
+            get
+            {
+                return this.my_filters
+                    .Where(x => x.Type == Filters.FilterType.WhiteList)
+                    .ToArray();
+            }
+        }
+
+        public ChanArchiver.Filters.IFilter[] BlacklistFilters
+        {
+            get
+            {
+                return this.my_filters
+                    .Where(x => x.Type == Filters.FilterType.BlackList)
+                    .ToArray();
+            }
+        }
+
+        /// <summary>
+        /// Returns thread filters that are suitable for this instance monitoring mode
+        /// That is, in whitelist mode it return whitelist filters,
+        /// In blacklist mode it returns blacklist filters,
+        /// Or otherwise it returns an empty array.
+        /// </summary>
+        private ChanArchiver.Filters.IFilter[] CurrentModeFilters
+        {
+            get
+            {
+                if (this.Mode == BoardMode.Whitelist)
+                {
+                    return this.WhitelistFilters;
+                }
+
+                if (this.Mode == BoardMode.Blacklist)
+                {
+                    return this.BlacklistFilters;
+                }
+
+                return new Filters.IFilter[0];
+            }
         }
 
         public void AddFilter(ChanArchiver.Filters.IFilter filter)
@@ -621,16 +695,21 @@ namespace ChanArchiver
 
         public bool MatchFilters(AniWrap.DataTypes.GenericPost post)
         {
-            for (int i = 0; i < this.my_filters.Count(); i++)
+            var filters = this.CurrentModeFilters;
+
+            foreach (var filter in filters)
             {
                 try
                 {
-                    if (my_filters[i].Detect(post))
+                    if (filter.Detect(post))
                     {
                         return true;
                     }
                 }
-                catch (Exception) { }
+                catch (Exception)
+                {
+                    // ignore it
+                }
             }
 
             return false;
@@ -647,34 +726,20 @@ namespace ChanArchiver
             return true;
         }
 
-        public void SaveFilters()
-        {
-            if (this.my_filters.Count == 0)
-            {
-                if (System.IO.File.Exists(this.FilterSaveFilePath))
-                {
-                    System.IO.File.Delete(this.FilterSaveFilePath);
-                    return;
-                }
-            }
-
-            List<string[]> s = new List<string[]>();
-
-            ChanArchiver.Filters.IFilter[] filters = my_filters.ToArray();
-
-            foreach (ChanArchiver.Filters.IFilter filter in filters)
-            {
-                s.Add(new string[] { filter.GetType().FullName, filter.FilterText, filter.Notes });
-            }
-
-            System.IO.File.WriteAllText(this.FilterSaveFilePath, JsonConvert.ExportToString(s));
-        }
-
-        private string FilterSaveFilePath
+        [Obsolete("Please use FilterDictionarySaveFilePath instead", false)]
+        private string LegacyFilterSaveFilePath
         {
             get
             {
                 return System.IO.Path.Combine(Program.board_settings_dir, string.Format("filters-{0}.json", this.Board));
+            }
+        }
+
+        private string FilterDictionarySaveFilePath
+        {
+            get
+            {
+                return System.IO.Path.Combine(Program.board_settings_dir, string.Format("filters-dic-{0}.json", this.Board));
             }
         }
 
@@ -688,9 +753,12 @@ namespace ChanArchiver
 
         public void LoadFilters()
         {
-            if (System.IO.File.Exists(this.FilterSaveFilePath))
+            if (File.Exists(this.LegacyFilterSaveFilePath))
             {
-                JsonArray s = JsonConvert.Import<JsonArray>(System.IO.File.ReadAllText(this.FilterSaveFilePath));
+                // Load legacy v1.12 filter file, and then delete the file
+
+                JsonArray s = JsonConvert.Import<JsonArray>(File.ReadAllText(this.LegacyFilterSaveFilePath));
+                File.Delete(this.LegacyFilterSaveFilePath);
 
                 foreach (object filter in s)
                 {
@@ -701,17 +769,96 @@ namespace ChanArchiver
                     if (t != null)
                     {
                         System.Reflection.ConstructorInfo ci = t.GetConstructor(new Type[] { typeof(string) });
-                        ChanArchiver.Filters.IFilter fil = (ChanArchiver.Filters.IFilter)ci.Invoke(new object[] { Convert.ToString(FilterData[1]) });
+                        ChanArchiver.Filters.IFilter fil = (ChanArchiver.Filters.IFilter)
+                            ci.Invoke(new object[] { Convert.ToString(FilterData[1]) });
 
                         if (FilterData.Count > 2)
                         {
                             fil.Notes = Convert.ToString(FilterData[2]);
                         }
 
+                        // Prior to v1.13, all filters were whitelist filters
+                        fil.Type = Filters.FilterType.WhiteList;
+
                         this.my_filters.Add(fil);
                     }
                 }
             }
+
+            if (File.Exists(this.FilterDictionarySaveFilePath))
+            {
+                string jsonString = File.ReadAllText(this.FilterDictionarySaveFilePath);
+                JsonArray jsonArray = JsonConvert.Import<JsonArray>(jsonString);
+
+                foreach (object jsonObject in jsonArray)
+                {
+                    JsonObject filterJsonObject = jsonObject as JsonObject;
+                    if (filterJsonObject == null)
+                    {
+                        continue;
+                    }
+
+                    string className = Convert.ToString(filterJsonObject["class_name"]);
+                    string filter_data = Convert.ToString(filterJsonObject["data"]);
+                    string filter_notes = Convert.ToString(filterJsonObject["notes"]);
+                    string filter_type = Convert.ToString(filterJsonObject["type"]);
+
+                    Type t = Type.GetType(className);
+                    if (t == null)
+                    {
+                        continue;
+                    }
+
+                    System.Reflection.ConstructorInfo ci = t.GetConstructor(new Type[] { typeof(string) });
+                    ChanArchiver.Filters.IFilter fil = (ChanArchiver.Filters.IFilter)
+                        ci.Invoke(new object[] { filter_data });
+
+                    fil.Notes = filter_notes;
+
+
+                    if (filter_type == Filters.FilterType.BlackList.ToString())
+                    {
+                        fil.Type = Filters.FilterType.BlackList;
+                    }
+                    else
+                    {
+                        // default filter type is whitelist
+                        fil.Type = Filters.FilterType.WhiteList;
+                    }
+
+                    this.my_filters.Add(fil);
+                }
+            }
+        }
+
+        public void SaveFilters()
+        {
+            if (this.my_filters.Count == 0)
+            {
+                if (File.Exists(this.FilterDictionarySaveFilePath))
+                {
+                    File.Delete(this.FilterDictionarySaveFilePath);
+                    return;
+                }
+            }
+
+            JsonArray array = new JsonArray();
+
+            ChanArchiver.Filters.IFilter[] filters = my_filters.ToArray();
+
+            foreach (var filter in filters)
+            {
+                JsonObject json = new JsonObject();
+
+                json.Put("class_name", filter.GetType().FullName);
+                json.Put("data", filter.FilterText ?? "");
+                json.Put("notes", filter.Notes ?? "");
+                json.Put("type", filter.Type.ToString());
+
+                array.Add(json);
+            }
+
+            File.WriteAllText(this.FilterDictionarySaveFilePath, JsonConvert.ExportToString(array));
         }
 
         private void Log(LogEntry lo)

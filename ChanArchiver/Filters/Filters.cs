@@ -27,6 +27,8 @@ namespace ChanArchiver.Filters
         }
 
         public string Notes { get; set; }
+
+        public FilterType Type { get; set; }
     }
 
     public class SubjectFilter : IFilter
@@ -50,6 +52,8 @@ namespace ChanArchiver.Filters
         }
 
         public string Notes { get; set; }
+
+        public FilterType Type { get; set; }
     }
 
     public class TripFilter : IFilter
@@ -73,6 +77,8 @@ namespace ChanArchiver.Filters
         }
 
         public string Notes { get; set; }
+
+        public FilterType Type { get; set; }
     }
 
     public class NameFilter : IFilter
@@ -95,6 +101,8 @@ namespace ChanArchiver.Filters
             return matcher.IsMatch(post.Name);
         }
         public string Notes { get; set; }
+
+        public FilterType Type { get; set; }
     }
 
     public class EmailFilter : IFilter
@@ -116,7 +124,10 @@ namespace ChanArchiver.Filters
         {
             return matcher.IsMatch(post.Email);
         }
+
         public string Notes { get; set; }
+
+        public FilterType Type { get; set; }
     }
 
     public class FileNameFilter : IFilter
@@ -146,6 +157,7 @@ namespace ChanArchiver.Filters
             }
         }
         public string Notes { get; set; }
+        public FilterType Type { get; set; }
     }
 
     public class FileHashFilter : IFilter
@@ -173,6 +185,7 @@ namespace ChanArchiver.Filters
             }
         }
         public string Notes { get; set; }
+        public FilterType Type { get; set; }
     }
 
     //public class ImageFilter : IFilter

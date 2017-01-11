@@ -1,86 +1,16 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="shortcut icon" href="/res/favicon.ico" />
-
-    <title>[ChanArchiver] - File Info</title>
-
-    <link href="/res/bootstrap.css" rel="stylesheet" />
-    <link href="/res/dashboard.css" rel="stylesheet" />
+    {{commons-headtags}}
 </head>
 
 <body>
 
-    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
-        <div class="container-fluid">
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <a class="navbar-brand" href="/">ChanArchiver</a>
-            </div>
-            <div class="navbar-collapse collapse">
-                <ul class="nav navbar-nav navbar-right">
-                    <li>
-                        <a href="/boards">Archived Boards</a>
-                    </li>
-                    <li>
-                        <a href="https://github.com/diantahoc/chan-archiver" target="_blank">Github</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </div>
+   {{commons-navbar}}
 
     <div class="container-fluid">
         <div class="row">
-            <div class="col-sm-3 col-md-2 sidebar">
-
-                <ul class="nav nav-sidebar">
-                    <li>
-                        <a href="/">Overview</a>
-                    </li>
-
-                    <li class="active">
-                        <a href="/fq">File Queue</a>
-                    </li>
-                </ul>
-
-                <ul class="nav nav-sidebar">
-                    <li>
-                        <a href="/wjobs">Watch Jobs</a>
-                    </li>
-
-                    <li>
-                        <a href="/monboards">Monitored Boards</a>
-                    </li>
-
-                    <li>
-                        <a href="/filters">Thread Filters</a>
-                    </li>
-
-                </ul>
-
-
-                <ul class="nav nav-sidebar">
-                    <li>
-                        <a href="/bannedfiles">Banned files</a>
-                    </li>
-
-                    <li>
-                        <a href="/settings">Settings</a>
-                    </li>
-
-                </ul>
-
-            </div>
+            {{commons-sidebar}}
 
             <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
 
@@ -163,13 +93,10 @@
         </div>
     </div>
 
-    <script src="/res/jquery.js"></script>
-    <script src="/res/bootstrap.js"></script>
-    <script src="/res/docs.js"></script>
+    {{commons-scripts}}
 
     <script>
-        function update_fileinfo()
-        {
+        function update_fileinfo() {
             $.get("/jsonapi/get-file-info.json", { hash: "{workid}" },
             function (data) {
                 $("#progressbar")

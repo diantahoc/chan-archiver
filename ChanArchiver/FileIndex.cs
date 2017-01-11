@@ -20,12 +20,13 @@ namespace ChanArchiver
             Console.Write("Loading file index ...");
             if (File.Exists(FileIndexSaveFile))
             {
-                load_index_from_save_file();
+                load_index_from_bin();
+                //load_index_from_save_file();
             }
             else
             {
                 build_file_index_from_scratch();
-                save_index();
+                save_index_bin();
             }
 
             Console.WriteLine(".. done");
@@ -35,7 +36,8 @@ namespace ChanArchiver
         {
             if (need_save)
             {
-                save_index();
+               // save_index();
+                save_index_bin();
             }
         }
 
@@ -56,15 +58,15 @@ namespace ChanArchiver
                 GC.Collect();
                 try
                 {
-                    foreach (string board in ThreadStore.GetExistingBoards())
+                    foreach (string board in ThreadStore.GetStorageEngine().GetExistingBoards())
                     {
-                        var threads = ThreadStore.GetIndexIDOnly(board);
+                        var threads = ThreadStore.GetStorageEngine().GetIndexIDOnly(board);
 
                         foreach (string thread_id in threads)
                         {
                             if (thread_id == null) { continue; }
 
-                            var thread_data = ThreadStore.GetThread(board, thread_id);
+                            var thread_data = ThreadStore.GetStorageEngine().GetThread(board, thread_id);
 
                             int tid = int.Parse(thread_id);
 
@@ -103,7 +105,7 @@ namespace ChanArchiver
         {
             get
             {
-                return System.IO.Path.Combine(Program.program_dir, "file-index.json");
+                return System.IO.Path.Combine(Program.program_dir, "file-index.bin");
             }
         }
 
@@ -192,7 +194,7 @@ namespace ChanArchiver
                                 {
                                     info = file_index[hash];
                                 }
-                                else 
+                                else
                                 {
                                     info = new FileIndexInfo(hash);
                                     file_index.Add(hash, info);
@@ -211,13 +213,98 @@ namespace ChanArchiver
                                     catch (Exception) { }
                                 }
 
-                              
+
                             }
                         }
                     }
                 }
             }
             GC.Collect();
+        }
+
+        private static void load_index_from_bin() 
+        {
+            lock (l)
+            {
+                using (FileStream fs = new FileStream(FileIndexSaveFile, FileMode.Open))
+                {
+                    byte[] b = new byte[4];
+                    fs.Read(b, 0, 4);
+
+                    int entries_count = fromBytes(b);
+
+                    byte[] temp = toBytes(entries_count);
+
+                  
+                }
+            }
+        }
+
+        private static void save_index_bin()
+        {
+            lock (l)
+            {
+                File.Delete(FileIndexSaveFile);
+                using (FileStream fs = new FileStream(FileIndexSaveFile, FileMode.CreateNew))
+                {
+                    int entries_count = file_index.Count;
+
+                    byte[] temp = toBytes(entries_count);
+
+                    fs.Write(temp, 0, temp.Length);
+
+                    foreach (var kvp in file_index)
+                    {
+                        byte[] temp1 = Encoding.UTF8.GetBytes(kvp.Key);
+
+                        temp = toBytes(temp1.Length);
+                        fs.Write(temp, 0, temp.Length);
+                        fs.Write(temp1, 0, temp1.Length);
+
+                        foreach (var i in kvp.Value.GetRepostsData())
+                        {
+                            temp1 = Encoding.UTF8.GetBytes(i.Board);
+                            temp = toBytes(temp1.Length);
+                            fs.Write(temp, 0, temp.Length);
+                            fs.Write(temp1, 0, temp1.Length);
+
+                            temp1 = Encoding.UTF8.GetBytes(i.FileName);
+                            temp = toBytes(temp1.Length);
+                            fs.Write(temp, 0, temp.Length);
+                            fs.Write(temp1, 0, temp1.Length);
+
+                            temp = toBytes(i.ThreadID);
+                            fs.Write(temp, 0, temp.Length);
+
+                            temp = toBytes(i.PostID);
+                            fs.Write(temp, 0, temp.Length);
+                        }
+                    }
+
+                    fs.Flush();
+                }
+                need_save = false;
+            }
+        }
+
+        // in big endian
+        private static byte[] toBytes(int intValue)
+        {
+            byte[] intBytes = BitConverter.GetBytes(intValue);
+            if (BitConverter.IsLittleEndian)
+                Array.Reverse(intBytes);
+            byte[] result = intBytes;
+            return result;
+        }
+
+        // input is in big-endian
+        private static int fromBytes(byte[] input)
+        {
+            if (BitConverter.IsLittleEndian)
+            {
+                Array.Reverse(input);
+            }
+            return BitConverter.ToInt32(input, 0);
         }
 
         public static FileIndexInfo GetIndexState(string hash)

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using AniWrap.DataTypes;
 
 namespace ChanArchiver.Thread_Storage
 {
@@ -24,5 +25,9 @@ namespace ChanArchiver.Thread_Storage
         string GetThreadNotes(string board, int tid);
 
         void setThreadNotes(string board, int tid, string notes);
+
+        void savePost(string board, int tid, int postId, GenericPost post);
+
+        void OptimizeThread(string board, int tid);
     }
 }

@@ -12,6 +12,7 @@ namespace ChanArchiver.HttpServerHandlers.PageHandlers
         {
             target.Replace("{{commons-headtags}}", GenerateHeadTagsHtml());
             target.Replace("{{commons-sidebar}}", GenerateSidebarHtml());
+            target.Replace("{{commons-navbar}}", HtmlTemplates.CommonNavBarTemplate);
             target.Replace("{{commons-scripts}}", HtmlTemplates.CommonScriptsTemplate);
         }
 
@@ -21,7 +22,8 @@ namespace ChanArchiver.HttpServerHandlers.PageHandlers
             "{{filequeue-active}}",
             "{{watchjobs-active}}",
             "{{monitoredboards-active}}",
-            "{{threadfilters-active}}",
+            "{{whitefilters-active}}",
+            "{{blackfilters-active}}",
             "{{bannedfiles-active}}",
             "{{settings-active}}"
         };
@@ -66,9 +68,10 @@ namespace ChanArchiver.HttpServerHandlers.PageHandlers
             FileQueue = 1,
             WatchJobs = 2,
             MonitoredBoards = 3,
-            ThreadFilters = 4,
-            BannedFiles = 5,
-            Settings = 6,
+            WhitelistFilters = 4,
+            BlacklistFilters = 5,
+            BannedFiles = 6,
+            Settings = 7,
             NotSpecified = -1
         }
 

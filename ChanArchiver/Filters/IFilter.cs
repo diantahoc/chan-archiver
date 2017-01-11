@@ -10,5 +10,12 @@ namespace ChanArchiver.Filters
         bool Detect(AniWrap.DataTypes.GenericPost post);
         string FilterText { get; }
         string Notes { get; set; }
+        FilterType Type { get; set; }
+    }
+
+    public enum FilterType
+    {
+        WhiteList,
+        BlackList
     }
 }

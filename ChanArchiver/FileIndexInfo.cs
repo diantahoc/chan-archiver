@@ -12,7 +12,7 @@ namespace ChanArchiver
         public string Hash { get; private set; }
 
         public Post[] GetRepostsData() { return my_posts.Values.ToArray(); }
-      
+
         public int RepostCount
         {
             get
@@ -40,7 +40,7 @@ namespace ChanArchiver
 
         private string get_post_hash(string board, int threadid, int postid)
         {
-            return string.Format("{0}-{1}-{2}", board, threadid, postid);
+            return board + "-" + threadid + "-" + postid;
         }
 
         public void MarkPost(string board, int threadid, int postid, string file_name)

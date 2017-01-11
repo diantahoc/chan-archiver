@@ -58,6 +58,9 @@
     <ApplicationIcon>clover_icon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="DBreeze">
+      <HintPath>..\..\..\..\..\Desktop\.NET stuffs\DBreeze.dll</HintPath>
+    </Reference>
     <Reference Include="HttpServer, Version=1.0.0.0, Culture=neutral, PublicKeyToken=d7063c47c583695a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\Desktop\New folder\HttpServer.v1.1\HttpServer.dll</HintPath>
@@ -130,10 +133,10 @@
     <Compile Include="FoolFuukaParser.cs" />
     <Compile Include="HMSFormatter.cs" />
     <Compile Include="HtmlTemplates.cs" />
-    <Compile Include="HttpServerHandlers\BannedFilesPageHandler.cs" />
+    <Compile Include="HttpServerHandlers\PageHandlers\BannedFilesPageHandler.cs" />
     <Compile Include="HttpServerHandlers\FileBrowserPageHandler.cs" />
     <Compile Include="HttpServerHandlers\FileHandler.cs" />
-    <Compile Include="HttpServerHandlers\FileInfoPageHandler.cs" />
+    <Compile Include="HttpServerHandlers\PageHandlers\FileInfoPageHandler.cs" />
     <Compile Include="HttpServerHandlers\PageHandlers\FileQueuePageHandler.cs" />
     <Compile Include="HttpServerHandlers\JsonApi\GetDailyNetworkStatisticsJsonApiHandler.cs" />
     <Compile Include="HttpServerHandlers\JsonApi\GetFileInfoJsonApiHandler.cs" />
@@ -148,7 +151,7 @@
     <Compile Include="HttpServerHandlers\ServerConstants.cs" />
     <Compile Include="HttpServerHandlers\SettingsAction\ThumbnailOnlySettingsController.cs" />
     <Compile Include="HttpServerHandlers\SettingsPageHandler.cs" />
-    <Compile Include="HttpServerHandlers\PageHandlers\ThreadFiltersPageHandler.cs" />
+    <Compile Include="HttpServerHandlers\PageHandlers\ThreadsFiltersPageHandler.cs" />
     <Compile Include="HttpServerHandlers\ThreadJobInfoPageHandler.cs" />
     <Compile Include="HttpServerHandlers\ThreadsAction\DownloadAsZipHandler.cs" />
     <Compile Include="HttpServerHandlers\ThreadsAction\StopAllManuallyAddedThreadsHandler.cs" />
@@ -367,7 +370,7 @@
     <Compile Include="Thread Storage\FolderStorageEngine.cs" />
     <Compile Include="Thread Storage\IStorageEngine.cs" />
     <Compile Include="Thread Storage\ThreadStoreStats.cs" />
-    <Compile Include="ThreadStore.cs" />
+    <Compile Include="Thread Storage\ThreadStore.cs" />
     <Compile Include="ThreadWorker.cs" />
     <Compile Include="Wordfilter.cs" />
   </ItemGroup>
@@ -389,6 +392,7 @@
     <Content Include="clover_icon.ico" />
     <Content Include="html\bs\banned_files.html" />
     <Content Include="html\bs\Common Html\headtags.html" />
+    <Content Include="html\bs\Common Html\navbar.html" />
     <Content Include="html\bs\Common Html\scripts.html" />
     <Content Include="html\bs\Common Html\sidebar.html" />
     <Content Include="html\bs\file_reposts.html" />

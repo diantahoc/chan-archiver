@@ -16,8 +16,8 @@ namespace ChanArchiver.HttpServerHandlers.JsonApi
         {
             if (request.UriPath == Url)
             {
-                ThreadStore.UpdateThreadStoreStats();
-                ThreadStoreStats stats = ThreadStore.StoreStats;
+                ThreadStore.GetStorageEngine().UpdateThreadStoreStats();
+                ThreadStoreStats stats = ThreadStore.GetStorageEngine().StoreStats;
 
                 JsonArray ja = new JsonArray();
 

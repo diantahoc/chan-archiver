@@ -38,7 +38,7 @@ namespace ChanArchiver.HttpServerHandlers.PageHandlers
         {
             if (request.UriPath == Url)
             {
-                ThreadStore.UpdateThreadStoreStats();
+                ThreadStore.GetStorageEngine().UpdateThreadStoreStats();
 
                 StringBuilder sb = new StringBuilder(HtmlTemplates.OverviewPageTemplate);
 
@@ -166,7 +166,7 @@ namespace ChanArchiver.HttpServerHandlers.PageHandlers
         private string get_ArchivedThreadsStats()
         {
             StringBuilder sb = new StringBuilder();
-            ThreadStoreStats stats = ThreadStore.StoreStats;
+            ThreadStoreStats stats = ThreadStore.GetStorageEngine().StoreStats;
 
             foreach (string board in Program.ValidBoards.Keys)
             {
@@ -202,7 +202,7 @@ namespace ChanArchiver.HttpServerHandlers.PageHandlers
 
             s.AppendFormat("<td>{0}</td>", Program.format_size_string(NetworkUsageCounter.TotalConsumedAllTime));
 
-            s.AppendFormat("<td>{0}</td>", ThreadStore.StoreStats.TotalArchivedThreadsCount);
+            s.AppendFormat("<td>{0}</td>", ThreadStore.GetStorageEngine().StoreStats.TotalArchivedThreadsCount);
 
             s.Append("</tr>");
 

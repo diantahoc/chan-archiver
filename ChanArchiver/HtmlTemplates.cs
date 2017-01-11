@@ -11,24 +11,29 @@ namespace ChanArchiver
         private const string commons_scripts = "commons-scripts.html";
         private const string commons_sidebar = "commons-sidebar.html";
         private const string commons_headtags = "commons-headtags.html";
+        private const string commons_navbar = "commons-navbar.html";
 
         private const string overview_page = "overview-page.html";
         private const string file_queue_page = "file-queue-page.html";
         private const string watch_jobs_page = "watch-jobs-page.html";
         private const string monitored_boards_page = "monitored-boards-page.html";
         private const string thread_filters_page = "thread-filters-page.html";
+        private const string banned_files_page = "banned-files-page.html";
+        private const string file_info_page = "file-info-page.html";
 
 
         public static string CommonScriptsTemplate { get; private set; }
         public static string CommonSidebarTemplate { get; private set; }
         public static string CommonHeadTagsTemplate { get; private set; }
+        public static string CommonNavBarTemplate { get; private set; }
 
         public static string OverviewPageTemplate { get; private set; }
         public static string FileQueuePageTemplate { get; private set; }
         public static string WatchJobsPageTemplate { get; private set; }
         public static string MonitoredBoardsPageTemplate { get; private set; }
         public static string ThreadFiltersPageTemplate { get; private set; }
-
+        public static string BannedFilesPageTemplate { get; private set; }
+        public static string FileInfoPageTemplate { get; private set; }
 
         public static void Init()
         {
@@ -41,7 +46,10 @@ namespace ChanArchiver
                 {commons_headtags, Properties.Resources.commons_headtags},
                 {watch_jobs_page, Properties.Resources.wjobs_page},
                 {monitored_boards_page, Properties.Resources.boards_page},
-                {thread_filters_page, Properties.Resources.filters_page}
+                {thread_filters_page, Properties.Resources.filters_page},
+                {banned_files_page, Properties.Resources.banned_files_page},
+                {file_info_page, Properties.Resources.fileinfo},
+                {commons_navbar, Properties.Resources.navbar}
             };
 
             foreach (var k in mappings)
@@ -63,10 +71,14 @@ namespace ChanArchiver
             CommonScriptsTemplate = File.ReadAllText(Path.Combine(Program.html_templates_dir, commons_scripts));
             CommonSidebarTemplate = File.ReadAllText(Path.Combine(Program.html_templates_dir, commons_sidebar));
             CommonHeadTagsTemplate = File.ReadAllText(Path.Combine(Program.html_templates_dir, commons_headtags));
+            CommonNavBarTemplate = File.ReadAllText(Path.Combine(Program.html_templates_dir, commons_navbar));
             FileQueuePageTemplate = File.ReadAllText(Path.Combine(Program.html_templates_dir, file_queue_page));
             WatchJobsPageTemplate = File.ReadAllText(Path.Combine(Program.html_templates_dir, watch_jobs_page));
             MonitoredBoardsPageTemplate = File.ReadAllText(Path.Combine(Program.html_templates_dir, monitored_boards_page));
             ThreadFiltersPageTemplate = File.ReadAllText(Path.Combine(Program.html_templates_dir, thread_filters_page));
+            BannedFilesPageTemplate = File.ReadAllText(Path.Combine(Program.html_templates_dir, banned_files_page));
+            FileInfoPageTemplate = File.ReadAllText(Path.Combine(Program.html_templates_dir, file_info_page));
+           
         }
     }
 }

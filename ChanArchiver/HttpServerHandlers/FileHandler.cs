@@ -6,7 +6,7 @@ using System.IO;
 using System.Diagnostics;
 namespace ChanArchiver.HttpServerHandlers
 {
-    public class FileHandler : HttpServer.HttpModules.HttpModule
+    public sealed class FileHandler : HttpServer.HttpModules.HttpModule
     {
         public override bool Process(HttpServer.IHttpRequest request, HttpServer.IHttpResponse response, HttpServer.Sessions.IHttpSession session)
         {
